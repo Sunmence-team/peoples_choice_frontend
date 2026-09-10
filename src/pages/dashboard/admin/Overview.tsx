@@ -1,10 +1,10 @@
 import React from "react";
-import OverviewCards from "../components/cards/OverviewCards";
+import OverviewCards from "../../components/cards/OverviewCards";
 import { TbReceiptDollar } from "react-icons/tb";
 import { HiHome, HiOutlineArrowTrendingUp } from "react-icons/hi2";
 import { LuUsersRound } from "react-icons/lu";
-import { formatterUtility } from "../helpers/formatterUtility";
-import { useUser } from "../hooks/useUser";
+import { formatterUtility } from "../../helpers/formatterUtility";
+import { useUser } from "../../hooks/useUser";
 
 const Overview: React.FC = () => {
   const { user } = useUser();
@@ -16,7 +16,9 @@ const Overview: React.FC = () => {
           <h2 className="text-lg font-semibold">
             Welcome <span className="capitalize">{user?.role}</span>
           </h2>
-          <p className="text-sm text-gray-500">Here is your business breakdown overview</p>
+          <p className="text-sm text-gray-500">
+            Here is your business breakdown overview
+          </p>
         </div>
       </div>
 

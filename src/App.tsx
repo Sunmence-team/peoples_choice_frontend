@@ -1,22 +1,31 @@
 import { Toaster } from "sonner";
 import { Routes, Route } from "react-router-dom";
+
+import HomeLayout from "./layout/HomeLayout";
 import MainLayout from "./layout/MainLayout";
-import Login from "./pages/auth/Login";
-import Overview from "./pages/Overview";
 import NotFound from "./pages/view/NotFound";
+
+// Auth Pages
+import Login from "./pages/auth/Login";
+
+// Landing pages
+import Home from "./pages/home/Home";
+
+// Dashboards
+import Overview from "./pages/dashboard/client/Overview";
 
 function App() {
   return (
     <>
       <Toaster />
       <Routes>
-        <Route index element={<Login />} />
         <Route path="*" element={<NotFound />} />
         <Route
           index
           path="/"
-          element={<MainLayout pageName="Dashboard" children={<Overview />} />}
+          element={<HomeLayout pageName="Home" children={<Home />} />}
         />
+        <Route path="/login" element={<Login />} />
         <Route
           index
           path="/dashboard/overview"
