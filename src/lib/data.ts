@@ -2,6 +2,7 @@ import type { Transaction } from "./interfaces";
 
 export const transactions: Transaction[] = [
   {
+    id: 1,
     transaction_id: "TXN-7841",
     network: "trc-20",
     type: "deposit",
@@ -10,6 +11,7 @@ export const transactions: Transaction[] = [
     date: "Sep 14, 2026",
   },
   {
+    id: 2,
     transaction_id: "TXN-7839",
     network: "trc-20",
     type: "withdrawal",
@@ -18,6 +20,7 @@ export const transactions: Transaction[] = [
     date: "Sep 14, 2026",
   },
   {
+    id: 3,
     transaction_id: "TXN-7837",
     network: "trc-20",
     type: "deposit",
@@ -26,6 +29,7 @@ export const transactions: Transaction[] = [
     date: "Sep 13, 2026",
   },
   {
+    id: 4,
     transaction_id: "TXN-7835",
     network: "trc-20",
     type: "withdrawal",
@@ -34,6 +38,7 @@ export const transactions: Transaction[] = [
     date: "Sep 13, 2026",
   },
   {
+    id: 5,
     transaction_id: "TXN-7832",
     network: "trc-20",
     type: "deposit",
