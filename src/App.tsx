@@ -14,6 +14,7 @@ import Home from "./pages/home/Home";
 // Dashboards
 import Overview from "./pages/dashboard/client/Overview";
 import Profile from "./pages/dashboard/client/Profile";
+import Transaction from "./pages/dashboard/client/Transaction";
 
 function App() {
   return (
@@ -50,7 +51,7 @@ function App() {
         <Route
           index
           path="/dashboard/transaction-history"
-          element={<MainLayout pageName="Withdrawl" children={<Overview />} />}
+          element={<MainLayout pageName="Withdrawl" children={<Transaction />} />}
         />
       </Routes>
     </>

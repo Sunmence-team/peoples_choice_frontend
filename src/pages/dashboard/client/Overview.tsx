@@ -11,6 +11,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { IoMdArrowForward } from "react-icons/io";
 import { ActionCard } from '../../../components/cards/ActionCard';
 import ActionCell from '../../../components/ui/ActionCell';
 import ReusableTable from '../../../utility/ReusableTable';
@@ -225,12 +226,14 @@ export default function Overview() {
       </div>
 
       <div className="mt-10">
-        <div>
+        <div className='flex justify-between'>
           <h2 className="text-primary font-bold text-xl mb-5">
             Recent Transactions
           </h2>
 
-          <button onClick={() => navigate('/dashbaord/transaction')} >View all</button>
+          <button className='cursor-pointer flex items-center gap-1' onClick={() => navigate('/dashboard/transaction-history')} >
+            View all <IoMdArrowForward size={14} />
+            </button>
 
         </div>
 
