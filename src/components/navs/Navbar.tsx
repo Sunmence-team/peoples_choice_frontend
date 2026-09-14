@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { HiMenu, HiX } from "react-icons/hi";
-import { assets } from "../assets/assets";
-import { navItems } from "../lib/navItems";
+import { navItems } from "../../lib/navItems";
+import { assets } from "../../assets/assets";
 
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
