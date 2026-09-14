@@ -105,7 +105,7 @@ const MainLayout = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3 w-full relative! bg-secondary h-dvh overflow-hidden px-4 py-3">
+    <div className="flex flex-col gap-3 w-full relative! bg-secondary/80 h-dvh overflow-hidden px-4 py-3">
       <div className="md:px-6 px-4 md:flex gap-4 sticky top-0 z-10 items-center hidden bg-white rounded-xl">
         <button
           type="button"

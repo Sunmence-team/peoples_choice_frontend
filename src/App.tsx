@@ -31,6 +31,21 @@ function App() {
           path="/dashboard/overview"
           element={<MainLayout pageName="Dashboard" children={<Overview />} />}
         />
+        <Route
+          index
+          path="/dashboard/deposit"
+          element={<MainLayout pageName="Deposit" children={<Overview />} />}
+        />
+        <Route
+          index
+          path="/dashboard/withdrawl"
+          element={<MainLayout pageName="Withdrawl" children={<Overview />} />}
+        />
+        <Route
+          index
+          path="/dashboard/transaction-history"
+          element={<MainLayout pageName="Withdrawl" children={<Overview />} />}
+        />
       </Routes>
     </>
   );

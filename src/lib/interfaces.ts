@@ -6,7 +6,20 @@ export type OverviewCardsProps = {
   value: string | number;
   icon?: IconType;
   icon2: IconType;
+  className?: string;
 };
+
+export interface ActionCardProps {
+  title: string;
+  description: string;
+  buttonText: string;
+  icon: React.ElementType;
+  badge?: string;
+  badgeIcon?: React.ElementType;
+  dark?: boolean;
+  buttonIcon?: React.ElementType;
+  onClick?: () => void;
+}
 
 export interface TableColumnProps<T = unknown> {
   label: string | React.ReactNode;
