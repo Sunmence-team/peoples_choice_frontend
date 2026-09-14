@@ -18,6 +18,8 @@ import FAQ from "./pages/home/FAQ";
 
 // Dashboards
 import Overview from "./pages/dashboard/client/Overview";
+import Profile from "./pages/dashboard/client/Profile";
+import Transaction from "./pages/dashboard/client/Transaction";
 
 
 function App() {
@@ -40,6 +42,26 @@ function App() {
           index
           path="/dashboard/overview"
           element={<MainLayout pageName="Dashboard" children={<Overview />} />}
+        />
+        <Route
+          index
+          path="/dashboard/deposit"
+          element={<MainLayout pageName="Deposit" children={<Overview />} />}
+        />
+        <Route
+          index
+          path="/dashboard/profile"
+          element={<MainLayout pageName="Deposit" children={<Profile />} />}
+        />
+        <Route
+          index
+          path="/dashboard/withdrawl"
+          element={<MainLayout pageName="Withdrawl" children={<Overview />} />}
+        />
+        <Route
+          index
+          path="/dashboard/transaction-history"
+          element={<MainLayout pageName="Withdrawl" children={<Transaction />} />}
         />
       </Routes>
     </>
