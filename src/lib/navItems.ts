@@ -4,6 +4,7 @@ import {
   IoArrowUp,
   IoReceipt
 } from "react-icons/io5";
+import { User } from "lucide-react";
 
 export const navItems = [
   {
@@ -28,6 +29,12 @@ export const navItems = [
     name: "Transaction History",
     icon: IoReceipt,
     path: "/dashboard/transaction-history",
+    role: [""],
+  },
+  {
+    name: "Profile",
+    icon: User,
+    path: "/dashboard/profile",
     role: [""],
   },
 ];

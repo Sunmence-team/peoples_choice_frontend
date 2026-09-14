@@ -13,6 +13,7 @@ import Home from "./pages/home/Home";
 
 // Dashboards
 import Overview from "./pages/dashboard/client/Overview";
+import Profile from "./pages/dashboard/client/Profile";
 
 function App() {
   return (
@@ -35,6 +36,11 @@ function App() {
           index
           path="/dashboard/deposit"
           element={<MainLayout pageName="Deposit" children={<Overview />} />}
+        />
+        <Route
+          index
+          path="/dashboard/profile"
+          element={<MainLayout pageName="Deposit" children={<Profile />} />}
         />
         <Route
           index
