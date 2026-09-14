@@ -20,11 +20,11 @@ import {
 import ActionCard from "../../../components/cards/ActionCard";
 import ReusableTable from "../../../utility/ReusableTable";
 import ActionCell from "../../../components/ui/ActionCell";
+import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
 
 const Overview: React.FC = () => {
 
-  const [selectedTransaction, setSelectedTransaction] = React.useState('')
-  const [deleModal, setDeletedModal] = React.useState(false)
+  const [selectedTransaction, setSelectedTransaction] = React.useState<any[]>(null)
   const [viewModal, setViewModal] = React.useState(false)
 
   const { user } = useUser();
@@ -75,14 +75,16 @@ const Overview: React.FC = () => {
             setSelectedTransaction(item);
             setViewModal(true);
           }}
-          onDelete={() => {
-            setSelectedTransaction(item);
-            setDeletedModal(true);
-          }}
         />
       )
     },
   ];
+
+  const data = [
+    {
+      transaction_id: ""
+    }
+  ]
 
   return (
     <div className="">
@@ -191,8 +193,8 @@ const Overview: React.FC = () => {
 
         <ReusableTable
           isLoading={false}
-          error={customerError}
-          data={customers}
+          error={error}
+          data={null}
           columns={columns}
           currentPage={1}
           totalPages={5}
@@ -203,6 +205,12 @@ const Overview: React.FC = () => {
           hasSerialNo={true}
         />
       </div>
+
+      {
+        viewModal && (
+          <ViewTransactionModal />
+        )
+      }
     </div>
   );
 };
