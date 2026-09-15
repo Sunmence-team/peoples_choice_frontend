@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HiMenu, HiX } from "react-icons/hi";
-import { assets } from "../../../assets/assets";
+import { assets } from "../../assets/assets";
 // import { navItems } from "../../../lib/navItems";
 
 const Navbar: React.FC = () => {
