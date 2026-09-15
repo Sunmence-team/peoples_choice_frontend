@@ -2,7 +2,7 @@ export const formatterUtility = (amount: number, noSign=false) => {
   if (amount === null || amount === undefined) {
     return '';
   }
-  const sign = noSign ? "" : "₦";
+  const sign = noSign ? "" : "$";
   return `${sign}${amount.toLocaleString("en-NG")}`
 };
 

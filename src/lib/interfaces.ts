@@ -6,7 +6,32 @@ export type OverviewCardsProps = {
   value: string | number;
   icon?: IconType;
   icon2: IconType;
+  className?: string;
 };
+
+export interface QuickActionProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick?: () => void;
+}
+
+export interface ActionCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  iconClassName: string;
+}
+export type TransactionStatus = "completed" | "pending";
+
+export interface Transaction {
+  transaction_id: string;
+  type: "deposit" | "withdrawal";
+  network: string;
+  amount: string;
+  status: TransactionStatus;
+  date: string;
+}
 
 export interface TableColumnProps<T = unknown> {
   label: string | React.ReactNode;
