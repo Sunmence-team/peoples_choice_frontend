@@ -32,6 +32,8 @@ export interface Transaction {
   amount: string;
   status: TransactionStatus;
   date: string;
+  walletAddress?: string;
+  transactionHash?: string;
 }
 
 export interface TableColumnProps<T = unknown> {

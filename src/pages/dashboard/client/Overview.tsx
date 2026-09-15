@@ -4,57 +4,43 @@ import {
   ArrowUpFromLine,
   BarChart3,
   ChevronDown,
-  Clock3,
-  LockKeyhole,
-  ShieldCheck,
   UserRound,
   Wallet,
-  X,
 } from "lucide-react";
 import { IoMdArrowForward } from "react-icons/io";
 import { ActionCard } from '../../../components/cards/ActionCard';
 import ActionCell from '../../../components/ui/ActionCell';
 import ReusableTable from '../../../utility/ReusableTable';
-import { formatISODateToCustom } from '../../../helpers/formatterUtility';
-import { assets } from '../../../assets/assets';
 import { useUser } from '../../../hooks/useUser';
 import { useNavigate } from 'react-router-dom';
 import { transactions } from '../../../lib/data';
+import type { TableColumnProps, Transaction } from '../../../lib/interfaces';
+import ViewTransactionModal from '../../../components/modal/ViewTransactionModal';
 
 export default function Overview() {
 
-  const [selectedTransaction, setSelectedTransaction] = React.useState<any>(null)
-  const [viewModal, setViewModal] = React.useState(false)
-
   const { user } = useUser();
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
+  const [selectedTransaction, setSelectedTransaction] = React.useState<Transaction | null>(null);
+  const [viewModal, setViewModal] = React.useState(false);
 
   const balance = 2450
   const percentage = 2.4
   const totlaDeposit = 2750
   const totalwithdrawl = 5200
 
-  const columns = [
+  const columns: TableColumnProps<Transaction>[] = [
     {
       label: "TRANSACTION ID",
       key: "transaction_id",
-      render: (item: any) => (
-        <div className="flex items-center gap-1">
-          <img
-            src={assets.ether}
-            alt="ehterium logo"
-            width="8%"
-          />
-          {item.transaction_id || "-"}
-        </div>
-      ),
+      render: (item) => item.transaction_id || "-" 
     },
     {
       label: "TYPE",
       key: "type",
-      render: (item: any) => (
-        <span className={`px-3 py-1 rounded-xl font-medium ${item.type === "deposit" ? "bg-green-100 text-green-500" : item.type === "withdrawl" ? "bg-primary/10 text-primary" : "bg-gray-100 text-black"}`}>
+      render: (item) => (
+        <span className={`px-3 py-1 rounded-xl font-medium ${item.type === "deposit" ? "bg-green-100 text-green-500" : item.type === "withdrawal" ? "bg-primary/10 text-primary" : "bg-gray-100 text-black"}`}>
           {item.type}
         </span>
       )
@@ -62,22 +48,22 @@ export default function Overview() {
     {
       label: "AMOUNT (USDT)",
       key: "amount",
-      render: (item: any) => item.amount || "-",
+      render: (item) => item.amount || "-",
     },
     {
       label: "NETWORK",
       key: "network",
-      render: (item: any) => item.network || "-",
+      render: (item) => item.network || "-",
     },
     {
-      label: "DATE & TIME",
-      key: "date & time",
-      render: (item: any) => (formatISODateToCustom(`${item.date} | ${item.time}`)) || "-",
+      label: "DATE",
+      key: "date",
+      render: (item) => item.date || "-",
     },
     {
       label: "STATUS",
       key: "status",
-      render: (item: any) => (
+      render: (item) => (
         <span className={`px-3 py-1 rounded-xl font-medium ${item.status === "completed" ? "bg-green-100 text-green-500" : item.status === "pending" ? "bg-gray-100 text-black" : "bg-primary/10 text-primary"}`}>
           {item.status}
         </span>
@@ -86,13 +72,16 @@ export default function Overview() {
     {
       label: "Action",
       key: "action",
-      render: (item: any) => (
+      render: (item) => (
         <ActionCell
           canView={true}
-          rowId={Number(item.id)}
-          onView={() => {
-            setSelectedTransaction(item);
-            setViewModal(true);
+          rowId={Number(item.id ?? 0)}
+          onView={(id) => {
+            const row = transactions.find((transactionItem) => Number(transactionItem.id) === id);
+            if (row) {
+              setSelectedTransaction(row);
+              setViewModal(true);
+            }
           }}
         />
       )
@@ -233,7 +222,7 @@ export default function Overview() {
 
           <button className='cursor-pointer flex items-center gap-1' onClick={() => navigate('/dashboard/transaction-history')} >
             View all <IoMdArrowForward size={14} />
-            </button>
+          </button>
 
         </div>
 
@@ -251,6 +240,16 @@ export default function Overview() {
           hasSerialNo={true}
         />
       </div>
+
+      {viewModal && (
+        <ViewTransactionModal
+          transaction={selectedTransaction}
+          onClose={() => {
+            setViewModal(false);
+            setSelectedTransaction(null);
+          }}
+        />
+      )}
 
     </>
   )

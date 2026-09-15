@@ -9,6 +9,8 @@ export const transactions: Transaction[] = [
     amount: "+300 USDT",
     status: "completed",
     date: "Sep 14, 2026",
+    walletAddress: "TQv4rFfq9nP3aYxZb7yKJ3nJ7wY9uX2mB9",
+    transactionHash: "0xA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0",
   },
   {
     id: 2,
@@ -18,6 +20,8 @@ export const transactions: Transaction[] = [
     amount: "-200 USDT",
     status: "pending",
     date: "Sep 14, 2026",
+    walletAddress: "TQv4rFfq9nP3aYxZb7yKJ3nJ7wY9uX2mB9",
+    transactionHash: "0x9T8S7R6Q5P4O3N2M1L0K9J8I7H6G5F4E3D2C1B0A9",
   },
   {
     id: 3,
@@ -27,6 +31,8 @@ export const transactions: Transaction[] = [
     amount: "+500 USDT",
     status: "pending",
     date: "Sep 13, 2026",
+    walletAddress: "TQv4rFfq9nP3aYxZb7yKJ3nJ7wY9uX2mB9",
+    transactionHash: "0xBAFE1234567890ABCDEF0987654321FEEDCBA098",
   },
   {
     id: 4,
@@ -36,6 +42,8 @@ export const transactions: Transaction[] = [
     amount: "-100 USDT",
     status: "completed",
     date: "Sep 13, 2026",
+    walletAddress: "TQv4rFfq9nP3aYxZb7yKJ3nJ7wY9uX2mB9",
+    transactionHash: "0xC0FFEE1234567890ABCDEF0987654321FEEDCBA98",
   },
   {
     id: 5,
@@ -45,5 +53,7 @@ export const transactions: Transaction[] = [
     amount: "+300 USDT",
     status: "completed",
     date: "Sep 12, 2026",
+    walletAddress: "TQv4rFfq9nP3aYxZb7yKJ3nJ7wY9uX2mB9",
+    transactionHash: "0xDEADBEEF1234567890ABCDEF0987654321FEEDCBA",
   },
 ];
