@@ -20,6 +20,8 @@ import FAQ from "./pages/home/FAQ";
 import Overview from "./pages/dashboard/client/Overview";
 import Profile from "./pages/dashboard/client/Profile";
 import Transaction from "./pages/dashboard/client/Transaction";
+import Withdrawl from "./pages/dashboard/client/Withdrawl";
+import DepositRequest from "./pages/dashboard/client/Deposit";
 
 
 function App() {
@@ -46,7 +48,7 @@ function App() {
         <Route
           index
           path="/dashboard/deposit"
-          element={<MainLayout pageName="Deposit" children={<Overview />} />}
+          element={<MainLayout pageName="Deposit" children={<DepositRequest />} />}
         />
         <Route
           index
@@ -56,7 +58,7 @@ function App() {
         <Route
           index
           path="/dashboard/withdrawl"
-          element={<MainLayout pageName="Withdrawl" children={<Overview />} />}
+          element={<MainLayout pageName="Withdrawl" children={<Withdrawl />} />}
         />
         <Route
           index

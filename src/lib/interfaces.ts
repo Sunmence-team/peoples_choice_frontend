@@ -25,12 +25,15 @@ export interface ActionCardProps {
 export type TransactionStatus = "completed" | "pending";
 
 export interface Transaction {
+  id?: number | string;
   transaction_id: string;
   type: "deposit" | "withdrawal";
   network: string;
   amount: string;
   status: TransactionStatus;
   date: string;
+  walletAddress?: string;
+  transactionHash?: string;
 }
 
 export interface TableColumnProps<T = unknown> {

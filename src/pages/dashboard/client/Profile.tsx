@@ -35,14 +35,14 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7faff] p-6">
+    <div className="min-h-screen p-">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-5">
         <h1 className="text-2xl font-bold text-[#0d2340]">
           Profile Settings
         </h1>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-0.5 text-[15px] text-gray-500">
           Manage your account information and security settings.
         </p>
       </div>
@@ -53,8 +53,8 @@ export default function Profile() {
           onClick={() => setActiveTab("personal")}
           className={`rounded-md px-8 py-3 text-sm font-medium cursor-pointer transition ${
             activeTab === "personal"
-              ? "bg-[#073b68] text-white shadow-sm"
-              : "text-[#66809c] hover:text-[#073b68] bg-[#eef5fc]"
+              ? "bg-primary text-white shadow-sm"
+              : "text-primary hover:text-primary bg-white"
           }`}
         >
           Personal Information
@@ -64,8 +64,8 @@ export default function Profile() {
           onClick={() => setActiveTab("security")}
           className={`rounded-md px-8 py-3 text-sm font-medium cursor-pointer transition ${
             activeTab === "security"
-              ? "bg-[#073b68] text-white shadow-sm"
-              : "text-[#66809c] hover:text-[#073b68] bg-[#eef5fc]"
+              ? "bg-primary text-white shadow-sm"
+              : "text-[#66809c] hover:text-primary bg-white"
           }`}
         >
           Security
@@ -75,8 +75,8 @@ export default function Profile() {
           onClick={() => setActiveTab("wallet")}
           className={`rounded-md px-8 py-3 text-sm font-medium cursor-pointer transition ${
             activeTab === "wallet"
-              ? "bg-[#073b68] text-white shadow-sm"
-              : "text-[#66809c] hover:text-[#073b68] bg-[#eef5fc]"
+              ? "bg-primary text-white shadow-sm"
+              : "text-[#66809c] hover:text-primary bg-white"
           }`}
         >
           Wallet Information
@@ -97,7 +97,7 @@ export default function Profile() {
                   className="h-16 w-16 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#082f55] text-xl font-semibold text-white">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-white">
                   AK
                 </div>
               )}
@@ -105,7 +105,7 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-sm font-medium text-blue-500 hover:text-blue-600"
+                className="text-sm font-medium text-primary/90 hover:text-blue-600"
               >
                 Change Photo
               </button>
@@ -165,7 +165,7 @@ export default function Profile() {
             <button
               type="button"
               onClick={handleUpdateProfile}
-              className="w-full rounded-lg bg-[#05a957] cursor-pointer py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
+              className="w-full rounded-lg bg-tetiary cursor-pointer py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
             >
               Update Profile
             </button>
@@ -173,7 +173,7 @@ export default function Profile() {
 
           {/* Right Card */}
           <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-lg font-semibold text-[#173b5f]">
+            <h2 className="mb-6 text-lg font-semibold text-primary">
               Account Information
             </h2>
 
@@ -203,7 +203,7 @@ export default function Profile() {
 
             {/* Verification Notice */}
             <div className="mt-5 flex gap-3 rounded-lg bg-[#e9f9f2] p-4">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#05a957] text-xs font-bold text-white">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tetiary text-xs font-bold text-white">
                 ✓
               </div>
 
@@ -219,7 +219,7 @@ export default function Profile() {
       {/* Security */}
       {activeTab === "security" && (
         <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#173b5f]">
+          <h2 className="text-lg font-semibold text-priamry">
             Security
           </h2>
 
@@ -232,7 +232,7 @@ export default function Profile() {
       {/* Wallet */}
       {activeTab === "wallet" && (
         <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#173b5f]">
+          <h2 className="text-lg font-semibold text-primary">
             Wallet Information
           </h2>
 
