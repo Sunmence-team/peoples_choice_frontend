@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { HiMenu, HiX } from "react-icons/hi";
-import { assets } from "../assets/assets";
-import { navItems } from "../lib/navItems";
+import { assets } from "../../assets/assets";
+import { navItems } from "../../lib/navItems";
 
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -45,34 +45,22 @@ const Navbar: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center">
-              <img
-                src={assets.logo}
-                alt="Go4bill"
-                className="h-8 w-auto"
-              />
+              <img src={assets.logo} alt="Go4bill" className="h-8 w-auto" />
             </Link>
           </div>
 
           {/* Desktop Links */}
           <div className="hidden lg:flex lg:items-center lg:space-x-6">
-            {navItems.map((link) => 
-              link.isPage ? (
+            {navItems.map((link) =>
+              link ? (
                 <Link
-                  key={link.label}
-                  to={link.href}
+                  key={link.name}
+                  to={link.path}
                   className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors duration-200"
                 >
-                  {link.label}
+                  {link.name}
                 </Link>
-              ) : (
-                <a
-                  key={link.label}
-                  href={isHome ? link.href : `/${link.href}`}
-                  className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors duration-200"
-                >
-                  {link.label}
-                </a>
-              )
+              ) : null
             )}
           </div>
 
@@ -104,26 +92,17 @@ const Navbar: React.FC = () => {
       {open && (
         <div className="lg:hidden border-t border-slate-200 bg-white">
           <div className="space-y-3 px-4 pt-4 pb-6">
-            {navItems.map((link) => 
-              link.isPage ? (
+            {navItems.map((link) =>
+              link ? (
                 <Link
-                  key={link.label}
-                  to={link.href}
-                  onClick={() => handleLinkClick(link.href, true)}
+                  key={link.name}
+                  to={link.path}
+                  onClick={() => handleLinkClick(link.path, true)}
                   className="block rounded-md px-2 py-2 text-base text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-                  {link.label}
+                  {link.name}
                 </Link>
-              ) : (
-                <a
-                  key={link.label}
-                  href={isHome ? link.href : `/${link.href}`}
-                  onClick={() => handleLinkClick(link.href, false)}
-                  className="block rounded-md px-2 py-2 text-base text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  {link.label}
-                </a>
-              )
+              ) : null,
             )}
 
             <a

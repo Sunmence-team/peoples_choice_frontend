@@ -23,7 +23,9 @@ function App() {
         <Route
           index
           path="/"
-          element={<HomeLayout pageName="Home" children={<Home />} />}
+          element={<HomeLayout  >
+            <Home/>
+          </HomeLayout>}
         />
         <Route path="/login" element={<Login />} />
         <Route
