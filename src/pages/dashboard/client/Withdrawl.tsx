@@ -57,24 +57,7 @@ export default function Withdrawal() {
     validationSchema,
 
     onSubmit: async (values) => {
-      try {
-        setIsSubmitting(true);
-
-        console.log("Withdrawal request:", values);
-
-        // Later:
-        // await withdrawalMutation.mutateAsync(values);
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1500)
-        );
-
-        formik.resetForm();
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsSubmitting(false);
-      }
+     console.log(values)
     },
   });
 
