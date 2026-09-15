@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { QRCodeSVG } from "qrcode.react";
 import { submitDepositService } from "../../../helpers/apiService";
 import { Loader2 } from "lucide-react";
+import DepositStatusTracker from "../../../components/Tracker/DepositTracker";
 
 const walletAddresses = {
     TRC20: "TTrQ0e6e7a2caN_mLMeQv",
@@ -122,7 +123,7 @@ const DepositRequest = () => {
     return (
         <div className="w-full">
 
-            <h2 className='text-lg text-primary font-bold'>Deposit USDT</h2>
+            <h2 className='text-2xl text-primary font-bold'>Deposit USDT</h2>
             <p className='text-[13px] font-medium w-[530px] text-gray-500 '>
                 Send USDT to tour wallet address and submit your payment details. Your deposit will be reviewed manually before your
                 wallet is credited
@@ -402,6 +403,8 @@ const DepositRequest = () => {
                     </button>
                 </form>
             </div>
+
+            <DepositStatusTracker status="pending_verification" />
         </div>
     );
 };

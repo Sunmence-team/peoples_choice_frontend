@@ -35,14 +35,14 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-5">
         <h1 className="text-2xl font-bold text-[#0d2340]">
           Profile Settings
         </h1>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-0.5 text-[15px] text-gray-500">
           Manage your account information and security settings.
         </p>
       </div>
