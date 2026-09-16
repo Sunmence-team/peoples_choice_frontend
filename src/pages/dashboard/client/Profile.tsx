@@ -84,16 +84,6 @@ export default function Profile() {
           Security
         </button>
 
-        <button
-          onClick={() => setActiveTab("wallet")}
-          className={`rounded-md px-8 py-3 text-sm font-medium cursor-pointer transition ${
-            activeTab === "wallet"
-              ? "bg-primary text-white shadow-sm"
-              : "text-[#66809c] hover:text-primary bg-white"
-          }`}
-        >
-          Wallet Information
-        </button>
       </div>
 
       {/* Personal Information */}
@@ -178,7 +168,7 @@ export default function Profile() {
             <button
               type="button"
               onClick={handleUpdateProfile}
-              className="w-full rounded-lg bg-tetiary cursor-pointer py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
+              className="w-full rounded-lg bg-primary cursor-pointer py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
             >
               Update Profile
             </button>
@@ -333,7 +323,7 @@ export default function Profile() {
 
                 alert("Password updated successfully");
               }}
-              className="w-full rounded-lg bg-tetiary py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
+              className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
             >
               Update Password
             </button>
@@ -471,263 +461,7 @@ export default function Profile() {
         </div>
       )}
 
-     {/* Wallet */}
-      {activeTab === "wallet" && (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          {/* Wallet Balance */}
-          <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">
-                  Available Wallet Balance
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold text-primary">
-                  ₦250,000.00
-                </h2>
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e9f9f2] text-xl text-tetiary">
-                ₦
-              </div>
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                className="rounded-lg bg-tetiary px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
-              >
-                Deposit
-              </button>
-
-              <button
-                type="button"
-                className="rounded-lg border border-primary px-6 py-3 text-sm font-semibold text-primary transition hover:bg-[#f4f8fc]"
-              >
-                Withdraw
-              </button>
-            </div>
-          </div>
-
-          {/* Wallet Status */}
-          <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-primary">
-              Wallet Status
-            </h2>
-
-            <div className="mt-5 flex items-center justify-between border-b border-[#e6edf4] pb-4">
-              <span className="text-sm text-gray-500">
-                Wallet Status
-              </span>
-
-              <span className="rounded-full bg-[#e9f9f2] px-3 py-1 text-xs font-medium text-[#428060]">
-                Active
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between border-b border-[#e6edf4] py-4">
-              <span className="text-sm text-gray-500">
-                Wallet ID
-              </span>
-
-              <span className="text-sm font-medium text-[#40556d]">
-                WAL-000123
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between py-4">
-              <span className="text-sm text-gray-500">
-                Currency
-              </span>
-
-              <span className="text-sm font-medium text-[#40556d]">
-                Nigerian Naira (NGN)
-              </span>
-            </div>
-          </div>
-
-          {/* Bank Account */}
-          <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-primary">
-                Bank Account
-              </h2>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Manage the bank account connected to your wallet.
-              </p>
-            </div>
-
-            {/* Account Name */}
-            <div className="mb-4">
-              <label className="mb-2 block text-sm font-medium text-[#40556d]">
-                Account Name
-              </label>
-
-              <input
-                type="text"
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-                className="w-full rounded-lg border border-[#d8e4ef] px-4 py-3 text-sm text-[#243b53] outline-none transition focus:border-primary"
-              />
-            </div>
-
-            {/* Bank Name */}
-            <div className="mb-4">
-              <label className="mb-2 block text-sm font-medium text-[#40556d]">
-                Bank Name
-              </label>
-
-              <select
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                className="w-full rounded-lg border border-[#d8e4ef] bg-white px-4 py-3 text-sm text-[#243b53] outline-none transition focus:border-primary"
-              >
-                <option>First Bank</option>
-                <option>GTBank</option>
-                <option>Access Bank</option>
-                <option>UBA</option>
-                <option>Zenith Bank</option>
-                <option>Opay</option>
-                <option>Moniepoint</option>
-              </select>
-            </div>
-
-            {/* Account Number */}
-            <div className="mb-6">
-              <label className="mb-2 block text-sm font-medium text-[#40556d]">
-                Account Number
-              </label>
-
-              <input
-                type="text"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                maxLength={10}
-                className="w-full rounded-lg border border-[#d8e4ef] px-4 py-3 text-sm text-[#243b53] outline-none transition focus:border-primary"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => alert("Bank information updated")}
-              className="w-full rounded-lg bg-tetiary py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
-            >
-              Update Bank Information
-            </button>
-          </div>
-
-          {/* Wallet Security */}
-          <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-primary">
-              Wallet Security
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Important information about your wallet.
-            </p>
-
-            <div className="mt-6 rounded-lg bg-[#fff8e8] p-4">
-              <div className="flex gap-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e5a500] text-xs font-bold text-white">
-                  !
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-[#755b18]">
-                    Keep your wallet secure
-                  </h3>
-
-                  <p className="mt-1 text-xs leading-5 text-[#8b7538]">
-                    Make sure your bank information is correct before
-                    making withdrawals. Some changes may require
-                    additional verification.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-lg bg-[#f5f9fd] p-4">
-              <p className="text-xs leading-5 text-gray-500">
-                Your wallet information is protected and can only be
-                accessed by you after successful authentication.
-              </p>
-            </div>
-          </div>
-
-          {/* Transaction Information */}
-          <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm lg:col-span-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-primary">
-                  Recent Wallet Activity
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Your most recent wallet transactions.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                View All
-              </button>
-            </div>
-
-            <div className="mt-5 divide-y divide-[#e6edf4]">
-              <div className="flex items-center justify-between py-4">
-                <div>
-                  <p className="text-sm font-medium text-[#243b53]">
-                    Wallet Deposit
-                  </p>
-
-                  <p className="mt-1 text-xs text-gray-400">
-                    Sep 14, 2026 · 10:32 AM
-                  </p>
-                </div>
-
-                <span className="text-sm font-semibold text-tetiary">
-                  +₦100,000.00
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-4">
-                <div>
-                  <p className="text-sm font-medium text-[#243b53]">
-                    Property Purchase
-                  </p>
-
-                  <p className="mt-1 text-xs text-gray-400">
-                    Sep 12, 2026 · 02:15 PM
-                  </p>
-                </div>
-
-                <span className="text-sm font-semibold text-red-500">
-                  -₦50,000.00
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-4">
-                <div>
-                  <p className="text-sm font-medium text-[#243b53]">
-                    Wallet Deposit
-                  </p>
-
-                  <p className="mt-1 text-xs text-gray-400">
-                    Sep 10, 2026 · 09:40 AM
-                  </p>
-                </div>
-
-                <span className="text-sm font-semibold text-tetiary">
-                  +₦200,000.00
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+ 
     </div>
   );
 }
