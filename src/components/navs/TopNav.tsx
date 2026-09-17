@@ -37,7 +37,7 @@ const TopNav: React.FC<TopNavProps> = ({ showSearchBar = true }) => {
   }, [searchQuery]);
 
   return (
-    <div className="w-full py-2 flex gap-3 items-center justify-between">
+   <div className="w-full py-2 flex items-center justify-between gap-3">
       <img src={assets.logo} alt="Platform Logo" className="w-10" />
       <div className="flex gap-6 items-center">
         {showSearchBar && (

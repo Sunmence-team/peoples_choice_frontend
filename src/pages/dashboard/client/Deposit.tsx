@@ -219,10 +219,6 @@ const DepositRequest = () => {
                     </div>
                 </div>
 
-                {/* ========================= */}
-                {/* STEP 2 */}
-                {/* ========================= */}
-
                 <form
                     onSubmit={formik.handleSubmit}
                     className="rounded-xl border border-[#e5edf5] bg-white p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]"
@@ -386,7 +382,7 @@ const DepositRequest = () => {
                     <button
                         type="submit"
                         disabled={mutation.isPending}
-                        className="flex h-10 w-full items-center justify-center rounded-lg bg-tetiary text-[11px] font-bold text-white transition hover:bg-tetiary/80 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex h-10 w-full items-center justify-center rounded-lg bg-primary cursor-pointer text-[11px] font-bold text-white transition hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {mutation.isPending ? (
                             <>
@@ -403,8 +399,10 @@ const DepositRequest = () => {
                     </button>
                 </form>
             </div>
-
-            <DepositStatusTracker status="pending_verification" />
+            
+            <div className="mt-5">
+                <DepositStatusTracker status="pending_verification" />
+            </div>
         </div>
     );
 };
