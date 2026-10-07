@@ -44,8 +44,6 @@ const validationSchema = Yup.object({
 });
 
 export default function Withdrawal() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const formik = useFormik<WithdrawalFormValues>({
     initialValues: {
       amount: "",
@@ -271,10 +269,10 @@ export default function Withdrawal() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={formik.isSubmitting}
               className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? (
+              {formik.isSubmitting ? (
                 <>
                   <svg
                     className="mr-2 h-4 w-4 animate-spin"
