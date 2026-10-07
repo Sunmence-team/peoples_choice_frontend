@@ -20,9 +20,9 @@ export default function Profile() {
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
-  const [accountName, setAccountName] = useState("Areez Kamal");
-  const [bankName, setBankName] = useState("First Bank");
-  const [accountNumber, setAccountNumber] = useState("0123456789");
+  // const [accountName, setAccountName] = useState("Areez Kamal");
+  // const [bankName, setBankName] = useState("First Bank");
+  // const [accountNumber, setAccountNumber] = useState("0123456789");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
