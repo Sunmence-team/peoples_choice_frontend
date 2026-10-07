@@ -48,7 +48,7 @@ export default function Profile() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-5 flex w-fit gap-5 rounded-lg p-1">
+      <div className="mb-5 flex w-full gap-5 rounded-lg p-1 overflow-x-auto">
         <button
           onClick={() => setActiveTab("personal")}
           className={`rounded-md px-8 py-3 text-sm font-medium cursor-pointer transition ${
@@ -165,7 +165,7 @@ export default function Profile() {
             <button
               type="button"
               onClick={handleUpdateProfile}
-              className="w-full rounded-lg bg-tetiary cursor-pointer py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
+              className="w-full rounded-lg bg-primary cursor-pointer py-3 text-sm font-semibold text-white transition hover:bg-primary/80"
             >
               Update Profile
             </button>
