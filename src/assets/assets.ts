@@ -10,6 +10,6 @@ export const assets = {
   phone,
   human,
   login,
-  Untitleddesign,,
+  Untitleddesign,
   ether
 };
