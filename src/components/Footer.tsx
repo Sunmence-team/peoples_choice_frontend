@@ -194,7 +194,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Footer */}
-        <div className="flex flex-col gap-3 border-t border-light/20 py-4 sm:flex-row sm:items-center sm:justify-between"></div>
+        <div className="flex flex-col gap-3 border-t border-gray-500 py-4 sm:flex-row sm:items-center sm:justify-between"></div>
       </div>
     </footer>
   );
