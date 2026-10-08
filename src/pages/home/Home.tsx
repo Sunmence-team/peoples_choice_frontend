@@ -32,7 +32,7 @@ const Home: React.FC = () => {
 
             <div className="mt-9 flex flex-wrap gap-3">
               <Link
-                to="/login"
+                to="/signup"
                 className="w-fit rounded-md bg-primary flex justify-center items-center gap-2 px-4 py-2 text-sm font-medium text-white"
               >
                 Create Account <FaArrowRight />

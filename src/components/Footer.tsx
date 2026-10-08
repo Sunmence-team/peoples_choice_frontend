@@ -6,6 +6,7 @@ import {
   FaLinkedinIn,
 } from "react-icons/fa";
 import { assets } from "../assets/assets";
+import { Link } from "react-router-dom";
 
 const Footer: React.FC = () => {
   return (
@@ -13,11 +14,13 @@ const Footer: React.FC = () => {
       <div>
         <div className="grid gap-8 pb-7 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <img
-              src={assets.Untitleddesign}
-              alt="Go4bill"
-              className="h-25 w-auto"
-            />
+            <div className="relative  bottom-7">
+              <img
+                src={assets.Untitleddesign}
+                alt="Go4bill"
+                className="h-25  w-auto"
+              />
+            </div>
 
             <p className="mt-2 max-w-[190px] text-[9px] lg:text-[14px] leading-5 text-white">
               A simple and transparent way to manage your digital funds,
@@ -65,42 +68,41 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-[10px] lg:text-xl font-bold">Platform</h3>
 
-            <ul className="mt-3 space-y-2">
-              <li>
-                <a
-                  href="#"
-                  className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
-                >
-                  How It Works
-                </a>
-              </li>
+            <ul className="mt-3 flex flex-col gap-2">
+              <Link
+                to="/"
+                className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
+              >
+                Home
+              </Link>
 
-              <li>
-                <a
-                  href="#"
-                  className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
-                >
-                  Features
-                </a>
-              </li>
+              <Link
+                to="/#about"
+                className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
+              >
+                About
+              </Link>
 
-              <li>
-                <a
-                  href="#"
-                  className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
-                >
-                  FAQs
-                </a>
-              </li>
+              <Link
+                to="/#features"
+                className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
+              >
+                Features
+              </Link>
 
-              <li>
-                <a
-                  href="#"
-                  className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
-                >
-                  Create Account
-                </a>
-              </li>
+              <Link
+                to="/#how-it-works"
+                className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
+              >
+                How it work
+              </Link>
+
+              <Link
+                to="/#faq"
+                className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
+              >
+                Faq
+              </Link>
             </ul>
           </div>
 
@@ -111,7 +113,7 @@ const Footer: React.FC = () => {
             <ul className="mt-3 space-y-2">
               <li>
                 <a
-                  href="#"
+                  href="login"
                   className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
                 >
                   Login
@@ -120,7 +122,7 @@ const Footer: React.FC = () => {
 
               <li>
                 <a
-                  href="#"
+                  href="signup"
                   className="text-[9px] lg:text-[12px] text-white transition hover:text-light"
                 >
                   Register
@@ -192,15 +194,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Footer */}
-        <div className="flex flex-col gap-3 border-t border-light py-4 sm:flex-row sm:items-center sm:justify-between">
-          {/* <a
-            href="#"
-            className="flex items-center gap-1 text-[8px] text-white/60 transition hover:text-white"
-          >
-            Back to top
-            <FaArrowRight className="-rotate-90" size={8} />
-          </a> */}
-        </div>
+        <div className="flex flex-col gap-3 border-t border-light/20 py-4 sm:flex-row sm:items-center sm:justify-between"></div>
       </div>
     </footer>
   );
