@@ -42,11 +42,11 @@ const ReusableTable = <T extends { id?: number | string }>({
                 <input
                   type="checkbox"
                   id="rowCheckBox"
-                  className="peer appearance-none hidden size-4 rounded-md border border-tableBorder bg-secondary outline-0"
+                  className="peer appearance-none hidden size-4 rounded-md border border-secondary/80 bg-secondary outline-0"
                   checked={allRowsSelected}
                   onChange={(e) => onToggleAllRows?.(e.target.checked)}
                 />
-                <span className="relative size-5 mx-auto pointer-events-none rounded border border-tableBorder bg-secondary peer-checked:bg-primary peer-checked:border-primary transition-all"></span>
+                <span className="relative size-5 mx-auto pointer-events-none rounded border border-secondary/80 bg-secondary peer-checked:bg-primary peer-checked:border-primary transition-all"></span>
                 <span className="hidden peer-checked:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-0.5 w-[7px] h-3 border-r-3 border-b-3 border-white rotate-45"></span>
               </label>
             ),
@@ -67,7 +67,7 @@ const ReusableTable = <T extends { id?: number | string }>({
               );
             },
             className:
-              "p-3 text-center border-x border-tableBorder first:border-s-0 last:border-e-0",
+              "p-3 text-center border-x border-secondary/80 first:border-s-0 last:border-e-0",
             tableHeadingClassName: "text-center!",
           },
         ]
@@ -100,7 +100,7 @@ const ReusableTable = <T extends { id?: number | string }>({
               {columnsWithSN.map((col, idx) => (
                 <th
                   key={col.key ?? idx}
-                  className={`px-3 py-1 text-[10px] font-medium text-tableHeading text-start border-x border-tableBorder first:border-s-0 last:border-e-0 whitespace-nowrap ${col.tableHeadingClassName}`}
+                  className={`px-3 py-1 text-[10px] font-medium text-primary text-start border-x border-secondary/80 first:border-s-0 last:border-e-0 whitespace-nowrap ${col.tableHeadingClassName}`}
                 >
                   {col.label}
                 </th>
@@ -110,7 +110,7 @@ const ReusableTable = <T extends { id?: number | string }>({
 
           <tbody>
             {isLoading ? (
-              <tr className="h-12 border-y border-tableBorder">
+              <tr className="h-12 border-y border-secondary/80">
                 <td colSpan={columnsWithSN.length}>
                   <div className="flex items-center justify-center gap-2 text-xs">
                     <LuLoaderCircle className="animate-spin" />
@@ -119,7 +119,7 @@ const ReusableTable = <T extends { id?: number | string }>({
                 </td>
               </tr>
             ) : error ? (
-              <tr className="h-12 border-y border-tableBorder">
+              <tr className="h-12 border-y border-secondary/80">
                 <td
                   colSpan={columnsWithSN.length}
                   className="px-3 py-1 text-[10px] text-center"
@@ -132,7 +132,7 @@ const ReusableTable = <T extends { id?: number | string }>({
                 </td>
               </tr>
             ) : data.length === 0 ? (
-              <tr className="h-11 border-y border-tableBorder">
+              <tr className="h-11 border-y border-secondary/80">
                 <td
                   colSpan={columnsWithSN.length}
                   className="px-3 py-1 text-[10px] text-center"
@@ -144,14 +144,14 @@ const ReusableTable = <T extends { id?: number | string }>({
               data.map((item, index) => (
                 <tr
                   key={(getRowId ? getRowId(item, index) : item.id) || index}
-                  className={`h-11 border-y border-tableBorder`}
+                  className={`h-11 border-y border-secondary`}
                 >
                   {columnsWithSN.map((col, idx) => (
                     <td
                       key={col.key ?? idx}
                       className={
                         col.className ||
-                        "px-3 py-1 text-[10px] whitespace-nowrap text-tableData font-medium border-x border-tableBorder first:border-s-0 last:border-e-0"
+                        "px-3 py-1 text-[10px] whitespace-nowrap text-tableData font-medium border-x border-secondary first:border-s-0 last:border-e-0"
                       }
                     >
                       {col.render

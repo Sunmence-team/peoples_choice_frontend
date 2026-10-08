@@ -1,6 +1,5 @@
 import { Outlet, useLocation } from "react-router-dom";
 import React, { useEffect } from "react";
-import type { RouteHandle } from "../lib/interfaces";
 import Navbar from "../components/navs/Navbar";
 import Footer from "../components/Footer";
 

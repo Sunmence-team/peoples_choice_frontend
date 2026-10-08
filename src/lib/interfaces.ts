@@ -22,15 +22,22 @@ export interface ActionCardProps {
   description: string;
   iconClassName: string;
 }
-export type TransactionStatus = "completed" | "pending";
+export type TransactionStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "completed";
 
 export interface Transaction {
+  id?: number | string;
   transaction_id: string;
   type: "deposit" | "withdrawal";
   network: string;
   amount: string;
   status: TransactionStatus;
   date: string;
+  walletAddress?: string;
+  transactionHash?: string;
 }
 
 export interface TableColumnProps<T = unknown> {
@@ -117,4 +124,40 @@ export interface UserProps {
 export interface BankProps {
   name: string;
   code: string;
+}
+
+export interface TransactionItem {
+  id: number;
+  transaction_id: string;
+  user_name: string;
+  type: "deposit" | "withdrawal";
+  network: string;
+  amount: number;
+  status: TransactionStatus;
+  date: string;
+  wallet_address?: string;
+  destination_address?: string;
+  note?: string;
+}
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  country: string;
+  role: string;
+  status: "active" | "disabled";
+  wallet_balance: number;
+  created_at: string;
+}
+
+export interface WalletBalance {
+  id: number;
+  username: string;
+  full_name: string;
+  balance: number;
+  currency: string;
+  last_updated: string;
 }

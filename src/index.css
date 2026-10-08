@@ -3,8 +3,8 @@
 
 @theme {
   --color-primary: #0b2d5b;
-  --color-secondary: #16A34A;
-  --color-light: #e5e7eb;
+  --color-secondary: #e5e7eb;
+  --color-tetiary: #16A34A;
 }
 
 * {

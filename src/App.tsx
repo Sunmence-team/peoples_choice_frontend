@@ -21,6 +21,16 @@ import Overview from "./pages/dashboard/client/Overview";
 import Profile from "./pages/dashboard/client/Profile";
 import Transaction from "./pages/dashboard/client/Transaction";
 
+// Admin Dashboards
+import AdminOverview from "./pages/dashboard/admin/Overview";
+import AdminUsers from "./pages/dashboard/admin/Users";
+import AdminBalances from "./pages/dashboard/admin/Balances";
+import AdminDeposits from "./pages/dashboard/admin/Deposits";
+import AdminWithdrawals from "./pages/dashboard/admin/Withdrawals";
+import AdminTransactions from "./pages/dashboard/admin/Transactions";
+import Withdrawl from "./pages/dashboard/client/Withdrawl";
+import DepositRequest from "./pages/dashboard/client/Deposit";
+
 
 function App() {
   return (
@@ -46,7 +56,7 @@ function App() {
         <Route
           index
           path="/dashboard/deposit"
-          element={<MainLayout pageName="Deposit" children={<Overview />} />}
+          element={<MainLayout pageName="Deposit" children={<DepositRequest />} />}
         />
         <Route
           index
@@ -56,12 +66,43 @@ function App() {
         <Route
           index
           path="/dashboard/withdrawl"
-          element={<MainLayout pageName="Withdrawl" children={<Overview />} />}
+          element={<MainLayout pageName="Withdrawl" children={<Withdrawl />} />}
         />
         <Route
           index
           path="/dashboard/transaction-history"
           element={<MainLayout pageName="Withdrawl" children={<Transaction />} />}
+        />
+
+        <Route
+          index
+          path="/dashboard/admin/overview"
+          element={<MainLayout pageName="Admin Dashboard" children={<AdminOverview />} />}
+        />
+        <Route
+          index
+          path="/dashboard/admin/users"
+          element={<MainLayout pageName="User Management" children={<AdminUsers />} />}
+        />
+        <Route
+          index
+          path="/dashboard/admin/balances"
+          element={<MainLayout pageName="Wallet Balances" children={<AdminBalances />} />}
+        />
+        <Route
+          index
+          path="/dashboard/admin/deposits"
+          element={<MainLayout pageName="Deposit Requests" children={<AdminDeposits />} />}
+        />
+        <Route
+          index
+          path="/dashboard/admin/withdrawals"
+          element={<MainLayout pageName="Withdrawal Requests" children={<AdminWithdrawals />} />}
+        />
+        <Route
+          index
+          path="/dashboard/admin/transactions"
+          element={<MainLayout pageName="Transactions" children={<AdminTransactions />} />}
         />
       </Routes>
     </>

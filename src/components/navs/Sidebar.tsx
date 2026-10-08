@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FiLogOut } from "react-icons/fi";
 import { MdSettings } from "react-icons/md";
-import { navItems } from "../../lib/navItems";
+import { navItems, adminNavItems } from "../../lib/navItems";
 import Modal from "../modal/Modal";
 import { useUser } from "../../hooks/useUser";
 
@@ -14,7 +14,13 @@ const Sidebar = ({
   const [showLogOutModal, setShowLogOutModal] = useState<boolean>(false);
   const { role, logout } = useUser();
 
-  const filteredLinks = navItems.filter((navItem) =>
+  const memberLinks = navItems.filter((navItem) =>
+    navItem.role
+      .map((r) => r.toLowerCase())
+      .includes(role?.toLowerCase() ?? ""),
+  );
+
+  const adminLinks = adminNavItems.filter((navItem) =>
     navItem.role
       .map((r) => r.toLowerCase())
       .includes(role?.toLowerCase() ?? ""),
@@ -22,30 +28,62 @@ const Sidebar = ({
 
   return (
     <div className="bg-white border-r border-primary/10 lg:w-full md:w-3/5 w-4/5 h-full px-2 py-4 md:pt-0 pt-8 flex flex-col">
-      <ul className="px-4 lg:mt-4 mt-8 flex flex-col gap-2 h-4/5 overflow-y-scroll no-scrollbar pb-6">
-        {filteredLinks.map((item, index) => {
-          return (
-            <NavLink
-              key={index}
-              to={item.path!}
-              className={({
-                isActive,
-              }) => `flex items-center gap-2 text-black transition-all duration-300 border-0 hover:bg-white hover:font-semibold hover:text-primary hover:shadow-md px-4 py-2.5 rounded-md cursor-pointer text-[11px] ${
-                isActive
-                  ? "bg-white text-primary font-semibold shadow-md border border-primary/5"
-                  : ""
-              }
-              `}
-              onClick={() => setIsOpen(false)}
-            >
-              <span>
-                <item.icon size={13} />
-              </span>
-              <span>{item.name}</span>
-            </NavLink>
-          );
-        })}
-      </ul>
+      <div className="px-4 lg:mt-4 mt-8 flex flex-col gap-1 h-4/5 overflow-y-scroll no-scrollbar pb-6">
+        <ul className="flex flex-col gap-2">
+          {memberLinks.map((item, index) => {
+            return (
+              <NavLink
+                key={index}
+                to={item.path!}
+                className={({
+                  isActive,
+                }) => `flex items-center gap-2 text-black transition-all duration-300 border-0 hover:bg-white hover:font-semibold hover:text-primary hover:shadow-md px-4 py-2.5 rounded-md cursor-pointer text-[11px] ${
+                  isActive
+                    ? "bg-white text-primary font-semibold shadow-md border border-primary/5"
+                    : ""
+                }
+                `}
+                onClick={() => setIsOpen(false)}
+              >
+                <span>
+                  <item.icon size={13} />
+                </span>
+                <span>{item.name}</span>
+              </NavLink>
+            );
+          })}
+        </ul>
+
+        {adminLinks.length > 0 && (
+          <div className="mt-6">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-tableHeading mb-2 px-4">
+              Admin
+            </p>
+            <ul className="flex flex-col gap-2">
+              {adminLinks.map((item, index) => (
+                <NavLink
+                  key={`admin-${index}`}
+                  to={item.path!}
+                  className={({
+                    isActive,
+                  }) => `flex items-center gap-2 text-black transition-all duration-300 border-0 hover:bg-white hover:font-semibold hover:text-primary hover:shadow-md px-4 py-2.5 rounded-md cursor-pointer text-[11px] ${
+                    isActive
+                      ? "bg-white text-primary font-semibold shadow-md border border-primary/5"
+                      : ""
+                  }
+                `}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span>
+                    <item.icon size={13} />
+                  </span>
+                  <span>{item.name}</span>
+                </NavLink>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
       <ul className="px-2 pt-2 border-t border-tableHeading/20 flex flex-col gap-1 justify-end mt-auto">
         <li>
