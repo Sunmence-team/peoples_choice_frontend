@@ -29,7 +29,7 @@ const HowItWorks: React.FC = () => {
       icon: <FaCoins size={20} />,
       step: "03",
       title: "Deposit USDT",
-      text: "Follow the provided instructions to make your USDT deposit.",
+      text: "Follow the steps to make your USDT deposit.",
     },
     {
       icon: <FaShieldAlt size={20} />,
@@ -41,13 +41,13 @@ const HowItWorks: React.FC = () => {
       icon: <FaWallet size={20} />,
       step: "05",
       title: "Wallet Credited",
-      text: "Once approved, the credited amount is reflected in your wallet.",
+      text: "Once approved, your wallet is credited",
     },
     {
       icon: <FaMoneyBillWave size={20} />,
       step: "06",
       title: "Request Withdrawal",
-      text: "Submit a withdrawal request when you want to withdraw your funds.",
+      text: "Request a withdrawal to access your funds.",
     },
   ];
 
@@ -91,7 +91,7 @@ const HowItWorks: React.FC = () => {
                 {step.icon}
               </div>
 
-              <p className="text-[9px] flex justify-start font-bold uppercase  text-secondary md:text-[10px] lg:text-[14px]">
+              <p className="text-[9px] flex justify-start font-bold uppercase  text-primary md:text-[10px] lg:text-[14px]">
                 Step {step.step}
               </p>
 
@@ -106,7 +106,7 @@ const HowItWorks: React.FC = () => {
           ))}
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-md bg-primary px-5 py-6 text-white sm:px-8">
+        <div className="mt-10 overflow-hidden rounded-md bg-primary px-5 py-10 text-white sm:px-8">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_2fr] lg:items-center">
             <div>
               <p className="mb-1 text-[8px] lg:text-sm font-bold uppercase tracking-[0.18em] text-secondary">

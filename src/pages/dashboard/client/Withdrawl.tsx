@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
@@ -44,8 +43,6 @@ const validationSchema = Yup.object({
 });
 
 export default function Withdrawal() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const formik = useFormik<WithdrawalFormValues>({
     initialValues: {
       amount: "",
@@ -94,7 +91,7 @@ export default function Withdrawal() {
           {/* Balance */}
           <div className="border-b border-gray-200 px-5 py-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tetiary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
                 <CircleUserRound
                   className="h-5 w-5 text-white"
                   strokeWidth={2}
@@ -271,10 +268,10 @@ export default function Withdrawal() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex h-10 w-full items-center justify-center rounded-lg bg-tertiary text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={formik.isSubmitting}
+              className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? (
+              {formik.isSubmitting ? (
                 <>
                   <svg
                     className="mr-2 h-4 w-4 animate-spin"

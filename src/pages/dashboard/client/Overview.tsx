@@ -36,7 +36,7 @@ export default function Overview() {
     {
       label: "TRANSACTION ID",
       key: "transaction_id",
-      render: (item) => item.transaction_id || "-" 
+      render: (item) => item.transaction_id || "-"
     },
     {
       label: "TYPE",
@@ -103,87 +103,117 @@ export default function Overview() {
       </div>
 
       <div className='grid grid-cols-1 gap-4 lg:grid-cols-[1.55fr_1fr]'>
-        <div className="relative min-h-[140px] overflow-hidden flex gap-6  rounded-xl bg-[#0B2D5B] p-4 text-white shadow-sm border-r-white">
-          <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/3" />
+        <div className="relative min-h-[140px] overflow-hidden rounded-xl bg-[#0B2D5B] p-4 text-white shadow-sm">
+          {/* Background decoration */}
+          <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/5" />
 
-          <div className=' flex flex-col gap-3'>
-            <div className="flex items-center gap-1.5 text-[8px] text-[#d9e4f0]">
-              <span className="flex h-10 w-10 items-center justify-center rounded-md border border-white/20 bg-white/10">
-                <Wallet size={20} />
-              </span>
-              <p className='text-[12px]'>Available Wallet Balance</p>
-              <button 
-              onClick={() => setShowBalance((prev) => !prev)}
-              >
-                {
-                  showBalance ? <EyeOff className='w-5 h-5'/> :
-                  <Eye className='w-5 h-5'/>
-                }
-              </button>
-            </div>
+          {/* Main content */}
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
 
-            <div className="mt-2 flex items-end gap-1.5">
-              <span className="text-[30px] font-bold leading-none tracking-[-1px]">
-               { showBalance ?  balance.toLocaleString() : "*******"}
-              </span>
-              <span className="mb-0.5 text-[9px] font-semibold text-[#dce8f5]">
-                USDT
-              </span>
-            </div>
+            {/* Wallet Balance */}
+            <div className="flex min-w-0 flex-1 flex-col gap-3">
 
-            <div className='flex items-center gap-4'>
-              <div className=" flex items-center gap-1 text-[13px] text-tetiary">
-                <span> <GoArrowUpRight size={18}/></span>
-                <span>+{percentage.toLocaleString()} this week</span>
+              {/* Header */}
+              <div className="flex items-center gap-2 text-[#d9e4f0]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/20 bg-white/10">
+                  <Wallet size={20} />
+                </span>
+
+                <p className="text-[12px] sm:text-[13px]">
+                  Available Wallet Balance
+                </p>
+
+                <button
+                  onClick={() => setShowBalance((prev) => !prev)}
+                  className="shrink-0 cursor-pointer"
+                >
+                  {showBalance ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
 
-              <p className="mt-1 text-[13px] text-[#b9cadc]">
-                ≈ ${balance}.00
-              </p>
+              {/* Balance */}
+              <div className="mt-2 flex items-end gap-1.5">
+                <span className="break-all text-[26px] font-bold leading-none tracking-[-1px] sm:text-[30px]">
+                  {showBalance ? balance.toLocaleString() : "*******"}
+                </span>
 
-            </div>
-
-
-            <div className=" flex gap-2">
-              <button className="rounded-md bg-tetiary px-3 py-2 text-[12px] font-semibold text-white">
-                Deposit USDT
-              </button>
-
-              <button className="rounded-md border border-white/30 px-3 py-2 text-[12px] font-semibold text-white">
-                Withdraw
-              </button>
-            </div>
-
-          </div>
-
-          <div className=" border-l border-white/10 pl-5 mt-5">
-            <div className="flex items-start gap-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e8f7ef] text-[#16a34a]">
-                <ArrowDownToLine size={18} />
+                <span className="mb-0.5 shrink-0 text-[9px] font-semibold text-[#dce8f5]">
+                  USDT
+                </span>
               </div>
 
-              <div>
-                <p className="text-[14px] text-[#8794a5]">
-                  Total Deposited
+              {/* Weekly + USD */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <div className="flex items-center gap-1 text-[12px] text-tetiary sm:text-[13px]">
+                  <GoArrowUpRight size={15} />
+                  <span>+{percentage.toLocaleString()} this week</span>
+                </div>
+
+                <p className="text-[12px] text-[#b9cadc] sm:text-[13px]">
+                  ≈ ${balance}.00
                 </p>
-                <p className="mt-1 text-[20px] font-bold">
-                  ${totlaDeposit.toLocaleString()}.00 USDT
-                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => navigate("/dashboard/deposit")}
+                  className="cursor-pointer rounded-md bg-tetiary px-3 py-2 text-[12px] font-semibold text-white transition hover:opacity-90"
+                >
+                  Deposit USDT
+                </button>
+
+                <button
+                  onClick={() => navigate("/dashboard/withdrawl")}
+                  className="cursor-pointer rounded-md border border-white/30 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-white/10"
+                >
+                  Withdraw
+                </button>
               </div>
             </div>
 
-            <div className="mt-5 flex items-start gap-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eef4fb] text-[#0B2D5B]">
-                <ArrowUpFromLine size={18} />
+            {/* Divider */}
+            <div className="h-px w-full bg-white/10 lg:h-auto lg:w-px lg:self-stretch" />
+
+            {/* Deposit / Withdrawal Stats */}
+            <div className="flex w-full flex-col gap-5 lg:w-auto lg:min-w-[280px] lg:pt-5">
+
+              {/* Total Deposited */}
+              <div className="flex items-start gap-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f7ef] text-[#16a34a]">
+                  <ArrowDownToLine size={18} />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-[13px] text-[#8794a5] sm:text-[14px]">
+                    Total Deposited
+                  </p>
+
+                  <p className="mt-1 break-words text-[18px] font-bold sm:text-[20px]">
+                    ${totlaDeposit.toLocaleString()}.00 USDT
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <p className="text-[14px] text-[#8794a5]">
-                  Total Withdrawn
-                </p>
-                <p className="mt-1 text-[20px] font-bold">
-                  ${totalwithdrawl.toLocaleString()}.00 USDT
-                </p>
+              {/* Total Withdrawn */}
+              <div className="flex items-start gap-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef4fb] text-[#0B2D5B]">
+                  <ArrowUpFromLine size={15} />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-[13px] text-[#8794a5] sm:text-[14px]">
+                    Total Withdrawn
+                  </p>
+
+                  <p className="mt-1 break-words text-[18px] font-bold sm:text-[20px]">
+                    ${totalwithdrawl.toLocaleString()}.00 USDT
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -200,24 +230,29 @@ export default function Overview() {
               icon={<ArrowDownToLine size={13} />}
               title="Deposit USDT"
               description="Fund your wallet"
+              onClick={() => navigate('/dashboard/deposit')}
             />
 
             <ActionCard
               icon={<ArrowUpFromLine size={13} />}
               title="Withdraw Funds"
               description="Request a withdrawal"
+              onClick={() => navigate('/dashboard/withdrawl')}
             />
 
             <ActionCard
               icon={<BarChart3 size={13} />}
               title="Transaction History"
               description="Track your activity"
+
+              onClick={() => navigate('/dashboard/transaction-history')}
             />
 
             <ActionCard
               icon={<UserRound size={13} />}
               title="Manage Profile"
               description="Update your details"
+              onClick={() => navigate('/dashboard/profile')}
             />
           </div>
         </div>
