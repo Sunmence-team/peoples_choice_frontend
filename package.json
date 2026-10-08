@@ -1,5 +1,5 @@
 {
-  "name": "pineleaf_land_buyback_admin_console",
+  "name": "peoples_choice_frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,7 +13,7 @@
   "dependencies": {
     "@floating-ui/react": "^0.27.18",
     "@tailwindcss/vite": "^4.1.17",
-    "@tanstack/react-query": "^5.100.10",
+    "@tanstack/react-query": "^5.103.2",
     "@tanstack/react-query-devtools": "^5.100.10",
     "all": "^0.0.0",
     "axios": "^1.13.2",
