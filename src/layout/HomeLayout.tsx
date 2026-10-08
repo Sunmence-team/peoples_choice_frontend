@@ -16,7 +16,7 @@ const HomeLayout: React.FC = () => {
   }
 
   useEffect(() => {
-    document.title = `Platform page | ${pageName}`;
+    document.title = `Peoples Choice Bank | ${pageName}`;
     if (hash) {
       setTimeout(() => {
         const id = hash.replace("#", "");
