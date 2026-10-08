@@ -54,13 +54,13 @@ const Features: React.FC = () => {
             Everything you need to manage your wallet.
           </h2>
 
-          <div className="grid grid-cols-1 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 overflow-hidden rounded-2xl border  border-[#E5E7EB] bg-white md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="border-1 border-light hover:bg-light/20 px-6 py-4"
+                className="border  border-[#E5E7EB] hover:bg-light/20 px-6 py-4"
               >
-                <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-full bg-[#DCFCE7] text-xl text-secondary">
+                <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-full bg-tetiary text-xl text-secondary">
                   {feature.icon}
                 </div>
 

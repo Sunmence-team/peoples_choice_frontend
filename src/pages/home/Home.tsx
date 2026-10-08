@@ -15,14 +15,14 @@ const Home: React.FC = () => {
       <section className="relative overflow-hidden">
         <div className="mx-auto flex  items-center px-6 py-12 lg:px-10 lg:py-0">
           <div className="w-full lg:w-1/2">
-            <p className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-secondary">
+            <p className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-tetiary">
               Simple. Secure. Trusted.
             </p>
 
             <h1 className="max-w-xl text-5xl font-bold leading-[1.08] tracking-[-0.04em] text-primary sm:text-6xl lg:text-7xl">
               Your Money,
               <br />
-              <span className="text-secondary">Made Simple.</span>
+              <span className="text-tetiary">Made Simple.</span>
             </h1>
 
             <p className="mt-6 max-w-lg text-base leading-6 text-black lg:text-lg">
