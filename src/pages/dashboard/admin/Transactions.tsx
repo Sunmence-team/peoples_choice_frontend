@@ -3,7 +3,7 @@ import ReusableTable from "../../../utility/ReusableTable";
 import ActionCell from "../../../components/ui/ActionCell";
 import StatusBadge from "../../../components/ui/StatusBadge";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
-import { adminTransactions } from "../../../lib/adminData";
+import { useAdminTransactions } from "../../../hooks/useAdminData";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
 import type { TransactionItem, TransactionStatus } from "../../../lib/interfaces";
 
@@ -19,16 +19,21 @@ const filters: { label: string; value: Filter }[] = [
 
 const Transactions: React.FC = () => {
   const [filter, setFilter] = useState<Filter>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selected, setSelected] = useState<TransactionItem | null>(null);
   const [viewModal, setViewModal] = useState(false);
 
-  const filtered =
-    filter === "all"
-      ? adminTransactions
-      : adminTransactions.filter((item) => item.status === filter);
+  const { data, isLoading, error } = useAdminTransactions(
+    currentPage,
+    itemsPerPage,
+    filter === "all" ? undefined : filter
+  );
+
+  const items = data?.items ?? [];
 
   const openView = (id: number) => {
-    const found = adminTransactions.find((item) => item.id === id);
+    const found = items.find((item) => item.id === id);
     if (found) {
       setSelected(found);
       setViewModal(true);
@@ -126,16 +131,16 @@ const Transactions: React.FC = () => {
       </div>
 
       <ReusableTable
-        isLoading={false}
-        error={false}
-        data={filtered}
+        isLoading={isLoading}
+        error={error}
+        data={items}
         columns={columns}
-        currentPage={1}
-        totalPages={1}
-        totalItems={adminTransactions.length}
-        setCurrentPage={() => {}}
-        itemsPerPage={10}
-        setItemsPerPage={() => {}}
+        currentPage={currentPage}
+        totalPages={data?.totalPages ?? 1}
+        totalItems={data?.total ?? items.length}
+        setCurrentPage={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
         hasSerialNo={true}
       />
 

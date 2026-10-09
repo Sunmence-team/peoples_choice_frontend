@@ -1,62 +1,94 @@
+import { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
   ChevronDown,
   CircleUserRound,
 } from "lucide-react";
+import { toast } from "sonner";
 import { WithdrawalStatusFlow } from "../../../components/Tracker/WithdrawlTracker";
-
-type Network = "TRC20" | "ERC20" | "BEP20";
+import {
+  useDashboard,
+  useMyWithdrawals,
+  useRequestWithdrawal,
+  useWallets,
+} from "../../../hooks/useClientData";
+import { getErrorMessage } from "../../../helpers/api";
 
 interface WithdrawalFormValues {
   amount: string;
-  network: Network | "";
-  walletAddress: string;
-  note: string;
+  network: string;
+  destination_address: string;
 }
 
-const AVAILABLE_BALANCE = 2450;
-
-const networks: Network[] = ["TRC20", "ERC20", "BEP20"];
-
-const validationSchema = Yup.object({
-  amount: Yup.number()
-    .typeError("Please enter a valid amount")
-    .required("Withdrawal amount is required")
-    .positive("Amount must be greater than 0")
-    .max(
-      AVAILABLE_BALANCE,
-      `Amount cannot exceed your available balance of ${AVAILABLE_BALANCE} USDT`
-    ),
-
-  network: Yup.string()
-    .oneOf(["TRC20", "ERC20", "BEP20"], "Please select a valid network")
-    .required("Please select a network"),
-
-  walletAddress: Yup.string()
-    .trim()
-    .required("Wallet address is required")
-    .min(10, "Please enter a valid wallet address"),
-
-  note: Yup.string()
-    .max(250, "Note cannot exceed 250 characters"),
-});
-
 export default function Withdrawal() {
+  const { data: stats, isLoading: statsLoading } = useDashboard();
+  const { data: wallets } = useWallets();
+  const { data: withdrawals } = useMyWithdrawals(1, 5);
+  const requestMutation = useRequestWithdrawal();
+
+  const availableBalance = stats?.balance ?? 0;
+  const networks = Array.from(
+    new Set((wallets ?? []).map((wallet) => wallet.type))
+  );
+
   const formik = useFormik<WithdrawalFormValues>({
     initialValues: {
       amount: "",
       network: "",
-      walletAddress: "",
-      note: "",
+      destination_address: "",
     },
 
-    validationSchema,
+    validationSchema: Yup.object({
+      amount: Yup.number()
+        .typeError("Please enter a valid amount")
+        .required("Withdrawal amount is required")
+        .positive("Amount must be greater than 0")
+        .max(
+          availableBalance,
+          `Amount cannot exceed your available balance of ${availableBalance.toLocaleString()} USDT`
+        ),
 
-    onSubmit: async (values) => {
-     console.log(values)
+      network: Yup.string().required("Please select a network"),
+
+      destination_address: Yup.string()
+        .trim()
+        .required("Wallet address is required")
+        .min(10, "Please enter a valid wallet address"),
+    }),
+
+    onSubmit: async (values, helpers) => {
+      const wallet =
+        wallets?.find((item) => item.type === values.network) ?? wallets?.[0];
+
+      if (!wallet) {
+        toast.error("No company wallet available for the selected network");
+        return;
+      }
+
+      try {
+        await requestMutation.mutateAsync({
+          amount: values.amount,
+          destination_address: values.destination_address,
+          wallet_address_id: wallet.id,
+          crypto_type: values.network,
+        });
+        toast.success("Withdrawal request submitted");
+        helpers.resetForm();
+      } catch (error) {
+        toast.error(
+          getErrorMessage(error, "Failed to submit withdrawal request")
+        );
+      }
     },
   });
+
+  useEffect(() => {
+    if (!formik.values.network && networks.length > 0) {
+      formik.setFieldValue("network", networks[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [networks.join(",")]);
 
   const amountError =
     formik.touched.amount && formik.errors.amount;
@@ -65,10 +97,16 @@ export default function Withdrawal() {
     formik.touched.network && formik.errors.network;
 
   const walletError =
-    formik.touched.walletAddress &&
-    formik.errors.walletAddress;
+    formik.touched.destination_address &&
+    formik.errors.destination_address;
 
-    const style = "w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-3 text-xs text-primary outline-none transition placeholder:text-gray-400"
+  const latestWithdrawal = withdrawals?.items?.[0];
+  const statusMap: Record<string, "submitted" | "pending_review" | "approved" | "rejected"> = {
+    pending: "pending_review",
+    approved: "approved",
+    completed: "approved",
+    rejected: "rejected",
+  };
 
   return (
     <div className="w-full">
@@ -105,9 +143,11 @@ export default function Withdrawal() {
 
                 <div className="flex items-baseline gap-1">
                   <span className="text-xl font-bold text-primary">
-                    {AVAILABLE_BALANCE.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                    })}
+                    {statsLoading
+                      ? "..."
+                      : availableBalance.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                        })}
                   </span>
 
                   <span className="text-[12px] font-bold text-primary">
@@ -116,7 +156,7 @@ export default function Withdrawal() {
                 </div>
 
                 <p className="text-[10px] font-medium text-gray-400">
-                  ≈ ${AVAILABLE_BALANCE.toLocaleString("en-US", {
+                  ≈ ${statsLoading ? "..." : availableBalance.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                   })}
                 </p>
@@ -127,6 +167,7 @@ export default function Withdrawal() {
           {/* Form */}
           <form
             onSubmit={formik.handleSubmit}
+            noValidate
             className="space-y-4 p-5"
           >
             {/* Withdrawal Amount */}
@@ -209,18 +250,18 @@ export default function Withdrawal() {
             {/* Wallet Address */}
             <div>
               <label
-                htmlFor="walletAddress"
+                htmlFor="destination_address"
                 className="mb-2 block text-[11px] font-bold text-primary"
               >
                 USDT Wallet Address
               </label>
 
               <input
-                id="walletAddress"
-                name="walletAddress"
+                id="destination_address"
+                name="destination_address"
                 type="text"
                 placeholder="Enter wallet address"
-                value={formik.values.walletAddress}
+                value={formik.values.destination_address}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className={`h-10 w-full rounded-lg border bg-white px-3 text-xs text-primary outline-none transition placeholder:text-gray-400 ${
@@ -232,46 +273,18 @@ export default function Withdrawal() {
 
               {walletError && (
                 <p className="mt-1 text-[10px] font-medium text-red-500">
-                  {formik.errors.walletAddress}
+                  {formik.errors.destination_address}
                 </p>
               )}
-            </div>
-
-            {/* Note */}
-            <div>
-              <label
-                htmlFor="note"
-                className="mb-2 block text-[11px] font-bold text-primary"
-              >
-                Withdrawal Note (Optional)
-              </label>
-
-              <textarea
-                id="note"
-                name="note"
-                rows={3}
-                placeholder="Add a note (optional)"
-                value={formik.values.note}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className={style}
-              />
-
-              {formik.touched.note &&
-                formik.errors.note && (
-                  <p className="mt-1 text-[10px] font-medium text-red-500">
-                    {formik.errors.note}
-                  </p>
-                )}
             </div>
 
             {/* Submit */}
             <button
               type="submit"
-              disabled={formik.isSubmitting}
+              disabled={formik.isSubmitting || requestMutation.isPending}
               className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {formik.isSubmitting ? (
+              {formik.isSubmitting || requestMutation.isPending ? (
                 <>
                   <svg
                     className="mr-2 h-4 w-4 animate-spin"
@@ -303,7 +316,13 @@ export default function Withdrawal() {
           </form>
         </div>
 
-        <WithdrawalStatusFlow status="pending_review" />
+        <WithdrawalStatusFlow
+          status={
+            latestWithdrawal
+              ? statusMap[latestWithdrawal.status] ?? "pending_review"
+              : "submitted"
+          }
+        />
       </div>
     </div>
   );

@@ -1,11 +1,56 @@
 import { useState } from "react";
 import { FiEye, FiEyeOff, FiLock, FiMail } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { assets } from "../../assets/assets";
+import { useLogin } from "../../hooks/useAuth";
+import { useUser } from "../../hooks/useUser";
+import { getErrorMessage } from "../../helpers/api";
+import { isAdminRole, isAdminUser } from "../../helpers/role";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const loginMutation = useLogin();
+  const { login, refreshUser } = useUser();
+  const navigate = useNavigate();
+
+  const formik = useFormik({
+    initialValues: { email: "", password: "" },
+    validationSchema: Yup.object({
+      email: Yup.string().required("Email is required").email("Enter a valid email"),
+      password: Yup.string().required("Password is required"),
+    }),
+    onSubmit: async (values) => {
+      try {
+        const result = await loginMutation.mutateAsync(values);
+        if (!result.token) {
+          throw new Error("No token returned from server. Check API response shape.");
+        }
+        login(result.token, result.user, result.role);
+
+        let finalRole = result.role;
+        if (!result.user) {
+          await refreshUser(result.token);
+          finalRole = localStorage.getItem("role") ?? result.role;
+        }
+
+        toast.success("Signed in successfully");
+        navigate(
+          isAdminRole(finalRole) || isAdminUser(result.user, finalRole)
+            ? "/dashboard/admin/overview"
+            : "/dashboard/overview"
+        );
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Unable to sign in"));
+      }
+    },
+  });
+
+  const isSubmitting = loginMutation.isPending || formik.isSubmitting;
 
   return (
     <div className="min-h-screen w-full bg-white lg:flex">
@@ -70,7 +115,7 @@ const Login: React.FC = () => {
             </p>
           </div>
 
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={formik.handleSubmit} noValidate>
             {/* Email */}
             <div>
               <label className="mb-2 block text-xs font-semibold  tracking-wide text-black">
@@ -85,10 +130,18 @@ const Login: React.FC = () => {
 
                 <input
                   type="email"
+                  name="email"
                   placeholder="alade@example.com"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="h-[55px] w-full rounded-md border border-light bg-white px-4 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
                 />
               </div>
+
+              {formik.touched.email && formik.errors.email && (
+                <p className="mt-1 text-xs text-red-500">{formik.errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -105,7 +158,11 @@ const Login: React.FC = () => {
 
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
                   placeholder="Enter your password"
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="h-[55px] w-full rounded-md border border-gray-300 bg-white px-4 pr-12 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
                 />
 
@@ -117,6 +174,10 @@ const Login: React.FC = () => {
                   {showPassword ? <FiEyeOff size={19} /> : <FiEye size={19} />}
                 </button>
               </div>
+
+              {formik.touched.password && formik.errors.password && (
+                <p className="mt-1 text-xs text-red-500">{formik.errors.password}</p>
+              )}
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -140,9 +201,11 @@ const Login: React.FC = () => {
             {/* Login button */}
             <button
               type="submit"
-              className="h-[55px] w-full rounded-md bg-[#0d3566] text-sm font-semibold text-white transition hover:bg-[#092545]"
+              disabled={isSubmitting}
+              className="flex h-[55px] w-full items-center justify-center gap-2 rounded-md bg-[#0d3566] text-sm font-semibold text-white transition hover:bg-[#092545] disabled:opacity-60"
             >
-              Sign In to Your Account
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSubmitting ? "Signing in..." : "Sign In to Your Account"}
             </button>
           </form>
 

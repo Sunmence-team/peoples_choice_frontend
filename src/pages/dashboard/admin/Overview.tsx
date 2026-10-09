@@ -6,47 +6,44 @@ import { IoArrowDown, IoArrowUp } from "react-icons/io5";
 import OverviewCards from "../../../components/cards/OverviewCards";
 import ReusableTable from "../../../utility/ReusableTable";
 import StatusBadge from "../../../components/ui/StatusBadge";
-import {
-  adminBalances,
-  adminDeposits,
-  adminTransactions,
-  adminUsers,
-  adminWithdrawals,
-} from "../../../lib/adminData";
+import { useAdminDashboard, useAdminTransactions } from "../../../hooks/useAdminData";
+import type { TransactionItem } from "../../../lib/interfaces";
 import {
   formatISODateToCustom,
   formatterUtility,
 } from "../../../helpers/formatterUtility";
 
 const Overview: React.FC = () => {
-  const totalWalletValue = adminBalances.reduce(
-    (sum, item) => sum + item.balance,
-    0,
-  );
-  const pendingDeposits = adminDeposits.filter(
-    (item) => item.status === "pending",
-  );
-  const pendingWithdrawals = adminWithdrawals.filter(
-    (item) => item.status === "pending",
-  );
+  const { data: stats, isLoading: statsLoading } = useAdminDashboard();
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const {
+    data: transactionsPage,
+    isLoading: transactionsLoading,
+    error: transactionsError,
+  } = useAdminTransactions(currentPage, 5);
+
+  const adminTransactions = transactionsPage?.items ?? [];
+  const totalWalletValue = stats?.balance ?? 0;
+  const pendingDepositsCount = stats?.pendingDeposits ?? 0;
+  const pendingWithdrawalsCount = stats?.pendingWithdrawals ?? 0;
 
   const columns = [
     {
       label: "TRANSACTION ID",
       key: "transaction_id",
-      render: (item: (typeof adminTransactions)[number]) => (
+      render: (item: TransactionItem) => (
         <span className="font-semibold">{item.transaction_id}</span>
       ),
     },
     {
       label: "USER",
       key: "user_name",
-      render: (item: (typeof adminTransactions)[number]) => item.user_name,
+      render: (item: TransactionItem) => item.user_name || "-",
     },
     {
       label: "TYPE",
       key: "type",
-      render: (item: (typeof adminTransactions)[number]) => (
+      render: (item: TransactionItem) => (
         <span
           className={`px-3 py-1 rounded-xl font-medium capitalize ${
             item.type === "deposit"
@@ -61,27 +58,26 @@ const Overview: React.FC = () => {
     {
       label: "NETWORK",
       key: "network",
-      render: (item: (typeof adminTransactions)[number]) => item.network,
+      render: (item: TransactionItem) => item.network,
     },
     {
       label: "AMOUNT",
       key: "amount",
-      render: (item: (typeof adminTransactions)[number]) => (
+      render: (item: TransactionItem) => (
         <span className="font-semibold">{item.amount}.00 USDT</span>
       ),
     },
     {
       label: "STATUS",
       key: "status",
-      render: (item: (typeof adminTransactions)[number]) => (
+      render: (item: TransactionItem) => (
         <StatusBadge status={item.status} />
       ),
     },
     {
       label: "DATE & TIME",
       key: "date",
-      render: (item: (typeof adminTransactions)[number]) =>
-        formatISODateToCustom(item.date),
+      render: (item: TransactionItem) => formatISODateToCustom(item.date),
     },
   ];
 
@@ -100,28 +96,28 @@ const Overview: React.FC = () => {
         <OverviewCards
           icon={LuUsersRound}
           title="Total Users"
-          value={adminUsers.length}
+          value={statsLoading ? "..." : stats?.totalUsers ?? 0}
           icon2={HiOutlineArrowTrendingUp}
         />
 
         <OverviewCards
           icon={LuWallet}
           title="Total Wallet Value"
-          value={formatterUtility(totalWalletValue)}
+          value={statsLoading ? "..." : formatterUtility(totalWalletValue)}
           icon2={HiOutlineArrowTrendingUp}
         />
 
         <OverviewCards
           icon={IoArrowDown}
           title="Pending Deposits"
-          value={pendingDeposits.length}
+          value={statsLoading ? "..." : pendingDepositsCount}
           icon2={HiOutlineArrowTrendingUp}
         />
 
         <OverviewCards
           icon={IoArrowUp}
           title="Pending Withdrawals"
-          value={pendingWithdrawals.length}
+          value={statsLoading ? "..." : pendingWithdrawalsCount}
           icon2={HiOutlineArrowTrendingUp}
         />
       </div>
@@ -132,20 +128,21 @@ const Overview: React.FC = () => {
             Recent Transactions
           </h2>
           <span className="flex items-center gap-1 text-[12px] text-[#8190a3]">
-            <TbReceiptDollar size={14} /> {adminTransactions.length} records
+            <TbReceiptDollar size={14} />{" "}
+            {transactionsPage?.total ?? adminTransactions.length} records
           </span>
         </div>
 
         <ReusableTable
-          isLoading={false}
-          error={false}
+          isLoading={transactionsLoading}
+          error={transactionsError}
           data={adminTransactions}
           columns={columns}
-          currentPage={1}
-          totalPages={1}
-          totalItems={adminTransactions.length}
-          setCurrentPage={() => {}}
-          itemsPerPage={10}
+          currentPage={currentPage}
+          totalPages={transactionsPage?.totalPages ?? 1}
+          totalItems={transactionsPage?.total ?? adminTransactions.length}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={5}
           setItemsPerPage={() => {}}
           hasSerialNo={true}
         />

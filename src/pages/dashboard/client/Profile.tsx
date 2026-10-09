@@ -1,13 +1,42 @@
 import React, { useRef, useState } from "react";
 
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useUser } from "../../../hooks/useUser";
+import {
+  useUpdateProfile,
+  useDeleteAccount,
+  useDisableAccount,
+} from "../../../hooks/useClientData";
+import ConfirmDialog from "../../../components/modal/ConfirmDialog";
+import { getErrorMessage } from "../../../helpers/api";
+import { formatShortDate } from "../../../helpers/formatterUtility";
+
 type Tab = "personal" | "security" | "wallet";
 
 export default function Profile() {
+  const { user } = useUser();
+  return <ProfileBody key={user?.id ?? "loading"} />;
+}
+
+function ProfileBody() {
   const [activeTab, setActiveTab] = useState<Tab>("personal");
 
-  const [fullName, setFullName] = useState("Areez Kamal");
-  const [email, setEmail] = useState("areezkamal@gmail.com");
-  const [phone, setPhone] = useState("+234 810 300 7467");
+  const { user, token, refreshUser } = useUser();
+  const updateMutation = useUpdateProfile();
+  const deleteMutation = useDeleteAccount();
+  const disableMutation = useDisableAccount();
+
+  const [firstName, setFirstName] = useState(user?.first_name ?? "");
+  const [lastName, setLastName] = useState(user?.last_name ?? "");
+  const [username, setUsername] = useState(user?.username ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [phone, setPhone] = useState(
+    (user as unknown as { phone?: string })?.phone ?? "",
+  );
+  const [country, setCountry] = useState(
+    (user as unknown as { country?: string })?.country ?? "",
+  );
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -20,9 +49,9 @@ export default function Profile() {
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
-  // const [accountName, setAccountName] = useState("Areez Kamal");
-  // const [bankName, setBankName] = useState("First Bank");
-  // const [accountNumber, setAccountNumber] = useState("0123456789");
+  const [disableReason, setDisableReason] = useState("");
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,15 +66,53 @@ export default function Profile() {
     }
   };
 
-  const handleUpdateProfile = () => {
-    console.log({
-      fullName,
-      email,
-      phone,
-    });
-
-    alert("Profile updated successfully!");
+  const handleUpdateProfile = async () => {
+    try {
+      await updateMutation.mutateAsync({
+        first_name: firstName,
+        last_name: lastName,
+        username,
+        phone,
+        country,
+        email,
+      });
+      toast.success("Profile updated successfully");
+      if (token) await refreshUser(token);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Unable to update profile"));
+    }
   };
+
+  const handleDisableAccount = async () => {
+    if (!disableReason.trim()) {
+      toast.error("Please provide a reason for disabling your account");
+      return;
+    }
+    try {
+      await disableMutation.mutateAsync(disableReason.trim());
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Unable to disable account"));
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteMutation.mutateAsync();
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Unable to delete account"));
+    }
+  };
+
+  const initials =
+    `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() ||
+    (user?.username?.[0] ?? "U").toUpperCase();
+
+  const createdAt = user?.created_at
+    ? formatShortDate(user.created_at)
+    : "—";
+  const lastLogin = user?.updated_at
+    ? formatShortDate(user.updated_at)
+    : "—";
 
   return (
     <div className="min-h-screen p-">
@@ -101,7 +168,7 @@ export default function Profile() {
                 />
               ) : (
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-white">
-                  AK
+                  {initials}
                 </div>
               )}
 
@@ -122,16 +189,45 @@ export default function Profile() {
               />
             </div>
 
-            {/* Full Name */}
+            {/* Names */}
+            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[#40556d]">
+                  First Name
+                </label>
+
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full rounded-lg border border-[#d8e4ef] bg-white px-4 py-3 text-sm text-[#243b53] outline-none transition focus:border-[#0c4778]"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[#40556d]">
+                  Last Name
+                </label>
+
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full rounded-lg border border-[#d8e4ef] bg-white px-4 py-3 text-sm text-[#243b53] outline-none transition focus:border-[#0c4778]"
+                />
+              </div>
+            </div>
+
+            {/* Username */}
             <div className="mb-4">
               <label className="mb-2 block text-sm font-medium text-[#40556d]">
-                Full Name
+                Username
               </label>
 
               <input
                 type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full rounded-lg border border-[#d8e4ef] bg-white px-4 py-3 text-sm text-[#243b53] outline-none transition focus:border-[#0c4778]"
               />
             </div>
@@ -151,7 +247,7 @@ export default function Profile() {
             </div>
 
             {/* Phone */}
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="mb-2 block text-sm font-medium text-[#40556d]">
                 Phone Number
               </label>
@@ -164,13 +260,31 @@ export default function Profile() {
               />
             </div>
 
+            {/* Country */}
+            <div className="mb-6">
+              <label className="mb-2 block text-sm font-medium text-[#40556d]">
+                Country
+              </label>
+
+              <input
+                type="text"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="w-full rounded-lg border border-[#d8e4ef] bg-white px-4 py-3 text-sm text-[#243b53] outline-none transition focus:border-[#0c4778]"
+              />
+            </div>
+
             {/* Update Button */}
             <button
               type="button"
               onClick={handleUpdateProfile}
-              className="w-full rounded-lg bg-primary cursor-pointer py-3 text-sm font-semibold text-white transition hover:bg-primary/80"
+              disabled={updateMutation.isPending}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary cursor-pointer py-3 text-sm font-semibold text-white transition hover:bg-primary/80 disabled:opacity-60"
             >
-              Update Profile
+              {updateMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+              {updateMutation.isPending ? "Updating..." : "Update Profile"}
             </button>
           </div>
 
@@ -184,7 +298,7 @@ export default function Profile() {
             <div className="border-b border-[#e6edf4] py-4 first:pt-0">
               <p className="mb-1 text-xs text-gray-400">User ID</p>
               <p className="text-sm font-medium text-[#52677c]">
-                #PC-000123
+                #PC-{String(user?.id ?? "—").padStart(6, "0")}
               </p>
             </div>
 
@@ -192,15 +306,15 @@ export default function Profile() {
             <div className="border-b border-[#e6edf4] py-4">
               <p className="mb-1 text-xs text-gray-400">Account Created</p>
               <p className="text-sm font-medium text-[#52677c]">
-                Sep 1, 2026
+                {createdAt}
               </p>
             </div>
 
-            {/* Last Login */}
+            {/* Last Updated */}
             <div className="border-b border-[#e6edf4] py-4">
-              <p className="mb-1 text-xs text-gray-400">Last Login</p>
+              <p className="mb-1 text-xs text-gray-400">Last Updated</p>
               <p className="text-sm font-medium text-[#52677c]">
-                Sep 14, 2026, 08:32 AM
+                {lastLogin}
               </p>
             </div>
 
@@ -316,12 +430,17 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => {
-                if (newPassword !== confirmPassword) {
-                  alert("Passwords do not match");
+                if (!currentPassword || !newPassword) {
+                  toast.error("All password fields are required");
                   return;
                 }
 
-                alert("Password updated successfully");
+                if (newPassword !== confirmPassword) {
+                  toast.error("Passwords do not match");
+                  return;
+                }
+
+                toast.info("Password change is not available yet");
               }}
               className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
             >
@@ -414,54 +533,94 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Login Activity */}
-          <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm lg:col-span-2">
-            <h2 className="text-lg font-semibold text-primary">
-              Recent Login Activity
+          {/* Danger Zone */}
+          <div className="rounded-xl border border-red-100 bg-white p-6 shadow-sm lg:col-span-2">
+            <h2 className="text-lg font-semibold text-red-600">
+              Account Actions
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              Review recent activity on your account.
+              Temporarily disable or permanently delete your account.
             </p>
 
-            <div className="mt-5 divide-y divide-[#e6edf4]">
-              <div className="flex items-center justify-between py-4">
-                <div>
-                  <p className="text-sm font-medium text-[#243b53]">
-                    Chrome · Windows
-                  </p>
+            <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {/* Disable */}
+              <div className="rounded-lg border border-[#e1eaf2] p-4">
+                <h3 className="text-sm font-semibold text-[#243b53]">
+                  Disable Account
+                </h3>
 
-                  <p className="mt-1 text-xs text-gray-400">
-                    Lagos, Nigeria · Sep 14, 2026
-                  </p>
-                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Your account will be disabled until you contact support.
+                </p>
 
-                <span className="rounded-full bg-[#e9f9f2] px-3 py-1 text-xs font-medium text-[#428060]">
-                  Current
-                </span>
+                <textarea
+                  rows={2}
+                  placeholder="Reason for disabling your account"
+                  value={disableReason}
+                  onChange={(e) => setDisableReason(e.target.value)}
+                  className="mt-3 w-full resize-none rounded-lg border border-[#d8e4ef] bg-white px-3 py-2 text-sm text-[#243b53] outline-none transition focus:border-primary"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowDisableConfirm(true)}
+                  disabled={disableMutation.isPending}
+                  className="mt-3 w-full rounded-lg border border-amber-500 py-2.5 text-sm font-semibold text-amber-600 transition hover:bg-amber-50 disabled:opacity-60"
+                >
+                  Disable My Account
+                </button>
               </div>
 
-              <div className="flex items-center justify-between py-4">
-                <div>
-                  <p className="text-sm font-medium text-[#243b53]">
-                    Chrome · Android
-                  </p>
+              {/* Delete */}
+              <div className="rounded-lg border border-red-100 p-4">
+                <h3 className="text-sm font-semibold text-red-600">
+                  Delete Account
+                </h3>
 
-                  <p className="mt-1 text-xs text-gray-400">
-                    Lagos, Nigeria · Sep 12, 2026
-                  </p>
-                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  This action is permanent and cannot be undone.
+                </p>
 
-                <span className="text-xs text-gray-400">
-                  2 days ago
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={deleteMutation.isPending}
+                  className="mt-3 w-full rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+                >
+                  Delete My Account
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
- 
+      <ConfirmDialog
+        isOpen={showDisableConfirm}
+        title="Disable your account?"
+        message="You will be signed out and your account will be disabled."
+        confirmText="Yes, Disable"
+        isLoading={disableMutation.isPending}
+        onCancel={() => setShowDisableConfirm(false)}
+        onConfirm={async () => {
+          await handleDisableAccount();
+          setShowDisableConfirm(false);
+        }}
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete your account?"
+        message="This permanently deletes your account and data. This cannot be undone."
+        confirmText="Yes, Delete"
+        isLoading={deleteMutation.isPending}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          await handleDeleteAccount();
+          setShowDeleteConfirm(false);
+        }}
+      />
     </div>
   );
 }

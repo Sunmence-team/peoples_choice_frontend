@@ -11,26 +11,31 @@ import { ActionCard } from '../../../components/cards/ActionCard';
 import ActionCell from '../../../components/ui/ActionCell';
 import ReusableTable from '../../../utility/ReusableTable';
 import { useUser } from '../../../hooks/useUser';
+import { useDashboard, useTransactionLedger } from '../../../hooks/useClientData';
 import { useNavigate } from 'react-router-dom';
-import { transactions } from '../../../lib/data';
 import type { TableColumnProps, Transaction } from '../../../lib/interfaces';
 import ViewTransactionModal from '../../../components/modal/ViewTransactionModal';
 import { GoArrowUpRight } from "react-icons/go";
 import { Eye, EyeOff } from "lucide-react";
+import { formatISODateToCustom } from '../../../helpers/formatterUtility';
 
 export default function Overview() {
 
   const { user } = useUser();
   const navigate = useNavigate();
+  const { data: stats, isLoading: statsLoading } = useDashboard();
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const { data: ledger, isLoading: ledgerLoading, error: ledgerError } =
+    useTransactionLedger(currentPage, 5);
 
   const [selectedTransaction, setSelectedTransaction] = React.useState<Transaction | null>(null);
   const [viewModal, setViewModal] = React.useState(false);
   const [showBalance, setShowBalance] = React.useState(false);
 
-  const balance = 2450
-  const percentage = 2.4
-  const totlaDeposit = 2750
-  const totalwithdrawl = 5200
+  const balance = stats?.balance ?? 0;
+  const totlaDeposit = stats?.totalDeposited ?? 0;
+  const totalwithdrawl = stats?.totalWithdrawn ?? 0;
+  const recentTransactions = ledger?.items ?? [];
 
   const columns: TableColumnProps<Transaction>[] = [
     {
@@ -60,7 +65,7 @@ export default function Overview() {
     {
       label: "DATE",
       key: "date",
-      render: (item) => item.date || "-",
+      render: (item) => formatISODateToCustom(item.date) || "-",
     },
     {
       label: "STATUS",
@@ -79,7 +84,9 @@ export default function Overview() {
           canView={true}
           rowId={Number(item.id ?? 0)}
           onView={(id) => {
-            const row = transactions.find((transactionItem) => Number(transactionItem.id) === id);
+            const row = recentTransactions.find(
+              (transactionItem) => Number(transactionItem.id) === id
+            );
             if (row) {
               setSelectedTransaction(row);
               setViewModal(true);
@@ -138,7 +145,7 @@ export default function Overview() {
               {/* Balance */}
               <div className="mt-2 flex items-end gap-1.5">
                 <span className="break-all text-[26px] font-bold leading-none tracking-[-1px] sm:text-[30px]">
-                  {showBalance ? balance.toLocaleString() : "*******"}
+                  {statsLoading ? "..." : showBalance ? balance.toLocaleString() : "*******"}
                 </span>
 
                 <span className="mb-0.5 shrink-0 text-[9px] font-semibold text-[#dce8f5]">
@@ -150,11 +157,11 @@ export default function Overview() {
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                 <div className="flex items-center gap-1 text-[12px] text-tetiary sm:text-[13px]">
                   <GoArrowUpRight size={15} />
-                  <span>+{percentage.toLocaleString()} this week</span>
+                  <span>Wallet overview</span>
                 </div>
 
                 <p className="text-[12px] text-[#b9cadc] sm:text-[13px]">
-                  ≈ ${balance}.00
+                  ≈ ${balance.toLocaleString()}.00
                 </p>
               </div>
 
@@ -271,15 +278,15 @@ export default function Overview() {
         </div>
 
         <ReusableTable
-          isLoading={false}
-          error={false}
-          data={transactions}
+          isLoading={ledgerLoading}
+          error={ledgerError}
+          data={recentTransactions}
           columns={columns}
-          currentPage={1}
-          totalPages={5}
-          totalItems={50}
-          setCurrentPage={() => { }}
-          itemsPerPage={10}
+          currentPage={currentPage}
+          totalPages={ledger?.totalPages ?? 1}
+          totalItems={ledger?.total ?? recentTransactions.length}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={5}
           setItemsPerPage={() => { }}
           hasSerialNo={true}
         />

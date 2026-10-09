@@ -10,14 +10,9 @@ import Sidebar from "../components/navs/Sidebar";
 type LayoutProps = {
   children: React.ReactNode;
   pageName: string;
-  showSearchBar?: boolean;
 };
 
-const MainLayout = ({
-  children,
-  pageName,
-  showSearchBar
-}: LayoutProps) => {
+const MainLayout = ({ children, pageName }: LayoutProps) => {
   useEffect(() => {
     document.title = "Platform Name - " + pageName;
   }, [pageName]);
@@ -114,7 +109,7 @@ const MainLayout = ({
         >
           <HiBars3 size={30} />
         </button>
-        <TopNav showSearchBar={showSearchBar} />
+        <TopNav />
       </div>
       <div className="flex items-start h-[calc(100vh-58px)]">
         <div
