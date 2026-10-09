@@ -8,12 +8,77 @@ import {
   FiUser,
   FiGlobe,
 } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { assets } from "../../assets/assets";
+import { useRegister } from "../../hooks/useAuth";
+import { useUser } from "../../hooks/useUser";
+import { getErrorMessage } from "../../helpers/api";
 
 const SignUp: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const registerMutation = useRegister();
+  const { login, refreshUser } = useUser();
+  const navigate = useNavigate();
+
+  const formik = useFormik({
+    initialValues: {
+      first_name: "",
+      last_name: "",
+      username: "",
+      phone: "",
+      email: "",
+      country: "",
+      password: "",
+      password_confirmation: "",
+    },
+    validationSchema: Yup.object({
+      first_name: Yup.string().required("First name is required"),
+      last_name: Yup.string().required("Last name is required"),
+      username: Yup.string().required("Username is required"),
+      phone: Yup.string().required("Phone number is required"),
+      email: Yup.string().required("Email is required").email("Enter a valid email"),
+      country: Yup.string().required("Country is required"),
+      password: Yup.string()
+        .required("Password is required")
+        .min(8, "Password must be at least 8 characters"),
+      password_confirmation: Yup.string()
+        .required("Confirm your password")
+        .oneOf([Yup.ref("password")], "Passwords do not match"),
+    }),
+    onSubmit: async (values) => {
+      try {
+        const result = await registerMutation.mutateAsync(values);
+
+        if (result?.token) {
+          login(result.token, result.user, result.role);
+          if (!result.user) await refreshUser(result.token);
+          toast.success("Account created successfully");
+          navigate("/dashboard/overview");
+          return;
+        }
+
+        toast.success("Account created. Please sign in.");
+        navigate("/login");
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Unable to create account"));
+      }
+    },
+  });
+
+  const isSubmitting = registerMutation.isPending || formik.isSubmitting;
+
+  const fieldClass =
+    "h-[55px] w-full rounded-md border border-light bg-white px-4 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11";
+
+  const errorText = (name: keyof typeof formik.values) =>
+    formik.touched[name] && formik.errors[name] ? (
+      <p className="mt-1 text-xs text-red-500">{formik.errors[name]}</p>
+    ) : null;
 
   return (
     <div className="min-h-screen w-full bg-white lg:flex">
@@ -39,7 +104,7 @@ const SignUp: React.FC = () => {
             </p>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={formik.handleSubmit} noValidate>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-2 block text-xs font-semibold tracking-wide text-black">
@@ -54,10 +119,15 @@ const SignUp: React.FC = () => {
 
                   <input
                     type="text"
+                    name="first_name"
                     placeholder="First name"
-                    className="h-[55px] w-full rounded-md border border-light bg-white px-4 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
+                    value={formik.values.first_name}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={fieldClass}
                   />
                 </div>
+                {errorText("first_name")}
               </div>
 
               {/* Last Name */}
@@ -74,10 +144,15 @@ const SignUp: React.FC = () => {
 
                   <input
                     type="text"
+                    name="last_name"
                     placeholder="Last name"
-                    className="h-[55px] w-full rounded-md border border-light bg-white px-4 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
+                    value={formik.values.last_name}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={fieldClass}
                   />
                 </div>
+                {errorText("last_name")}
               </div>
             </div>
 
@@ -95,10 +170,15 @@ const SignUp: React.FC = () => {
 
                 <input
                   type="text"
+                  name="username"
                   placeholder="Choose a username"
-                  className="h-[55px] w-full rounded-md border border-light bg-white px-4 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
+                  value={formik.values.username}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={fieldClass}
                 />
               </div>
+              {errorText("username")}
             </div>
 
             {/* Phone Number */}
@@ -115,10 +195,15 @@ const SignUp: React.FC = () => {
 
                 <input
                   type="tel"
+                  name="phone"
                   placeholder="Enter your phone number"
-                  className="h-[55px] w-full rounded-md border border-light bg-white px-4 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
+                  value={formik.values.phone}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={fieldClass}
                 />
               </div>
+              {errorText("phone")}
             </div>
 
             {/* Email */}
@@ -135,10 +220,15 @@ const SignUp: React.FC = () => {
 
                 <input
                   type="email"
+                  name="email"
                   placeholder="Enter your email address"
-                  className="h-[55px] w-full rounded-md border border-light bg-white px-4 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={fieldClass}
                 />
               </div>
+              {errorText("email")}
             </div>
 
             {/* Country */}
@@ -154,22 +244,26 @@ const SignUp: React.FC = () => {
                 />
 
                 <select
-                  defaultValue=""
+                  name="country"
+                  value={formik.values.country}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="h-[55px] w-full appearance-none rounded-md border border-light bg-white px-4 text-sm text-black outline-none transition focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
                 >
                   <option value="" disabled>
                     Select your country
                   </option>
 
-                  <option value="nigeria">Nigeria</option>
-                  <option value="ghana">Ghana</option>
-                  <option value="kenya">Kenya</option>
-                  <option value="south-africa">South Africa</option>
-                  <option value="united-kingdom">United Kingdom</option>
-                  <option value="united-states">United States</option>
-                  <option value="canada">Canada</option>
+                  <option value="Nigeria">Nigeria</option>
+                  <option value="Ghana">Ghana</option>
+                  <option value="Kenya">Kenya</option>
+                  <option value="South Africa">South Africa</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="USA">United States</option>
+                  <option value="Canada">Canada</option>
                 </select>
               </div>
+              {errorText("country")}
             </div>
 
             {/* Password */}
@@ -186,7 +280,11 @@ const SignUp: React.FC = () => {
 
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
                   placeholder="Create a password"
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="h-[55px] w-full rounded-md border border-gray-300 bg-white px-4 pr-12 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
                 />
 
@@ -198,6 +296,7 @@ const SignUp: React.FC = () => {
                   {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                 </button>
               </div>
+              {errorText("password")}
             </div>
 
             {/* Confirm Password */}
@@ -214,7 +313,11 @@ const SignUp: React.FC = () => {
 
                 <input
                   type={showConfirmPassword ? "text" : "password"}
+                  name="password_confirmation"
                   placeholder="Confirm your password"
+                  value={formik.values.password_confirmation}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="h-[55px] w-full rounded-md border border-gray-300 bg-white px-4 pr-12 text-sm text-black outline-none transition placeholder:text-black focus:border-[#0b376d] focus:ring-1 focus:ring-light sm:pl-11"
                 />
 
@@ -230,14 +333,17 @@ const SignUp: React.FC = () => {
                   )}
                 </button>
               </div>
+              {errorText("password_confirmation")}
             </div>
 
             {/* Create Account */}
             <button
               type="submit"
-              className="mt-2 h-[55px] w-full rounded-md bg-[#0d3566] text-sm font-semibold text-white transition hover:bg-[#092545]"
+              disabled={isSubmitting}
+              className="mt-2 flex h-[55px] w-full items-center justify-center gap-2 rounded-md bg-[#0d3566] text-sm font-semibold text-white transition hover:bg-[#092545] disabled:opacity-60"
             >
-              Create Your Account
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSubmitting ? "Creating your account..." : "Create Your Account"}
             </button>
           </form>
 

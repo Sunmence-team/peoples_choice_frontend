@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import api, { setupInterceptors } from "../helpers/api";
 import axios from "axios";
+import { toUserProps } from "../helpers/mappers";
 import type { UserProps } from "../lib/interfaces";
 import { UserContext } from "./UserContext";
 
@@ -34,11 +35,12 @@ export const UserProvider = ({ children }: userProviderProps) => {
       const response = await api.get("/user", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const { data } = response.data;
+      const data = toUserProps(response.data?.data ?? response.data);
       setUser(data);
-      setRole(data?.role ?? data?.crm_role);
+      const nextRole = data.role || (data.is_admin === 1 ? "admin" : "client");
+      setRole(nextRole);
       localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("role", data?.role || data?.crm_role);
+      localStorage.setItem("role", nextRole);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         logout();
@@ -72,7 +74,7 @@ export const UserProvider = ({ children }: userProviderProps) => {
     initAuth();
   }, [refreshUser, logout]);
 
-  const login = (token: string, userData: UserProps, role: string) => {
+  const login = (token: string, userData: UserProps | null, role: string) => {
     localStorage.setItem("token", token);
     localStorage.setItem("role", role);
     localStorage.setItem("user", JSON.stringify(userData));

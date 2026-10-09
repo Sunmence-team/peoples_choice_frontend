@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FiLogOut } from "react-icons/fi";
-import { MdSettings } from "react-icons/md";
 import { navItems, adminNavItems } from "../../lib/navItems";
 import Modal from "../modal/Modal";
 import { useUser } from "../../hooks/useUser";
+import { useLogout } from "../../hooks/useAuth";
+import { isAdminRole } from "../../helpers/role";
 
 const Sidebar = ({
   setIsOpen,
@@ -12,19 +13,22 @@ const Sidebar = ({
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const [showLogOutModal, setShowLogOutModal] = useState<boolean>(false);
-  const { role, logout } = useUser();
+  const { role } = useUser();
+  const logoutMutation = useLogout();
 
-  const memberLinks = navItems.filter((navItem) =>
-    navItem.role
-      .map((r) => r.toLowerCase())
-      .includes(role?.toLowerCase() ?? ""),
-  );
+  const isAdmin = isAdminRole(role);
 
-  const adminLinks = adminNavItems.filter((navItem) =>
-    navItem.role
-      .map((r) => r.toLowerCase())
-      .includes(role?.toLowerCase() ?? ""),
-  );
+  const matchesRole = (allowed: string[]) =>
+    allowed.includes("*") ||
+    allowed.some((r) => r && r.toLowerCase() === (role?.toLowerCase() ?? ""));
+
+  const memberLinks = isAdmin
+    ? []
+    : navItems.filter((navItem) => matchesRole(navItem.role));
+
+  const adminLinks = isAdmin
+    ? adminNavItems.filter((navItem) => matchesRole(navItem.role))
+    : [];
 
   return (
     <div className="bg-white border-r border-primary/10 lg:w-full md:w-3/5 w-4/5 h-full px-2 py-4 md:pt-0 pt-8 flex flex-col">
@@ -87,22 +91,6 @@ const Sidebar = ({
 
       <ul className="px-2 pt-2 border-t border-tableHeading/20 flex flex-col gap-1 justify-end mt-auto">
         <li>
-          <NavLink
-            to="/dashboard/settings"
-            className={({ isActive }) =>
-              `flex items-center gap-3 text-black transition-all duration-300 px-4 py-2.5 rounded-md border-0 cursor-pointer text-[11px] hover:bg-white hover:font-semibold hover:text-primary hover:shadow-md ${
-                isActive
-                  ? "bg-white text-primary font-semibold shadow-md border border-primary/5"
-                  : ""
-              }`
-            }
-          >
-            <MdSettings size={13} />
-            <span>Settings</span>
-          </NavLink>
-        </li>
-
-        <li>
           <button
             onClick={() => setShowLogOutModal(true)}
             className="flex items-center gap-3 text-black transition-all duration-300 px-4 py-2.5 rounded-md cursor-pointer text-[11px] hover:bg-white hover:font-semibold hover:text-primary hover:shadow-md w-full text-left"
@@ -129,10 +117,11 @@ const Sidebar = ({
               </button>
               <button
                 type="button"
-                onClick={logout}
-                className="bg-red-500 text-xs rounded-md font-medium text-white w-1/2 h-10 cursor-pointer"
+                disabled={logoutMutation.isPending}
+                onClick={() => logoutMutation.mutate()}
+                className="bg-red-500 text-xs rounded-md font-medium text-white w-1/2 h-10 cursor-pointer disabled:opacity-60"
               >
-                Yes, Logout
+                {logoutMutation.isPending ? "Logging out..." : "Yes, Logout"}
               </button>
             </div>
           </div>

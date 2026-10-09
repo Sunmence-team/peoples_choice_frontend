@@ -1,52 +1,65 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
+import { FaCheck, FaXmark } from "react-icons/fa6";
 import ReusableTable from "../../../utility/ReusableTable";
 import ActionCell from "../../../components/ui/ActionCell";
 import StatusBadge from "../../../components/ui/StatusBadge";
-import ConfirmDialog from "../../../components/modal/ConfirmDialog";
+import Modal from "../../../components/modal/Modal";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
-import { adminDeposits } from "../../../lib/adminData";
+import { useAdminDeposits, useApproveDeposit, useRejectDeposit } from "../../../hooks/useAdminData";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
+import { getErrorMessage } from "../../../helpers/api";
 import type { TransactionItem } from "../../../lib/interfaces";
 
 type Target = TransactionItem | null;
 
 const Deposits: React.FC = () => {
-  const [deposits, setDeposits] = useState<TransactionItem[]>(adminDeposits);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selected, setSelected] = useState<TransactionItem | null>(null);
   const [viewModal, setViewModal] = useState(false);
-  const [approveTarget, setApproveTarget] = useState<Target>(null);
-  const [rejectTarget, setRejectTarget] = useState<Target>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionTarget, setActionTarget] = useState<Target>(null);
+  const [actionType, setActionType] = useState<"approve" | "reject">("approve");
+  const [remarks, setRemarks] = useState("");
 
-  const approveDeposit = () => {
-    if (!approveTarget) return;
-    const target = approveTarget;
-    setTimeout(() => {
-      setDeposits((prev) =>
-        prev.map((item) =>
-          item.id === target.id ? { ...item, status: "approved" } : item,
-        ),
-      );
-      toast.success(`${target.user_name}'s deposit of ${target.amount} USDT approved`);
-      setIsSubmitting(false);
-      setApproveTarget(null);
-    }, 600);
+  const { data, isLoading, error } = useAdminDeposits(currentPage, itemsPerPage);
+  const deposits = data?.items ?? [];
+
+  const approveMutation = useApproveDeposit();
+  const rejectMutation = useRejectDeposit();
+  const mutation = actionType === "approve" ? approveMutation : rejectMutation;
+
+  const openAction = (item: TransactionItem, type: "approve" | "reject") => {
+    setActionTarget(item);
+    setActionType(type);
+    setRemarks("");
   };
 
-  const rejectDeposit = () => {
-    if (!rejectTarget) return;
-    const target = rejectTarget;
-    setTimeout(() => {
-      setDeposits((prev) =>
-        prev.map((item) =>
-          item.id === target.id ? { ...item, status: "rejected" } : item,
-        ),
-      );
-      toast.error(`${target.user_name}'s deposit of ${target.amount} USDT rejected`);
-      setIsSubmitting(false);
-      setRejectTarget(null);
-    }, 600);
+  const runAction = async () => {
+    if (!actionTarget) return;
+    if (!remarks.trim()) {
+      toast.error("Remarks are required");
+      return;
+    }
+
+    try {
+      const vars = { depositId: actionTarget.id, remarks: remarks.trim() };
+      if (actionType === "approve") {
+        await approveMutation.mutateAsync(vars);
+        toast.success(
+          `${actionTarget.user_name || "User"}'s deposit of ${actionTarget.amount} USDT approved`
+        );
+      } else {
+        await rejectMutation.mutateAsync(vars);
+        toast.error(
+          `${actionTarget.user_name || "User"}'s deposit of ${actionTarget.amount} USDT rejected`
+        );
+      }
+      setActionTarget(null);
+      setRemarks("");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Action failed"));
+    }
   };
 
   const openView = (id: number) => {
@@ -68,7 +81,7 @@ const Deposits: React.FC = () => {
     {
       label: "USER",
       key: "user_name",
-      render: (item: TransactionItem) => item.user_name,
+      render: (item: TransactionItem) => item.user_name || "-",
     },
     {
       label: "NETWORK",
@@ -105,31 +118,29 @@ const Deposits: React.FC = () => {
       label: "ACTION",
       key: "action",
       render: (item: TransactionItem) => (
-        <div className="flex items-center gap-2">
-          {item.status === "pending" && (
-            <>
-              <button
-                type="button"
-                onClick={() => setApproveTarget(item)}
-                className="rounded-md bg-green-100 px-3 py-1.5 text-[10px] font-semibold text-green-600 transition hover:bg-green-200 cursor-pointer"
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                onClick={() => setRejectTarget(item)}
-                className="rounded-md bg-red-100 px-3 py-1.5 text-[10px] font-semibold text-red-600 transition hover:bg-red-200 cursor-pointer"
-              >
-                Reject
-              </button>
-            </>
-          )}
-          <ActionCell
-            canView={true}
-            rowId={Number(item.id)}
-            onView={() => openView(item.id)}
-          />
-        </div>
+        <ActionCell
+          canView={true}
+          rowId={Number(item.id)}
+          onView={() => openView(item.id)}
+          otherActions={
+            item.status === "pending"
+              ? [
+                  {
+                    name: "Approve",
+                    icon: <FaCheck />,
+                    tone: "success",
+                    action: () => openAction(item, "approve"),
+                  },
+                  {
+                    name: "Reject",
+                    icon: <FaXmark />,
+                    tone: "danger",
+                    action: () => openAction(item, "reject"),
+                  },
+                ]
+              : []
+          }
+        />
       ),
     },
   ];
@@ -146,16 +157,16 @@ const Deposits: React.FC = () => {
       </div>
 
       <ReusableTable
-        isLoading={false}
-        error={false}
+        isLoading={isLoading}
+        error={error}
         data={deposits}
         columns={columns}
-        currentPage={1}
-        totalPages={1}
-        totalItems={deposits.length}
-        setCurrentPage={() => {}}
-        itemsPerPage={10}
-        setItemsPerPage={() => {}}
+        currentPage={currentPage}
+        totalPages={data?.totalPages ?? 1}
+        totalItems={data?.total ?? deposits.length}
+        setCurrentPage={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
         hasSerialNo={true}
       />
 
@@ -165,25 +176,64 @@ const Deposits: React.FC = () => {
         onClose={() => setViewModal(false)}
       />
 
-      <ConfirmDialog
-        isOpen={!!approveTarget}
-        title="Approve this deposit?"
-        message={`Credit ${approveTarget?.amount}.00 USDT to ${approveTarget?.user_name}'s wallet?`}
-        confirmText="Yes, Approve"
-        onCancel={() => setApproveTarget(null)}
-        onConfirm={approveDeposit}
-        isLoading={isSubmitting}
-      />
+      {actionTarget && (
+        <Modal onClose={() => setActionTarget(null)}>
+          <div className="p-5">
+            <h3 className="text-[18px] font-bold text-[#0B2D5B]">
+              {actionType === "approve" ? "Approve this deposit?" : "Reject this deposit?"}
+            </h3>
+            <p className="mt-1 text-[13px] text-[#8190a3]">
+              {actionType === "approve"
+                ? `Credit ${actionTarget.amount}.00 USDT to ${actionTarget.user_name || "the user"}'s wallet?`
+                : `Decline the ${actionTarget.amount}.00 USDT deposit from ${actionTarget.user_name || "the user"}?`}
+            </p>
 
-      <ConfirmDialog
-        isOpen={!!rejectTarget}
-        title="Reject this deposit?"
-        message={`Decline the ${rejectTarget?.amount}.00 USDT deposit from ${rejectTarget?.user_name}?`}
-        confirmText="Yes, Reject"
-        onCancel={() => setRejectTarget(null)}
-        onConfirm={rejectDeposit}
-        isLoading={isSubmitting}
-      />
+            <div className="mt-5">
+              <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
+                Remarks
+              </label>
+              <textarea
+                rows={3}
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder={
+                  actionType === "approve"
+                    ? "e.g. Transaction confirmed on blockchain explorer"
+                    : "e.g. No matching blockchain transfer found"
+                }
+                className="w-full resize-none rounded-lg border border-[#dfe8f1] px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setActionTarget(null)}
+                disabled={mutation.isPending}
+                className="rounded-lg border border-[#dfe8f1] py-3 text-sm font-semibold text-[#52677c] transition hover:bg-[#f8fafc] disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={runAction}
+                disabled={mutation.isPending}
+                className={`rounded-lg py-3 text-sm font-semibold text-white transition disabled:opacity-60 ${
+                  actionType === "approve"
+                    ? "bg-[#05a957] hover:bg-[#04984e]"
+                    : "bg-red-500 hover:bg-red-600"
+                }`}
+              >
+                {mutation.isPending
+                  ? "Please wait..."
+                  : actionType === "approve"
+                    ? "Yes, Approve"
+                    : "Yes, Reject"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   );
 };

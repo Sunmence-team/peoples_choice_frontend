@@ -3,23 +3,26 @@ import { Routes, Route } from "react-router-dom";
 
 import HomeLayout from "./layout/HomeLayout";
 import MainLayout from "./layout/MainLayout";
+import ProtectedRoute from "./helpers/ProtectRoute";
 import NotFound from "./pages/view/NotFound";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
-import SignUp from "./pages/auth/SignUp"
+import SignUp from "./pages/auth/SignUp";
 
 // Landing pages
 import Home from "./pages/home/Home";
 import About from "./pages/home/About";
 import Features from "./pages/home/Features";
 import HowItWorks from "./pages/home/HowItWorks";
-import FAQ from "./pages/home/FAQ"; 
+import FAQ from "./pages/home/FAQ";
 
 // Dashboards
 import Overview from "./pages/dashboard/client/Overview";
 import Profile from "./pages/dashboard/client/Profile";
 import Transaction from "./pages/dashboard/client/Transaction";
+import Withdrawl from "./pages/dashboard/client/Withdrawl";
+import DepositRequest from "./pages/dashboard/client/Deposit";
 
 // Admin Dashboards
 import AdminOverview from "./pages/dashboard/admin/Overview";
@@ -28,9 +31,6 @@ import AdminBalances from "./pages/dashboard/admin/Balances";
 import AdminDeposits from "./pages/dashboard/admin/Deposits";
 import AdminWithdrawals from "./pages/dashboard/admin/Withdrawals";
 import AdminTransactions from "./pages/dashboard/admin/Transactions";
-import Withdrawl from "./pages/dashboard/client/Withdrawl";
-import DepositRequest from "./pages/dashboard/client/Deposit";
-
 
 function App() {
   return (
@@ -48,61 +48,117 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+
         <Route
-          index
           path="/dashboard/overview"
-          element={<MainLayout pageName="Dashboard" children={<Overview />} />}
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Dashboard">
+                <Overview />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/deposit"
-          element={<MainLayout pageName="Deposit" children={<DepositRequest />} />}
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Deposit">
+                <DepositRequest />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/profile"
-          element={<MainLayout pageName="Deposit" children={<Profile />} />}
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Profile">
+                <Profile />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/withdrawl"
-          element={<MainLayout pageName="Withdrawl" children={<Withdrawl />} />}
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Withdraw">
+                <Withdrawl />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/transaction-history"
-          element={<MainLayout pageName="Withdrawl" children={<Transaction />} />}
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Transaction History">
+                <Transaction />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
 
         <Route
-          index
           path="/dashboard/admin/overview"
-          element={<MainLayout pageName="Admin Dashboard" children={<AdminOverview />} />}
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Admin Dashboard">
+                <AdminOverview />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/admin/users"
-          element={<MainLayout pageName="User Management" children={<AdminUsers />} />}
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="User Management">
+                <AdminUsers />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/admin/balances"
-          element={<MainLayout pageName="Wallet Balances" children={<AdminBalances />} />}
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Company Wallets">
+                <AdminBalances />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/admin/deposits"
-          element={<MainLayout pageName="Deposit Requests" children={<AdminDeposits />} />}
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Deposit Requests">
+                <AdminDeposits />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/admin/withdrawals"
-          element={<MainLayout pageName="Withdrawal Requests" children={<AdminWithdrawals />} />}
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Withdrawal Requests">
+                <AdminWithdrawals />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
         <Route
-          index
           path="/dashboard/admin/transactions"
-          element={<MainLayout pageName="Transactions" children={<AdminTransactions />} />}
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Transactions">
+                <AdminTransactions />
+              </MainLayout>
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </>

@@ -101,22 +101,24 @@ export interface SearchableInputProps<T> {
   fetchOnEmpty?: boolean;
 }
 
-export interface SearchResult {
-  title: string;
-  url: string;
-  snippet: string;
-}
-
 export interface UserProps {
   id: number;
   username: string;
   first_name: string;
-  full_name: string;
   last_name: string;
+  full_name: string;
   email: string;
+  phone?: string;
+  country?: string;
+  balance?: string | number;
   is_admin: number;
   role: string;
-  enabled: number;
+  crm_role?: string;
+  enabled: number | boolean;
+  is_disabled?: boolean;
+  is_deleted?: boolean;
+  disable_reason?: string | null;
+  email_verified_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -148,7 +150,7 @@ export interface AdminUser {
   phone: string;
   country: string;
   role: string;
-  status: "active" | "disabled";
+  status: "active" | "disabled" | "deleted";
   wallet_balance: number;
   created_at: string;
 }

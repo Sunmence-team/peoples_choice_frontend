@@ -25,7 +25,15 @@ export interface OtherActionProps {
   name: string;
   icon?: React.ReactNode;
   action: () => void;
+  tone?: "default" | "success" | "danger" | "warning";
 }
+
+const TONE_CLASS: Record<NonNullable<OtherActionProps["tone"]>, string> = {
+  default: "text-[#172b4d]",
+  success: "text-[#05a957]",
+  danger: "text-red-600",
+  warning: "text-amber-600",
+};
 
 const ActionCell: React.FC<ActionCellProps> = ({
   rowId,
@@ -101,7 +109,7 @@ const ActionCell: React.FC<ActionCellProps> = ({
           <div
             ref={setFloatingRef}
             style={{ ...floatingStyles, zIndex: 9999 }}
-            className="flex flex-col bg-white rounded-lg shadow-xl border border-gray-100 min-w-28 text-[10px]"
+            className="flex flex-col bg-white rounded-lg shadow-xl border border-gray-100 min-w-32 text-[11px] overflow-hidden"
           >
             {(canView || onView) && (
               <button
@@ -111,7 +119,7 @@ const ActionCell: React.FC<ActionCellProps> = ({
                   setOpen(false);
                 }}
               >
-                <FaEye /> View
+                <FaEye className="shrink-0" /> View
               </button>
             )}
             {onEdit && (
@@ -122,9 +130,24 @@ const ActionCell: React.FC<ActionCellProps> = ({
                   setOpen(false);
                 }}
               >
-                <FiEdit /> Edit
+                <FiEdit className="shrink-0" /> Edit
               </button>
             )}
+            {otherActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  action.action();
+                  setOpen(false);
+                }}
+                className={`flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer border-t border-gray-50 ${TONE_CLASS[action.tone ?? "default"]}`}
+              >
+                {action.icon && (
+                  <span className="shrink-0 text-inherit">{action.icon}</span>
+                )}
+                {action.name}
+              </button>
+            ))}
             {onDelete && (
               <button
                 className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer text-red-600 border-t border-gray-50"
@@ -133,21 +156,9 @@ const ActionCell: React.FC<ActionCellProps> = ({
                   setOpen(false);
                 }}
               >
-                <FiTrash2 /> Delete
+                <FiTrash2 className="shrink-0" /> Delete
               </button>
             )}
-            {otherActions.map((action, index) => (
-              <button
-                key={index}
-                onClick={action.action}
-                className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer border-t border-gray-50 text-xs"
-              >
-                {action.icon && (
-                  <span className="text-inherit">{action.icon}</span>
-                )}
-                {action.name}
-              </button>
-            ))}
           </div>
         </FloatingPortal>
       )}

@@ -5,7 +5,7 @@ export interface UserContextType {
   user: UserProps | null;
   token: string | null;
   role: string | null;
-  login: (token: string, user: UserProps, role: string) => void;
+  login: (token: string, user: UserProps | null, role: string) => void;
   logout: () => void;
   isLoggedIn: boolean;
   refreshUser: (token: string) => Promise<void>;

@@ -1,60 +1,100 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
+import { FaCheck, FaXmark, FaCircleCheck } from "react-icons/fa6";
 import ReusableTable from "../../../utility/ReusableTable";
 import ActionCell from "../../../components/ui/ActionCell";
 import StatusBadge from "../../../components/ui/StatusBadge";
-import ConfirmDialog from "../../../components/modal/ConfirmDialog";
+import Modal from "../../../components/modal/Modal";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
-import { adminWithdrawals } from "../../../lib/adminData";
+import {
+  useAdminWithdrawals,
+  useApproveWithdrawal,
+  useRejectWithdrawal,
+  useCompleteWithdrawal,
+  useAdminWallets,
+} from "../../../hooks/useAdminData";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
+import { getErrorMessage } from "../../../helpers/api";
 import type { TransactionItem } from "../../../lib/interfaces";
 
 type Target = TransactionItem | null;
+type ActionType = "approve" | "reject" | "complete";
 
 const Withdrawals: React.FC = () => {
-  const [withdrawals, setWithdrawals] = useState<TransactionItem[]>(
-    adminWithdrawals,
-  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selected, setSelected] = useState<TransactionItem | null>(null);
   const [viewModal, setViewModal] = useState(false);
-  const [approveTarget, setApproveTarget] = useState<Target>(null);
-  const [rejectTarget, setRejectTarget] = useState<Target>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionTarget, setActionTarget] = useState<Target>(null);
+  const [actionType, setActionType] = useState<ActionType>("approve");
+  const [remarks, setRemarks] = useState("");
+  const [payoutWalletId, setPayoutWalletId] = useState<string>("");
 
-  const approveWithdrawal = () => {
-    if (!approveTarget) return;
-    const target = approveTarget;
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setWithdrawals((prev) =>
-        prev.map((item) =>
-          item.id === target.id ? { ...item, status: "approved" } : item,
-        ),
-      );
-      toast.success(
-        `${target.user_name}'s withdrawal of ${target.amount}.00 USDT approved`,
-      );
-      setIsSubmitting(false);
-      setApproveTarget(null);
-    }, 600);
+  const { data, isLoading, error } = useAdminWithdrawals(currentPage, itemsPerPage);
+  const withdrawals = data?.items ?? [];
+  const { data: walletsData } = useAdminWallets();
+  const companyWallets = walletsData?.items ?? [];
+
+  const approveMutation = useApproveWithdrawal();
+  const rejectMutation = useRejectWithdrawal();
+  const completeMutation = useCompleteWithdrawal();
+  const mutation =
+    actionType === "approve"
+      ? approveMutation
+      : actionType === "reject"
+        ? rejectMutation
+        : completeMutation;
+
+  const openAction = (item: TransactionItem, type: ActionType) => {
+    setActionTarget(item);
+    setActionType(type);
+    setRemarks("");
+    setPayoutWalletId("");
   };
 
-  const rejectWithdrawal = () => {
-    if (!rejectTarget) return;
-    const target = rejectTarget;
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setWithdrawals((prev) =>
-        prev.map((item) =>
-          item.id === target.id ? { ...item, status: "rejected" } : item,
-        ),
-      );
-      toast.error(
-        `${target.user_name}'s withdrawal of ${target.amount}.00 USDT rejected`,
-      );
-      setIsSubmitting(false);
-      setRejectTarget(null);
-    }, 600);
+  const runAction = async () => {
+    if (!actionTarget) return;
+    if (!remarks.trim()) {
+      toast.error("Remarks are required");
+      return;
+    }
+
+    try {
+      if (actionType === "approve") {
+        await approveMutation.mutateAsync({
+          withdrawalId: actionTarget.id,
+          remarks: remarks.trim(),
+        });
+        toast.success(
+          `${actionTarget.user_name || "User"}'s withdrawal approved`
+        );
+      } else if (actionType === "reject") {
+        await rejectMutation.mutateAsync({
+          withdrawalId: actionTarget.id,
+          remarks: remarks.trim(),
+        });
+        toast.error(
+          `${actionTarget.user_name || "User"}'s withdrawal rejected`
+        );
+      } else {
+        if (!payoutWalletId) {
+          toast.error("Select a payout wallet");
+          return;
+        }
+        await completeMutation.mutateAsync({
+          withdrawalId: actionTarget.id,
+          wallet_address_id: Number(payoutWalletId),
+          remarks: remarks.trim(),
+        });
+        toast.success(
+          `${actionTarget.user_name || "User"}'s withdrawal completed`
+        );
+      }
+      setActionTarget(null);
+      setRemarks("");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Action failed"));
+    }
   };
 
   const openView = (id: number) => {
@@ -76,7 +116,7 @@ const Withdrawals: React.FC = () => {
     {
       label: "USER",
       key: "user_name",
-      render: (item: TransactionItem) => item.user_name,
+      render: (item: TransactionItem) => item.user_name || "-",
     },
     {
       label: "NETWORK",
@@ -113,34 +153,71 @@ const Withdrawals: React.FC = () => {
       label: "ACTION",
       key: "action",
       render: (item: TransactionItem) => (
-        <div className="flex items-center gap-2">
-          {item.status === "pending" && (
-            <>
-              <button
-                type="button"
-                onClick={() => setApproveTarget(item)}
-                className="rounded-md bg-green-100 px-3 py-1.5 text-[10px] font-semibold text-green-600 transition hover:bg-green-200 cursor-pointer"
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                onClick={() => setRejectTarget(item)}
-                className="rounded-md bg-red-100 px-3 py-1.5 text-[10px] font-semibold text-red-600 transition hover:bg-red-200 cursor-pointer"
-              >
-                Reject
-              </button>
-            </>
-          )}
-          <ActionCell
-            canView={true}
-            rowId={Number(item.id)}
-            onView={() => openView(item.id)}
-          />
-        </div>
+        <ActionCell
+          canView={true}
+          rowId={Number(item.id)}
+          onView={() => openView(item.id)}
+          otherActions={
+            item.status === "pending"
+              ? [
+                  {
+                    name: "Approve",
+                    icon: <FaCheck />,
+                    tone: "success",
+                    action: () => openAction(item, "approve"),
+                  },
+                  {
+                    name: "Reject",
+                    icon: <FaXmark />,
+                    tone: "danger",
+                    action: () => openAction(item, "reject"),
+                  },
+                ]
+              : item.status === "approved"
+                ? [
+                    {
+                      name: "Complete",
+                      icon: <FaCircleCheck />,
+                      tone: "default",
+                      action: () => openAction(item, "complete"),
+                    },
+                    {
+                      name: "Reject",
+                      icon: <FaXmark />,
+                      tone: "danger",
+                      action: () => openAction(item, "reject"),
+                    },
+                  ]
+                : []
+          }
+        />
       ),
     },
   ];
+
+  const actionCopy = {
+    approve: {
+      title: "Approve this withdrawal?",
+      body: `Release ${actionTarget?.amount}.00 USDT to ${actionTarget?.user_name || "the user"}'s destination address?`,
+      confirm: "Yes, Approve",
+      className: "bg-[#05a957] hover:bg-[#04984e]",
+      placeholder: "e.g. Queued for payout",
+    },
+    reject: {
+      title: "Reject this withdrawal?",
+      body: `Decline the ${actionTarget?.amount}.00 USDT withdrawal request from ${actionTarget?.user_name || "the user"}?`,
+      confirm: "Yes, Reject",
+      className: "bg-red-500 hover:bg-red-600",
+      placeholder: "e.g. Invalid recipient wallet address",
+    },
+    complete: {
+      title: "Complete this withdrawal?",
+      body: `Deduct ${actionTarget?.amount}.00 USDT from a company payout wallet and mark as paid.`,
+      confirm: "Yes, Complete",
+      className: "bg-primary hover:bg-primary/80",
+      placeholder: "e.g. Payout broadcasted and confirmed",
+    },
+  } as const;
 
   return (
     <>
@@ -154,16 +231,16 @@ const Withdrawals: React.FC = () => {
       </div>
 
       <ReusableTable
-        isLoading={false}
-        error={false}
+        isLoading={isLoading}
+        error={error}
         data={withdrawals}
         columns={columns}
-        currentPage={1}
-        totalPages={1}
-        totalItems={withdrawals.length}
-        setCurrentPage={() => {}}
-        itemsPerPage={10}
-        setItemsPerPage={() => {}}
+        currentPage={currentPage}
+        totalPages={data?.totalPages ?? 1}
+        totalItems={data?.total ?? withdrawals.length}
+        setCurrentPage={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
         hasSerialNo={true}
       />
 
@@ -173,25 +250,73 @@ const Withdrawals: React.FC = () => {
         onClose={() => setViewModal(false)}
       />
 
-      <ConfirmDialog
-        isOpen={!!approveTarget}
-        title="Approve this withdrawal?"
-        message={`Release ${approveTarget?.amount}.00 USDT to ${approveTarget?.user_name}'s destination address?`}
-        confirmText="Yes, Approve"
-        onCancel={() => setApproveTarget(null)}
-        onConfirm={approveWithdrawal}
-        isLoading={isSubmitting}
-      />
+      {actionTarget && (
+        <Modal onClose={() => setActionTarget(null)}>
+          <div className="p-5">
+            <h3 className="text-[18px] font-bold text-[#0B2D5B]">
+              {actionCopy[actionType].title}
+            </h3>
+            <p className="mt-1 text-[13px] text-[#8190a3]">
+              {actionCopy[actionType].body}
+            </p>
 
-      <ConfirmDialog
-        isOpen={!!rejectTarget}
-        title="Reject this withdrawal?"
-        message={`Decline the ${rejectTarget?.amount}.00 USDT withdrawal request from ${rejectTarget?.user_name}?`}
-        confirmText="Yes, Reject"
-        onCancel={() => setRejectTarget(null)}
-        onConfirm={rejectWithdrawal}
-        isLoading={isSubmitting}
-      />
+            {actionType === "complete" && (
+              <div className="mt-5">
+                <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
+                  Payout Wallet
+                </label>
+                <select
+                  value={payoutWalletId}
+                  onChange={(e) => setPayoutWalletId(e.target.value)}
+                  className="w-full rounded-lg border border-[#dfe8f1] px-3 py-2.5 text-sm outline-none focus:border-primary"
+                >
+                  <option value="">Select company wallet</option>
+                  {companyWallets.map((wallet) => (
+                    <option key={wallet.id} value={wallet.id}>
+                      {wallet.type} — {wallet.address.slice(0, 12)}… (
+                      {wallet.balance} USDT)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="mt-5">
+              <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
+                Remarks
+              </label>
+              <textarea
+                rows={3}
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder={actionCopy[actionType].placeholder}
+                className="w-full resize-none rounded-lg border border-[#dfe8f1] px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setActionTarget(null)}
+                disabled={mutation.isPending}
+                className="rounded-lg border border-[#dfe8f1] py-3 text-sm font-semibold text-[#52677c] transition hover:bg-[#f8fafc] disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={runAction}
+                disabled={mutation.isPending}
+                className={`rounded-lg py-3 text-sm font-semibold text-white transition disabled:opacity-60 ${actionCopy[actionType].className}`}
+              >
+                {mutation.isPending
+                  ? "Please wait..."
+                  : actionCopy[actionType].confirm}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   );
 };
