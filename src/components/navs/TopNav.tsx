@@ -11,8 +11,8 @@ const TopNav: React.FC = () => {
     user?.full_name || user?.first_name || user?.username || "Guest";
 
   return (
-    <div className="w-full py-2 flex items-center justify-between gap-3">
-      <img src={assets.logo} alt="Platform Logo" className="w-10" />
+    <div className="w-full flex items-center justify-between gap-3">
+      <img src={assets.logo} alt="Peoples Choice Bank Logo" className="w-20" />
       <div className="flex gap-6 items-center">
         <Link to="">
           <PiBellSimple

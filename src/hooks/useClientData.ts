@@ -9,8 +9,10 @@ import {
 } from "../services/userServices";
 import {
   getMyDepositsService,
+  getDepositService,
   submitDepositService,
   type SubmitDepositPayload,
+  type DepositDetail,
 } from "../services/depositServices";
 import { getWalletsService } from "../services/walletServices";
 import {
@@ -90,11 +92,32 @@ export const useMyDeposits = (page = 1, perPage = 10) => {
   });
 };
 
+export const useDeposit = (
+  depositId: number | string | null | undefined
+) => {
+  const { token } = useUser();
+  return useQuery<DepositDetail>({
+    queryKey: ["deposit", depositId ? String(depositId) : null],
+    enabled: !!token && !!depositId,
+    queryFn: async () => {
+      return await getDepositService(depositId!);
+    },
+    refetchInterval: (query) => {
+      const status = query.state.data?.status?.toLowerCase();
+      return status === "pending" ? 5000 : false;
+    },
+  });
+};
+
 export const useSubmitDeposit = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: SubmitDepositPayload) => submitDepositService(payload),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data?.id) {
+        queryClient.setQueryData(["deposit", String(data.id)], data);
+      }
+      queryClient.invalidateQueries({ queryKey: ["deposit"] });
       queryClient.invalidateQueries({ queryKey: ["my-deposits"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["ledger"] });

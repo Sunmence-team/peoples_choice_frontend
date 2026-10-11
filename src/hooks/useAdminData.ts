@@ -228,10 +228,19 @@ const useDepositAction = (
       depositId: number | string;
       remarks: string;
     }) => fn(depositId, remarks),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-deposits"] });
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["admin-transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["deposit"] });
+      if (variables?.depositId) {
+        queryClient.invalidateQueries({
+          queryKey: ["deposit", String(variables.depositId)],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["my-deposits"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["ledger"] });
     },
   });
 };

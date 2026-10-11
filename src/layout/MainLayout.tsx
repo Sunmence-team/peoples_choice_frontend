@@ -14,7 +14,7 @@ type LayoutProps = {
 
 const MainLayout = ({ children, pageName }: LayoutProps) => {
   useEffect(() => {
-    document.title = "Platform Name - " + pageName;
+    document.title = "Peoples Choice Bank - " + pageName;
   }, [pageName]);
 
   const location = useLocation();
@@ -100,8 +100,8 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3 w-full relative! bg-secondary/80 h-dvh overflow-hidden px-4 py-3">
-      <div className="md:px-6 px-4 flex md:flex gap-4 sticky top-0 z-10 items-center lg: bg-white rounded-xl">
+    <div className="flex flex-col w-full relative! bg-secondary/80 h-dvh overflow-hidden">
+      <div className="md:px-6 py-2 px-4 flex md:flex gap-4 sticky top-0 z-10 items-center bg-white">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
@@ -113,7 +113,7 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
       </div>
       <div className="flex items-start h-[calc(100vh-58px)]">
         <div
-          className={`lg:w-[20%] z-100 bg-black/50 rounded-2xl overflow-hidden h-full w-full lg:sticky absolute transition-all duration-500 ${
+          className={`lg:w-[20%] z-100 bg-black/50 overflow-hidden h-full w-full lg:sticky absolute transition-all duration-500 ${
             isOpen ? "left-0" : "-left-full"
           }`}
         >
@@ -149,7 +149,7 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
                   display: "flex",
                   flexDirection: "column",
                 }}
-                className="px-4 h-full overflow-y-scroll no-scrollbar pb-4"
+                className="px-4 pt-2 h-full overflow-y-scroll no-scrollbar pb-4"
               >
                 {children}
               </motion.div>

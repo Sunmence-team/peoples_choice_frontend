@@ -41,9 +41,9 @@ const Sidebar = ({
                 to={item.path!}
                 className={({
                   isActive,
-                }) => `flex items-center gap-2 text-black transition-all duration-300 border-0 hover:bg-white hover:font-semibold hover:text-primary hover:shadow-md px-4 py-2.5 rounded-md cursor-pointer text-[11px] ${
+                }) => `flex items-center gap-2 text-black transition-all duration-300 border-0 hover:bg-primary hover:font-semibold hover:text-tertiary hover:shadow-md px-4 py-2.5 rounded-md cursor-pointer text-[11px] ${
                   isActive
-                    ? "bg-white text-primary font-semibold shadow-md border border-primary/5"
+                    ? "bg-primary text-tertiary font-semibold shadow-md border border-primary/5"
                     : ""
                 }
                 `}
@@ -59,33 +59,28 @@ const Sidebar = ({
         </ul>
 
         {adminLinks.length > 0 && (
-          <div className="mt-6">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-tableHeading mb-2 px-4">
-              Admin
-            </p>
-            <ul className="flex flex-col gap-2">
-              {adminLinks.map((item, index) => (
-                <NavLink
-                  key={`admin-${index}`}
-                  to={item.path!}
-                  className={({
-                    isActive,
-                  }) => `flex items-center gap-2 text-black transition-all duration-300 border-0 hover:bg-white hover:font-semibold hover:text-primary hover:shadow-md px-4 py-2.5 rounded-md cursor-pointer text-[11px] ${
-                    isActive
-                      ? "bg-white text-primary font-semibold shadow-md border border-primary/5"
-                      : ""
-                  }
-                `}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <span>
-                    <item.icon size={13} />
-                  </span>
-                  <span>{item.name}</span>
-                </NavLink>
-              ))}
-            </ul>
-          </div>
+          <ul className="flex flex-col gap-2">
+            {adminLinks.map((item, index) => (
+              <NavLink
+                key={`admin-${index}`}
+                to={item.path!}
+                className={({
+                  isActive,
+                }) => `flex items-center gap-2 text-black transition-all duration-300 border-0 hover:bg-primary hover:font-semibold hover:text-tertiary hover:shadow-md px-4 py-2.5 rounded-md cursor-pointer text-[11px] ${
+                  isActive
+                    ? "bg-primary text-tertiary font-semibold shadow-md border border-primary/5"
+                    : ""
+                }
+              `}
+                onClick={() => setIsOpen(false)}
+              >
+                <span>
+                  <item.icon size={13} />
+                </span>
+                <span>{item.name}</span>
+              </NavLink>
+            ))}
+          </ul>
         )}
       </div>
 

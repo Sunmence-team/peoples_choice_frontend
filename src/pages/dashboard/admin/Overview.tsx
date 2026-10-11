@@ -6,7 +6,10 @@ import { IoArrowDown, IoArrowUp } from "react-icons/io5";
 import OverviewCards from "../../../components/cards/OverviewCards";
 import ReusableTable from "../../../utility/ReusableTable";
 import StatusBadge from "../../../components/ui/StatusBadge";
-import { useAdminDashboard, useAdminTransactions } from "../../../hooks/useAdminData";
+import {
+  useAdminDashboard,
+  useAdminTransactions,
+} from "../../../hooks/useAdminData";
 import type { TransactionItem } from "../../../lib/interfaces";
 import {
   formatISODateToCustom,
@@ -70,9 +73,7 @@ const Overview: React.FC = () => {
     {
       label: "STATUS",
       key: "status",
-      render: (item: TransactionItem) => (
-        <StatusBadge status={item.status} />
-      ),
+      render: (item: TransactionItem) => <StatusBadge status={item.status} />,
     },
     {
       label: "DATE & TIME",
@@ -87,16 +88,16 @@ const Overview: React.FC = () => {
         <h1 className="text-[20px] font-bold tracking-[-0.4px] text-[#0B2D5B]">
           Admin Dashboard
         </h1>
-        <p className="mt-0.5 text-[15px] text-[#8190a3]">
+        <p className="text-[15px] text-[#8190a3]">
           Monitor users, wallet balances, deposits and withdrawals.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 mt-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 mt-2">
         <OverviewCards
           icon={LuUsersRound}
           title="Total Users"
-          value={statsLoading ? "..." : stats?.totalUsers ?? 0}
+          value={statsLoading ? "..." : (stats?.totalUsers ?? 0)}
           icon2={HiOutlineArrowTrendingUp}
         />
 
