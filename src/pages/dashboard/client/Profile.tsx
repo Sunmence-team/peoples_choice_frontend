@@ -55,9 +55,7 @@ function ProfileBody() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePhotoChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (file) {
@@ -107,20 +105,14 @@ function ProfileBody() {
     `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() ||
     (user?.username?.[0] ?? "U").toUpperCase();
 
-  const createdAt = user?.created_at
-    ? formatShortDate(user.created_at)
-    : "—";
-  const lastLogin = user?.updated_at
-    ? formatShortDate(user.updated_at)
-    : "—";
+  const createdAt = user?.created_at ? formatShortDate(user.created_at) : "—";
+  const lastLogin = user?.updated_at ? formatShortDate(user.updated_at) : "—";
 
   return (
     <div className="min-h-screen p-">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-2xl font-bold text-[#0d2340]">
-          Profile Settings
-        </h1>
+        <h1 className="text-2xl font-bold text-[#0d2340]">Profile Settings</h1>
 
         <p className="mt-0.5 text-[15px] text-gray-500">
           Manage your account information and security settings.
@@ -150,7 +142,6 @@ function ProfileBody() {
         >
           Security
         </button>
-
       </div>
 
       {/* Personal Information */}
@@ -305,17 +296,13 @@ function ProfileBody() {
             {/* Account Created */}
             <div className="border-b border-[#e6edf4] py-4">
               <p className="mb-1 text-xs text-gray-400">Account Created</p>
-              <p className="text-sm font-medium text-[#52677c]">
-                {createdAt}
-              </p>
+              <p className="text-sm font-medium text-[#52677c]">{createdAt}</p>
             </div>
 
             {/* Last Updated */}
             <div className="border-b border-[#e6edf4] py-4">
               <p className="mb-1 text-xs text-gray-400">Last Updated</p>
-              <p className="text-sm font-medium text-[#52677c]">
-                {lastLogin}
-              </p>
+              <p className="text-sm font-medium text-[#52677c]">{lastLogin}</p>
             </div>
 
             {/* Verification Notice */}
@@ -365,9 +352,7 @@ function ProfileBody() {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowCurrentPassword(!showCurrentPassword)
-                  }
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 hover:text-primary"
                 >
                   {showCurrentPassword ? "Hide" : "Show"}
@@ -417,9 +402,7 @@ function ProfileBody() {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 hover:text-primary"
                 >
                   {showConfirmPassword ? "Hide" : "Show"}
@@ -466,8 +449,7 @@ function ProfileBody() {
                 </h3>
 
                 <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Add an extra layer of security when logging into your
-                  account.
+                  Add an extra layer of security when logging into your account.
                 </p>
               </div>
 
@@ -527,8 +509,8 @@ function ProfileBody() {
               </div>
 
               <p className="text-xs leading-5 text-gray-500">
-                Never share your password or verification codes with
-                anyone. Our support team will never ask for your password.
+                Never share your password or verification codes with anyone. Our
+                support team will never ask for your password.
               </p>
             </div>
           </div>

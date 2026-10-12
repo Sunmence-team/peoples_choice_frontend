@@ -12,6 +12,8 @@ import {
   useDeleteAdminUser,
   useRestoreAdminUser,
   useUpdateAdminUserBalance,
+  useAdminUserCtoCode,
+  useGenerateAdminUserCtoCode,
 } from "../../../hooks/useAdminData";
 import {
   formatShortDate,
@@ -19,6 +21,158 @@ import {
 } from "../../../helpers/formatterUtility";
 import { getErrorMessage } from "../../../helpers/api";
 import type { AdminUser } from "../../../lib/interfaces";
+
+const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
+  const { data: ctoRes, isLoading, refetch } = useAdminUserCtoCode(userId);
+  const generateMutation = useGenerateAdminUserCtoCode();
+
+  const [customCode, setCustomCode] = useState("");
+  const [amount, setAmount] = useState("");
+  const [sendEmail, setSendEmail] = useState(true);
+  const [showGenerateForm, setShowGenerateForm] = useState(false);
+
+  const ctoData = ctoRes?.data;
+
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success("CTO code copied to clipboard");
+  };
+
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await generateMutation.mutateAsync({
+        userId,
+        payload: {
+          cto_code: customCode.trim() || undefined,
+          amount: amount ? Number(amount) : undefined,
+          send_email: sendEmail,
+        },
+      });
+      toast.success(res.message || "CTO code generated successfully");
+      setCustomCode("");
+      setAmount("");
+      setShowGenerateForm(false);
+      refetch();
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to generate CTO code"));
+    }
+  };
+
+  return (
+    <div className="mt-5 rounded-lg border border-[#e3eaf2] p-3 bg-[#f8fafc]">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-bold text-[#172b4d]">
+            Withdrawal CTO Authorization Code
+          </p>
+          <p className="text-[10px] text-[#8190a3]">
+            Administrative clearance code for user withdrawals
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowGenerateForm(!showGenerateForm)}
+          className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+        >
+          {showGenerateForm ? "Close Form" : "Generate / Override"}
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className="py-2 text-[11px] text-gray-400">Loading CTO code...</div>
+      ) : ctoData ? (
+        <div className="mt-2.5 rounded-md bg-white border border-[#dfe8f1] p-2.5 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium text-gray-500">Active CTO Code:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-2 py-0.5 rounded">
+                {ctoData.cto_code}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopy(ctoData.cto_code)}
+                className="text-[10px] font-medium text-primary hover:underline cursor-pointer bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+          {ctoData.otp_code && (
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-gray-500">OTP Code:</span>
+              <span className="font-mono font-semibold text-gray-800">{ctoData.otp_code}</span>
+            </div>
+          )}
+          {ctoData.amount && (
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-gray-500">Authorized Amount:</span>
+              <span className="font-semibold text-gray-800">{ctoData.amount} USDT</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-gray-500">Status:</span>
+            <span
+              className={`capitalize font-semibold ${
+                ctoData.status === "pending"
+                  ? "text-amber-600"
+                  : ctoData.status === "used"
+                    ? "text-green-600"
+                    : "text-red-500"
+              }`}
+            >
+              {ctoData.status}
+            </span>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-2 text-[11px] text-gray-400 italic">
+          No pending CTO code for this user.
+        </p>
+      )}
+
+      {showGenerateForm && (
+        <form onSubmit={handleGenerate} className="mt-3 space-y-2 border-t border-[#dfe8f1] pt-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input
+              type="text"
+              placeholder="Custom CTO Code (optional)"
+              value={customCode}
+              onChange={(e) => setCustomCode(e.target.value)}
+              className="h-8 rounded-md border border-[#dfe8f1] bg-white px-2.5 text-[11px] outline-none focus:border-primary"
+            />
+            <input
+              type="number"
+              placeholder="Amount (optional)"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="h-8 rounded-md border border-[#dfe8f1] bg-white px-2.5 text-[11px] outline-none focus:border-primary"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="sendEmail"
+              checked={sendEmail}
+              onChange={(e) => setSendEmail(e.target.checked)}
+              className="rounded border-gray-300 text-primary"
+            />
+            <label htmlFor="sendEmail" className="text-[11px] text-gray-600 cursor-pointer">
+              Send notification email to user
+            </label>
+          </div>
+          <button
+            type="submit"
+            disabled={generateMutation.isPending}
+            className="w-full rounded-md bg-primary py-2 text-[11px] font-semibold text-white transition hover:bg-primary/80 disabled:opacity-60 cursor-pointer"
+          >
+            {generateMutation.isPending ? "Generating..." : "Generate & Save CTO Code"}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+};
 
 const Users: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -362,6 +516,9 @@ const Users: React.FC = () => {
                 {balanceMutation.isPending ? "Updating..." : "Update Balance"}
               </button>
             </div>
+
+            {/* CTO Clearance Code management */}
+            <UserCtoSection userId={selectedUser.id} />
 
             {selectedUser.status === "active" && (
               <div className="mt-5 rounded-lg border border-[#e3eaf2] p-3">

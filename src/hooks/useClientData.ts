@@ -16,7 +16,11 @@ import { getWalletsService } from "../services/walletServices";
 import {
   getMyWithdrawalsService,
   requestWithdrawalService,
+  requestWithdrawalOtpService,
+  submitWithdrawalService,
   type RequestWithdrawalPayload,
+  type RequestOtpPayload,
+  type SubmitWithdrawalPayload,
 } from "../services/withdrawalServices";
 import { toPaged, toArray } from "../helpers/response";
 import {
@@ -114,6 +118,24 @@ export const useMyWithdrawals = (page = 1, perPage = 10) => {
         ...paged,
         items: paged.items.map((item) => toClientTransaction(item, "withdrawal")),
       };
+    },
+  });
+};
+
+export const useRequestWithdrawalOtp = () => {
+  return useMutation({
+    mutationFn: (payload?: RequestOtpPayload) => requestWithdrawalOtpService(payload),
+  });
+};
+
+export const useSubmitWithdrawal = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SubmitWithdrawalPayload) => submitWithdrawalService(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-withdrawals"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["ledger"] });
     },
   });
 };

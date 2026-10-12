@@ -175,6 +175,8 @@ export const toAdminTransaction = (
     note:
       pickString(raw.note, raw.remarks, raw.remark, raw.reason, raw.admin_remarks) ||
       undefined,
+    otp_code: pickString(raw.otp_code) || undefined,
+    cto_code: pickString(raw.cto_code) || undefined,
   };
 };
 

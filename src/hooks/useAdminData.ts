@@ -24,6 +24,10 @@ import {
   completeWithdrawalService,
   rejectWithdrawalService,
   getAdminTransactionsService,
+  getAdminUserCtoCodeService,
+  generateAdminUserCtoCodeService,
+  getAdminWithdrawalCodesService,
+  type AdminUserCtoResponse,
 } from "../services/adminServices";
 import { toPaged } from "../helpers/response";
 import {
@@ -328,5 +332,59 @@ export const useAdminTransactions = (
         }),
       };
     },
+  });
+};
+
+export const useAdminUserCtoCode = (userId: number | string | null) => {
+  const { token } = useUser();
+  return useQuery<AdminUserCtoResponse>({
+    queryKey: ["admin-user-cto", userId],
+    enabled: !!token && userId !== null,
+    queryFn: () => getAdminUserCtoCodeService(userId as number | string),
+  });
+};
+
+export const useGenerateAdminUserCtoCode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      payload,
+    }: {
+      userId: number | string;
+      payload?: {
+        cto_code?: string;
+        amount?: number | string;
+        send_email?: boolean;
+      };
+    }) => generateAdminUserCtoCodeService(userId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin-user-cto", variables.userId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+};
+
+export const useAdminWithdrawalCodes = (params?: {
+  status?: string;
+  user_id?: number | string;
+  search?: string;
+  page?: number;
+  per_page?: number;
+}) => {
+  const { token } = useUser();
+  return useQuery({
+    queryKey: [
+      "admin-withdrawal-codes",
+      params?.page ?? 1,
+      params?.per_page ?? 20,
+      params?.status ?? "all",
+      params?.search ?? "",
+      params?.user_id ?? "all",
+    ],
+    enabled: !!token,
+    queryFn: () => getAdminWithdrawalCodesService(params),
   });
 };

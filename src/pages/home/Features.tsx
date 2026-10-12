@@ -4,9 +4,12 @@ import {
   FaCoins,
   FaShieldAlt,
   FaWallet,
-  FaExchangeAlt,
   FaReceipt,
+  FaHandHoldingUsd,
+  FaHeadset,
+  FaBell,
 } from "react-icons/fa";
+import { FaMoneyBillTransfer } from "react-icons/fa6";
 
 const Features: React.FC = () => {
   const features = [
@@ -32,16 +35,37 @@ const Features: React.FC = () => {
       description: "View and manage your available wallet balance.",
     },
     {
-      icon: <FaExchangeAlt />,
-      title: "Withdrawal Requests",
-      description: "Submit withdrawal requests from your account.",
+      icon: <FaHandHoldingUsd />,
+      title: "Loan Services",
+      description:
+        "Apply for loans and track your loan requests and repayment status.",
+    },
+    {
+      icon: <FaMoneyBillTransfer />,
+      title: "Transfers & Withdrawals",
+      description:
+        "Transfer funds and submit withdrawal requests from your account.",
     },
     {
       icon: <FaReceipt />,
       title: "Transaction History",
-      description: "Track your deposits, withdrawals and wallet activity.",
+      description:
+        "Track your deposits, withdrawals, transfers and wallet activity.",
+    },
+    {
+      icon: <FaHeadset />,
+      title: "24/7 Dedicated Support",
+      description:
+        "Get fast and reliable assistance whenever you need help with your account.",
+    },
+    {
+      icon: <FaBell />,
+      title: "Instant Notifications",
+      description:
+        "Stay updated with real-time alerts on your transactions and wallet activities.",
     },
   ];
+
   return (
     <>
       <section

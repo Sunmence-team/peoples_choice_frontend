@@ -140,6 +140,8 @@ export interface TransactionItem {
   wallet_address?: string;
   destination_address?: string;
   note?: string;
+  otp_code?: string;
+  cto_code?: string;
 }
 
 export interface AdminUser {

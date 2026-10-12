@@ -14,7 +14,7 @@ type LayoutProps = {
 
 const MainLayout = ({ children, pageName }: LayoutProps) => {
   useEffect(() => {
-    document.title = "Platform Name - " + pageName;
+    document.title = `Peoples Choice Bank | ${pageName}`;
   }, [pageName]);
 
   const location = useLocation();

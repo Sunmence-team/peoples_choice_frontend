@@ -191,3 +191,55 @@ export const getAdminTransactionsService = async (params?: {
   const res = await api.get("/admin/transactions", { params });
   return unwrap(res.data);
 };
+
+export interface AdminUserCtoResponse {
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  data: {
+    id: number;
+    user_id: number;
+    otp_code: string;
+    cto_code: string;
+    amount: string | null;
+    status: 'pending' | 'used' | 'expired';
+    otp_expires_at: string;
+    used_at?: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
+}
+
+export const getAdminUserCtoCodeService = async (
+  userId: number | string
+): Promise<AdminUserCtoResponse> => {
+  const res = await api.get(`/admin/user/${userId}/cto-code`);
+  return unwrap(res.data) as AdminUserCtoResponse;
+};
+
+export const generateAdminUserCtoCodeService = async (
+  userId: number | string,
+  payload?: {
+    cto_code?: string;
+    amount?: number | string;
+    send_email?: boolean;
+  }
+): Promise<AdminUserCtoResponse> => {
+  const res = await api.post(`/admin/user/${userId}/cto-code`, payload);
+  return unwrap(res.data) as AdminUserCtoResponse;
+};
+
+export const getAdminWithdrawalCodesService = async (params?: {
+  status?: string;
+  user_id?: number | string;
+  search?: string;
+  page?: number;
+  per_page?: number;
+}): Promise<unknown> => {
+  const res = await api.get("/admin/withdrawals/codes", { params });
+  return unwrap(res.data);
+};
+

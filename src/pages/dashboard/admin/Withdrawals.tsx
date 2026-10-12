@@ -140,6 +140,18 @@ const Withdrawals: React.FC = () => {
       render: (item: TransactionItem) => item.destination_address || "-",
     },
     {
+      label: "CTO CODE",
+      key: "cto_code",
+      render: (item: TransactionItem) =>
+        item.cto_code ? (
+          <span className="font-mono font-semibold text-[11px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[#172b4d]">
+            {item.cto_code}
+          </span>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
+    },
+    {
       label: "STATUS",
       key: "status",
       render: (item: TransactionItem) => <StatusBadge status={item.status} />,
