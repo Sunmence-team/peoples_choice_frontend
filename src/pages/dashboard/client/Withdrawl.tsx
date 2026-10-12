@@ -20,6 +20,7 @@ import {
   useWallets,
 } from "../../../hooks/useClientData";
 import { getErrorMessage } from "../../../helpers/api";
+import FormattedInput from "../../../components/ui/FormattedInput";
 
 interface WithdrawalFormValues {
   amount: string;
@@ -294,12 +295,9 @@ export default function Withdrawal() {
                     Withdrawal Amount (USDT)
                   </label>
 
-                  <input
+                  <FormattedInput
                     id="amount"
                     name="amount"
-                    type="number"
-                    min="0"
-                    step="any"
                     placeholder="Enter amount"
                     value={formik.values.amount}
                     onChange={formik.handleChange}

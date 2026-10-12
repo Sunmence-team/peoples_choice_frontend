@@ -144,16 +144,17 @@ export interface TransactionItem {
   cto_code?: string;
 }
 
-export interface AdminUser {
-  id: number;
-  username: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  country: string;
-  role: string;
-  status: "active" | "disabled" | "deleted";
-  wallet_balance: number;
+export interface AdminUser extends UserProps {
+  // id: number;
+  // username: string;
+  // full_name: string;
+  // email: string;
+  // phone: string;
+  // country: string;
+  // role: string;
+  // status: "active" | "disabled" | "deleted";
+  // wallet_balance: number;
+  // is_disabled: boolean;
   created_at: string;
 }
 

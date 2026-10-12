@@ -1,19 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { formatNumberWithCommas, unformatNumber } from "../../helpers/formatterUtility";
 
-interface FormattedInputProps
+export interface FormattedInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
-  value: string | number;
-  onChange: (e: { target: { name: string; value: number } }) => void;
-  name: string;
+  value?: string | number;
+  onChange?: (e: any) => void;
+  name?: string;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
 }
 
 const FormattedInput: React.FC<FormattedInputProps> = ({
-  value,
+  value = "",
   onChange,
-  name,
+  name = "",
   className,
+  onFocus,
+  onBlur,
   ...props
 }) => {
   const [inputValue, setInputValue] = useState("");
@@ -24,6 +26,12 @@ const FormattedInput: React.FC<FormattedInputProps> = ({
       ? ""
       : formatNumberWithCommas(value);
 
+  useEffect(() => {
+    if (!isFocused) {
+      setInputValue(externalDisplayValue);
+    }
+  }, [externalDisplayValue, isFocused]);
+
   const displayValue = isFocused ? inputValue : externalDisplayValue;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,28 +39,52 @@ const FormattedInput: React.FC<FormattedInputProps> = ({
 
     if (!/^[0-9,.]*$/.test(nextValue)) return;
 
-    const rawValue = unformatNumber(nextValue);
-    const formattedValue =
-      nextValue.trim() === "" ? "" : formatNumberWithCommas(nextValue);
+    if (nextValue.trim() === "") {
+      setInputValue("");
+      onChange?.({
+        target: { name, value: "" },
+        currentTarget: { name, value: "" },
+        persist: () => {},
+      });
+      return;
+    }
 
-    onChange({ target: { name, value: rawValue } });
+    // Handle decimal formatting
+    let formattedValue = "";
+    if (nextValue.includes(".")) {
+      const parts = nextValue.split(".");
+      if (parts.length > 2) return; // ignore more than 1 decimal point
+      const cleanInt = parts[0].replace(/,/g, "");
+      const formattedInt = cleanInt === "" ? "" : formatNumberWithCommas(cleanInt);
+      formattedValue = `${formattedInt}.${parts[1]}`;
+    } else {
+      formattedValue = formatNumberWithCommas(nextValue);
+    }
+
+    const rawValue = unformatNumber(nextValue);
     setInputValue(formattedValue);
+
+    onChange?.({
+      target: { name, value: rawValue },
+      currentTarget: { name, value: rawValue },
+      persist: () => {},
+    });
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);
-    setInputValue(e.target.value);
+    setInputValue(externalDisplayValue);
 
-    if (props.onFocus) {
-      props.onFocus(e);
+    if (onFocus) {
+      onFocus(e);
     }
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(false);
 
-    if (props.onBlur) {
-      props.onBlur(e);
+    if (onBlur) {
+      onBlur(e);
     }
   };
 
@@ -60,6 +92,7 @@ const FormattedInput: React.FC<FormattedInputProps> = ({
     <input
       {...props}
       type="text"
+      inputMode="decimal"
       name={name}
       value={displayValue}
       onChange={handleChange}

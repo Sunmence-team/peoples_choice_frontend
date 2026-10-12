@@ -27,18 +27,17 @@ import {
   getAdminUserCtoCodeService,
   generateAdminUserCtoCodeService,
   getAdminWithdrawalCodesService,
-  type AdminUserCtoResponse,
+  type CtoProps,
 } from "../services/adminServices";
 import { toPaged } from "../helpers/response";
 import {
   toAdminTransaction,
-  toAdminUser,
   toCompanyWallet,
   toDashboardStats,
   type CompanyWallet,
   type DashboardStats,
 } from "../helpers/mappers";
-import type { AdminUser, TransactionItem } from "../lib/interfaces";
+import type { TransactionItem } from "../lib/interfaces";
 import { useUser } from "./useUser";
 
 interface PagedResult<T> {
@@ -52,7 +51,7 @@ interface PagedResult<T> {
 const mapPaged = <T>(
   body: unknown,
   mapper: (value: unknown) => T,
-  perPage: number
+  perPage: number,
 ): PagedResult<T> => {
   const paged = toPaged<unknown>(body, perPage);
   return { ...paged, items: paged.items.map(mapper) };
@@ -69,20 +68,19 @@ export const useAdminDashboard = () => {
 
 export const useAdminUsers = (page = 1, perPage = 10) => {
   const { token } = useUser();
-  return useQuery<PagedResult<AdminUser>>({
+  return useQuery({
     queryKey: ["admin-users", page, perPage],
     enabled: !!token,
-    queryFn: async () =>
-      mapPaged(await getAdminUsersService({ page, per_page: perPage }), toAdminUser, perPage),
+    queryFn: () => getAdminUsersService({ page, per_page: perPage }),
   });
 };
 
 export const useAdminUser = (userId: number | string | null) => {
   const { token } = useUser();
-  return useQuery<AdminUser>({
+  return useQuery({
     queryKey: ["admin-user", userId],
     enabled: !!token && userId !== null,
-    queryFn: async () => toAdminUser(await getAdminUserService(userId as number | string)),
+    queryFn: async () => getAdminUserService(userId as number | string),
   });
 };
 
@@ -122,7 +120,7 @@ export const useUpdateAdminUser = () => {
 };
 
 const useUserStatusMutation = (
-  fn: (userId: number | string, ...rest: never[]) => Promise<unknown>
+  fn: (userId: number | string, ...rest: never[]) => Promise<unknown>,
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -136,9 +134,15 @@ const useUserStatusMutation = (
 export const useDisableAdminUser = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, reason }: { userId: number | string; reason: string }) =>
-      disableAdminUserService(userId, reason),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
+    mutationFn: ({
+      userId,
+      reason,
+    }: {
+      userId: number | string;
+      reason: string;
+    }) => disableAdminUserService(userId, reason),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 };
 
@@ -162,12 +166,13 @@ export const useAdminWallets = () => {
 };
 
 const useWalletMutation = (
-  fn: (walletId: number | string, ...rest: never[]) => Promise<unknown>
+  fn: (walletId: number | string, ...rest: never[]) => Promise<unknown>,
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ walletId }: { walletId: number | string }) => fn(walletId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-wallets"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin-wallets"] }),
   });
 };
 
@@ -176,7 +181,8 @@ export const useCreateAdminWallet = () => {
   return useMutation({
     mutationFn: (payload: { address: string; type: string; balance: number }) =>
       createAdminWalletService(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-wallets"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin-wallets"] }),
   });
 };
 
@@ -190,7 +196,8 @@ export const useUpdateAdminWallet = () => {
       walletId: number | string;
       payload: { address: string; type: string; balance: number };
     }) => updateAdminWalletService(walletId, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-wallets"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin-wallets"] }),
   });
 };
 
@@ -215,13 +222,13 @@ export const useAdminDeposits = (page = 1, perPage = 10, status?: string) => {
       mapPaged(
         await getAdminDepositsService({ page, per_page: perPage, status }),
         (value) => toAdminTransaction(value, "deposit"),
-        perPage
+        perPage,
       ),
   });
 };
 
 const useDepositAction = (
-  fn: (depositId: number | string, remarks: string) => Promise<unknown>
+  fn: (depositId: number | string, remarks: string) => Promise<unknown>,
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -252,7 +259,11 @@ const useDepositAction = (
 export const useApproveDeposit = () => useDepositAction(approveDepositService);
 export const useRejectDeposit = () => useDepositAction(rejectDepositService);
 
-export const useAdminWithdrawals = (page = 1, perPage = 10, status?: string) => {
+export const useAdminWithdrawals = (
+  page = 1,
+  perPage = 10,
+  status?: string,
+) => {
   const { token } = useUser();
   return useQuery<PagedResult<TransactionItem>>({
     queryKey: ["admin-withdrawals", page, perPage, status ?? "all"],
@@ -261,13 +272,13 @@ export const useAdminWithdrawals = (page = 1, perPage = 10, status?: string) => 
       mapPaged(
         await getAdminWithdrawalsService({ page, per_page: perPage, status }),
         (value) => toAdminTransaction(value, "withdrawal"),
-        perPage
+        perPage,
       ),
   });
 };
 
 const useWithdrawalRemarksAction = (
-  fn: (withdrawalId: number | string, remarks: string) => Promise<unknown>
+  fn: (withdrawalId: number | string, remarks: string) => Promise<unknown>,
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -302,7 +313,8 @@ export const useCompleteWithdrawal = () => {
       withdrawalId: number | string;
       wallet_address_id: number | string;
       remarks: string;
-    }) => completeWithdrawalService(withdrawalId, { wallet_address_id, remarks }),
+    }) =>
+      completeWithdrawalService(withdrawalId, { wallet_address_id, remarks }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-withdrawals"] });
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
@@ -314,7 +326,7 @@ export const useCompleteWithdrawal = () => {
 export const useAdminTransactions = (
   page = 1,
   perPage = 10,
-  status?: string
+  status?: string,
 ) => {
   const { token } = useUser();
   return useQuery<PagedResult<TransactionItem>>({
@@ -333,9 +345,9 @@ export const useAdminTransactions = (
           const dict = item as Record<string, unknown> | null;
           const nestedType =
             dict && typeof dict.type === "string"
-              ? (dict.type.toLowerCase().includes("withdraw")
-                  ? "withdrawal"
-                  : "deposit")
+              ? dict.type.toLowerCase().includes("withdraw")
+                ? "withdrawal"
+                : "deposit"
               : undefined;
           return toAdminTransaction(item, nestedType);
         }),
@@ -346,7 +358,7 @@ export const useAdminTransactions = (
 
 export const useAdminUserCtoCode = (userId: number | string | null) => {
   const { token } = useUser();
-  return useQuery<AdminUserCtoResponse>({
+  return useQuery<CtoProps>({
     queryKey: ["admin-user-cto", userId],
     enabled: !!token && userId !== null,
     queryFn: () => getAdminUserCtoCodeService(userId as number | string),

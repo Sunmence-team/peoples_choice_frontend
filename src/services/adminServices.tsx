@@ -10,21 +10,19 @@ export const getAdminUsersService = async (params?: {
   page?: number;
   per_page?: number;
   search?: string;
-}): Promise<unknown> => {
+}) => {
   const res = await api.get("/admin/user", { params });
-  return unwrap(res.data);
+  return res.data.data;
 };
 
-export const getAdminUserService = async (
-  userId: number | string
-): Promise<unknown> => {
+export const getAdminUserService = async (userId: number | string) => {
   const res = await api.get(`/admin/user/${userId}`);
-  return unwrap(res.data);
+  return res.data;
 };
 
 export const updateAdminUserBalanceService = async (
   userId: number | string,
-  payload: { balance: number; description: string }
+  payload: { balance: number; description: string },
 ): Promise<unknown> => {
   const res = await api.post(`/admin/user/balance/${userId}`, payload);
   return unwrap(res.data);
@@ -39,7 +37,7 @@ export const updateAdminUserService = async (
     phone: string;
     email: string;
     country: string;
-  }
+  },
 ): Promise<unknown> => {
   const res = await api.put(`/admin/user/${userId}`, payload);
   return unwrap(res.data);
@@ -47,28 +45,28 @@ export const updateAdminUserService = async (
 
 export const disableAdminUserService = async (
   userId: number | string,
-  reason: string
+  reason: string,
 ): Promise<unknown> => {
   const res = await api.post(`/admin/user/disable/${userId}`, { reason });
   return unwrap(res.data);
 };
 
 export const enableAdminUserService = async (
-  userId: number | string
+  userId: number | string,
 ): Promise<unknown> => {
   const res = await api.post(`/admin/user/enable/${userId}`);
   return unwrap(res.data);
 };
 
 export const deleteAdminUserService = async (
-  userId: number | string
+  userId: number | string,
 ): Promise<unknown> => {
   const res = await api.delete(`/admin/user/${userId}`);
   return unwrap(res.data);
 };
 
 export const restoreAdminUserService = async (
-  userId: number | string
+  userId: number | string,
 ): Promise<unknown> => {
   const res = await api.post(`/admin/user/restore/${userId}`);
   return unwrap(res.data);
@@ -90,35 +88,35 @@ export const createAdminWalletService = async (payload: {
 
 export const updateAdminWalletService = async (
   walletId: number | string,
-  payload: { address: string; type: string; balance: number }
+  payload: { address: string; type: string; balance: number },
 ): Promise<unknown> => {
   const res = await api.put(`/admin/wallet/${walletId}`, payload);
   return unwrap(res.data);
 };
 
 export const disableAdminWalletService = async (
-  walletId: number | string
+  walletId: number | string,
 ): Promise<unknown> => {
   const res = await api.post(`/admin/wallet/disable/${walletId}`);
   return unwrap(res.data);
 };
 
 export const enableAdminWalletService = async (
-  walletId: number | string
+  walletId: number | string,
 ): Promise<unknown> => {
   const res = await api.post(`/admin/wallet/enable/${walletId}`);
   return unwrap(res.data);
 };
 
 export const deleteAdminWalletService = async (
-  walletId: number | string
+  walletId: number | string,
 ): Promise<unknown> => {
   const res = await api.delete(`/admin/wallet/${walletId}`);
   return unwrap(res.data);
 };
 
 export const restoreAdminWalletService = async (
-  walletId: number | string
+  walletId: number | string,
 ): Promise<unknown> => {
   const res = await api.post(`/admin/wallet/restore/${walletId}`);
   return unwrap(res.data);
@@ -135,17 +133,21 @@ export const getAdminDepositsService = async (params?: {
 
 export const approveDepositService = async (
   depositId: number | string,
-  remarks: string
+  remarks: string,
 ): Promise<unknown> => {
-  const res = await api.post(`/admin/deposits/approve/${depositId}`, { remarks });
+  const res = await api.post(`/admin/deposits/approve/${depositId}`, {
+    remarks,
+  });
   return unwrap(res.data);
 };
 
 export const rejectDepositService = async (
   depositId: number | string,
-  remarks: string
+  remarks: string,
 ): Promise<unknown> => {
-  const res = await api.post(`/admin/deposits/reject/${depositId}`, { remarks });
+  const res = await api.post(`/admin/deposits/reject/${depositId}`, {
+    remarks,
+  });
   return unwrap(res.data);
 };
 
@@ -160,25 +162,32 @@ export const getAdminWithdrawalsService = async (params?: {
 
 export const approveWithdrawalService = async (
   withdrawalId: number | string,
-  remarks: string
+  remarks: string,
 ): Promise<unknown> => {
-  const res = await api.post(`/admin/withdrawals/approve/${withdrawalId}`, { remarks });
+  const res = await api.post(`/admin/withdrawals/approve/${withdrawalId}`, {
+    remarks,
+  });
   return unwrap(res.data);
 };
 
 export const completeWithdrawalService = async (
   withdrawalId: number | string,
-  payload: { wallet_address_id: number | string; remarks: string }
+  payload: { wallet_address_id: number | string; remarks: string },
 ): Promise<unknown> => {
-  const res = await api.post(`/admin/withdrawals/complete/${withdrawalId}`, payload);
+  const res = await api.post(
+    `/admin/withdrawals/complete/${withdrawalId}`,
+    payload,
+  );
   return unwrap(res.data);
 };
 
 export const rejectWithdrawalService = async (
   withdrawalId: number | string,
-  remarks: string
+  remarks: string,
 ): Promise<unknown> => {
-  const res = await api.post(`/admin/withdrawals/reject/${withdrawalId}`, { remarks });
+  const res = await api.post(`/admin/withdrawals/reject/${withdrawalId}`, {
+    remarks,
+  });
   return unwrap(res.data);
 };
 
@@ -199,25 +208,27 @@ export interface AdminUserCtoResponse {
     name: string;
     email: string;
   };
-  data: {
-    id: number;
-    user_id: number;
-    otp_code: string;
-    cto_code: string;
-    amount: string | null;
-    status: 'pending' | 'used' | 'expired';
-    otp_expires_at: string;
-    used_at?: string | null;
-    created_at: string;
-    updated_at: string;
-  } | null;
+  data: CtoProps | null;
+}
+
+export interface CtoProps {
+  id: number;
+  user_id: number;
+  otp_code: string;
+  cto_code: string;
+  amount: string | null;
+  status: "pending" | "used" | "expired";
+  otp_expires_at: string;
+  used_at?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export const getAdminUserCtoCodeService = async (
-  userId: number | string
-): Promise<AdminUserCtoResponse> => {
+  userId: number | string,
+): Promise<CtoProps> => {
   const res = await api.get(`/admin/user/${userId}/cto-code`);
-  return unwrap(res.data) as AdminUserCtoResponse;
+  return unwrap(res.data) as CtoProps;
 };
 
 export const generateAdminUserCtoCodeService = async (
@@ -226,7 +237,7 @@ export const generateAdminUserCtoCodeService = async (
     cto_code?: string;
     amount?: number | string;
     send_email?: boolean;
-  }
+  },
 ): Promise<AdminUserCtoResponse> => {
   const res = await api.post(`/admin/user/${userId}/cto-code`, payload);
   return unwrap(res.data) as AdminUserCtoResponse;
@@ -242,4 +253,3 @@ export const getAdminWithdrawalCodesService = async (params?: {
   const res = await api.get("/admin/withdrawals/codes", { params });
   return unwrap(res.data);
 };
-

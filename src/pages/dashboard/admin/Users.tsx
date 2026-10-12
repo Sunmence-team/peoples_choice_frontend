@@ -21,6 +21,7 @@ import {
 } from "../../../helpers/formatterUtility";
 import { getErrorMessage } from "../../../helpers/api";
 import type { AdminUser } from "../../../lib/interfaces";
+import FormattedInput from "../../../components/ui/FormattedInput";
 
 const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
   const { data: ctoRes, isLoading, refetch } = useAdminUserCtoCode(userId);
@@ -31,7 +32,7 @@ const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
   const [sendEmail, setSendEmail] = useState(true);
   const [showGenerateForm, setShowGenerateForm] = useState(false);
 
-  const ctoData = ctoRes?.data;
+  const ctoData = ctoRes;
 
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -80,11 +81,15 @@ const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
       </div>
 
       {isLoading ? (
-        <div className="py-2 text-[11px] text-gray-400">Loading CTO code...</div>
+        <div className="py-2 text-[11px] text-gray-400">
+          Loading CTO code...
+        </div>
       ) : ctoData ? (
         <div className="mt-2.5 rounded-md bg-white border border-[#dfe8f1] p-2.5 space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-gray-500">Active CTO Code:</span>
+            <span className="text-[11px] font-medium text-gray-500">
+              Active CTO Code:
+            </span>
             <div className="flex items-center gap-1.5">
               <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-2 py-0.5 rounded">
                 {ctoData.cto_code}
@@ -101,13 +106,17 @@ const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
           {ctoData.otp_code && (
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-gray-500">OTP Code:</span>
-              <span className="font-mono font-semibold text-gray-800">{ctoData.otp_code}</span>
+              <span className="font-mono font-semibold text-gray-800">
+                {ctoData.otp_code}
+              </span>
             </div>
           )}
           {ctoData.amount && (
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-gray-500">Authorized Amount:</span>
-              <span className="font-semibold text-gray-800">{ctoData.amount} USDT</span>
+              <span className="font-semibold text-gray-800">
+                {ctoData.amount} USDT
+              </span>
             </div>
           )}
           <div className="flex items-center justify-between text-[11px]">
@@ -132,7 +141,10 @@ const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
       )}
 
       {showGenerateForm && (
-        <form onSubmit={handleGenerate} className="mt-3 space-y-2 border-t border-[#dfe8f1] pt-2.5">
+        <form
+          onSubmit={handleGenerate}
+          className="mt-3 space-y-2 border-t border-[#dfe8f1] pt-2.5"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               type="text"
@@ -141,8 +153,8 @@ const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
               onChange={(e) => setCustomCode(e.target.value)}
               className="h-8 rounded-md border border-[#dfe8f1] bg-white px-2.5 text-[11px] outline-none focus:border-primary"
             />
-            <input
-              type="number"
+            <FormattedInput
+              name="amount"
               placeholder="Amount (optional)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -157,7 +169,10 @@ const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
               onChange={(e) => setSendEmail(e.target.checked)}
               className="rounded border-gray-300 text-primary"
             />
-            <label htmlFor="sendEmail" className="text-[11px] text-gray-600 cursor-pointer">
+            <label
+              htmlFor="sendEmail"
+              className="text-[11px] text-gray-600 cursor-pointer"
+            >
               Send notification email to user
             </label>
           </div>
@@ -166,7 +181,9 @@ const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
             disabled={generateMutation.isPending}
             className="w-full rounded-md bg-primary py-2 text-[11px] font-semibold text-white transition hover:bg-primary/80 disabled:opacity-60 cursor-pointer"
           >
-            {generateMutation.isPending ? "Generating..." : "Generate & Save CTO Code"}
+            {generateMutation.isPending
+              ? "Generating..."
+              : "Generate & Save CTO Code"}
           </button>
         </form>
       )}
@@ -187,7 +204,7 @@ const Users: React.FC = () => {
   const [balanceDescription, setBalanceDescription] = useState("");
 
   const { data, isLoading, error } = useAdminUsers(currentPage, itemsPerPage);
-  const users = data?.items ?? [];
+  const users: AdminUser[] = data?.data ?? [];
 
   const disableMutation = useDisableAdminUser();
   const enableMutation = useEnableAdminUser();
@@ -204,9 +221,8 @@ const Users: React.FC = () => {
           ? deleteMutation
           : restoreMutation;
 
-  const getUserInitials = (fullName: string) => {
-    const [first = "", last = ""] = fullName.split(" ");
-    return getInitials(first, last);
+  const getUserInitials = (first_name: string, last_name: string) => {
+    return getInitials(first_name, last_name);
   };
 
   const openUser = (id: number) => {
@@ -233,16 +249,16 @@ const Users: React.FC = () => {
           userId: selectedUser.id,
           reason: reason.trim(),
         });
-        toast.success(`${selectedUser.full_name} has been disabled`);
+        toast.success(`${selectedUser.first_name} has been disabled`);
       } else if (confirmAction === "enable") {
         await enableMutation.mutateAsync({ userId: selectedUser.id });
-        toast.success(`${selectedUser.full_name} has been re-activated`);
+        toast.success(`${selectedUser.first_name} has been re-activated`);
       } else if (confirmAction === "delete") {
         await deleteMutation.mutateAsync({ userId: selectedUser.id });
-        toast.success(`${selectedUser.full_name} has been deleted`);
+        toast.success(`${selectedUser.first_name} has been deleted`);
       } else {
         await restoreMutation.mutateAsync({ userId: selectedUser.id });
-        toast.success(`${selectedUser.full_name} has been restored`);
+        toast.success(`${selectedUser.first_name} has been restored`);
       }
       setConfirmAction(null);
       setUserModal(false);
@@ -278,15 +294,13 @@ const Users: React.FC = () => {
     }
   };
 
-  const statusBadge = (status: AdminUser["status"]) => (
+  const statusBadge = (status: AdminUser["is_disabled"]) => (
     <span
       className={`px-3 py-1 rounded-xl font-medium capitalize ${
-        status === "active"
-          ? "bg-green-100 text-green-600"
-          : "bg-red-100 text-red-600"
+        !status ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
       }`}
     >
-      {status}
+      {!status ? "Active" : "Disabled"}
     </span>
   );
 
@@ -297,11 +311,11 @@ const Users: React.FC = () => {
       render: (item: AdminUser) => (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-white uppercase">
-            {getUserInitials(item.full_name)}
+            {getUserInitials(item.first_name, item.last_name)}
           </div>
           <div>
             <p className="text-[10px] font-semibold text-[#172b4d]">
-              {item.full_name}
+              {item.first_name} {item.last_name}
             </p>
             <p className="text-[9px] text-[#8190a3]">@{item.username}</p>
           </div>
@@ -313,27 +327,27 @@ const Users: React.FC = () => {
       key: "email",
       render: (item: AdminUser) => item.email,
     },
-    {
-      label: "ROLE",
-      key: "role",
-      render: (item: AdminUser) => (
-        <span className="px-3 py-1 rounded-xl font-medium capitalize bg-primary/10 text-primary">
-          {item.role}
-        </span>
-      ),
-    },
+    // {
+    //   label: "ROLE",
+    //   key: "role",
+    //   render: (item: AdminUser) => (
+    //     <span className="px-3 py-1 rounded-xl font-medium capitalize bg-primary/10 text-primary">
+    //       {item.role}
+    //     </span>
+    //   ),
+    // },
     {
       label: "ACCOUNT STATUS",
       key: "status",
-      render: (item: AdminUser) => statusBadge(item.status),
+      render: (item: AdminUser) => statusBadge(item.is_disabled),
     },
-    {
-      label: "WALLET BALANCE",
-      key: "wallet_balance",
-      render: (item: AdminUser) => (
-        <span className="font-semibold">{item.wallet_balance}.00 USDT</span>
-      ),
-    },
+    // {
+    //   label: "WALLET BALANCE",
+    //   key: "wallet_balance",
+    //   render: (item: AdminUser) => (
+    //     <span className="font-semibold">{item.wallet_balance}.00 USDT</span>
+    //   ),
+    // },
     {
       label: "JOINED",
       key: "created_at",
@@ -352,7 +366,7 @@ const Users: React.FC = () => {
             setConfirmAction("delete");
           }}
           otherActions={
-            item.status === "active"
+            !item.is_disabled
               ? [
                   {
                     name: "Disable",
@@ -390,22 +404,22 @@ const Users: React.FC = () => {
   const confirmLabels = {
     disable: {
       title: "Disable this account?",
-      message: `${selectedUser?.full_name} will lose access to the platform immediately.`,
+      message: `${selectedUser?.first_name} will lose access to the platform immediately.`,
       text: "Yes, Disable",
     },
     enable: {
       title: "Re-activate this account?",
-      message: `${selectedUser?.full_name} will regain access to the platform.`,
+      message: `${selectedUser?.first_name} will regain access to the platform.`,
       text: "Yes, Re-activate",
     },
     delete: {
       title: "Delete this account?",
-      message: `${selectedUser?.full_name}'s account will be permanently deleted. This cannot be undone.`,
+      message: `${selectedUser?.first_name}'s account will be permanently deleted. This cannot be undone.`,
       text: "Yes, Delete",
     },
     restore: {
       title: "Restore this account?",
-      message: `${selectedUser?.full_name}'s account will be restored.`,
+      message: `${selectedUser?.first_name}'s account will be restored.`,
       text: "Yes, Restore",
     },
   } as const;
@@ -447,14 +461,17 @@ const Users: React.FC = () => {
 
             <div className="mt-6 flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-semibold text-white uppercase">
-                {getUserInitials(selectedUser.full_name)}
+                {getUserInitials(
+                  selectedUser.first_name,
+                  selectedUser.last_name,
+                )}
               </div>
               <div>
                 <p className="text-[16px] font-bold text-[#172b4d]">
-                  {selectedUser.full_name}
+                  {selectedUser.first_name}
                 </p>
                 <span className="mt-1 inline-block">
-                  {statusBadge(selectedUser.status)}
+                  {statusBadge(selectedUser.is_disabled)}
                 </span>
               </div>
             </div>
@@ -466,17 +483,22 @@ const Users: React.FC = () => {
                 { label: "Phone", value: selectedUser.phone || "-" },
                 { label: "Country", value: selectedUser.country || "-" },
                 { label: "Role", value: selectedUser.role },
+                // {
+                //   label: "Wallet Balance",
+                //   value: `${selectedUser.wallet_balance}.00 USDT`,
+                // },
                 {
-                  label: "Wallet Balance",
-                  value: `${selectedUser.wallet_balance}.00 USDT`,
+                  label: "Joined",
+                  value: formatShortDate(selectedUser.created_at),
                 },
-                { label: "Joined", value: formatShortDate(selectedUser.created_at) },
               ].map((row) => (
                 <div
                   key={row.label}
                   className="flex items-center justify-between gap-4 border-b border-[#e3eaf2] pb-3"
                 >
-                  <span className="text-[11px] text-[#8190a3]">{row.label}</span>
+                  <span className="text-[11px] text-[#8190a3]">
+                    {row.label}
+                  </span>
                   <span className="text-[12px] font-semibold text-[#172b4d] capitalize text-right">
                     {row.value}
                   </span>
@@ -491,8 +513,8 @@ const Users: React.FC = () => {
               </p>
 
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <input
-                  type="number"
+                <FormattedInput
+                  name="balanceAmount"
                   placeholder="Amount"
                   value={balanceAmount}
                   onChange={(e) => setBalanceAmount(e.target.value)}
@@ -520,7 +542,7 @@ const Users: React.FC = () => {
             {/* CTO Clearance Code management */}
             <UserCtoSection userId={selectedUser.id} />
 
-            {selectedUser.status === "active" && (
+            {!selectedUser.is_disabled && (
               <div className="mt-5 rounded-lg border border-[#e3eaf2] p-3">
                 <p className="text-[11px] font-semibold text-[#172b4d]">
                   Reason (required to disable)
@@ -536,7 +558,7 @@ const Users: React.FC = () => {
             )}
 
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {selectedUser.status === "active" ? (
+              {!selectedUser.is_disabled ? (
                 <button
                   type="button"
                   onClick={() => setConfirmAction("disable")}
@@ -580,9 +602,7 @@ const Users: React.FC = () => {
         title={
           confirmAction ? confirmLabels[confirmAction].title : "Are you sure?"
         }
-        message={
-          confirmAction ? confirmLabels[confirmAction].message : ""
-        }
+        message={confirmAction ? confirmLabels[confirmAction].message : ""}
         confirmText={
           confirmAction ? confirmLabels[confirmAction].text : "Confirm"
         }

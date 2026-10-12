@@ -18,6 +18,7 @@ import {
 } from "../../../hooks/useAdminData";
 import { getErrorMessage } from "../../../helpers/api";
 import type { CompanyWallet } from "../../../helpers/mappers";
+import FormattedInput from "../../../components/ui/FormattedInput";
 
 type WalletAction = "disable" | "enable" | "delete" | "restore" | null;
 
@@ -376,8 +377,8 @@ const Balances: React.FC = () => {
                 <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
                   Balance
                 </label>
-                <input
-                  type="number"
+                <FormattedInput
+                  name="balance"
                   value={form.balance}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, balance: e.target.value }))
