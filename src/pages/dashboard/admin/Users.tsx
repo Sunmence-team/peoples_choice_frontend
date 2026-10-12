@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { FaLock, FaCheck, FaRotateLeft } from "react-icons/fa6";
+import { LuWallet } from "react-icons/lu";
 import ReusableTable from "../../../utility/ReusableTable";
 import ActionCell from "../../../components/ui/ActionCell";
 import Modal from "../../../components/modal/Modal";
@@ -196,6 +197,8 @@ const Users: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [userModal, setUserModal] = useState(false);
+  const [balanceModal, setBalanceModal] = useState(false);
+  const [disableModal, setDisableModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "disable" | "enable" | "delete" | "restore" | null
   >(null);
@@ -221,7 +224,7 @@ const Users: React.FC = () => {
           ? deleteMutation
           : restoreMutation;
 
-  const getUserInitials = (first_name: string, last_name: string) => {
+  const getUserInitials = (first_name?: string, last_name?: string) => {
     return getInitials(first_name, last_name);
   };
 
@@ -234,6 +237,19 @@ const Users: React.FC = () => {
       setBalanceAmount("");
       setBalanceDescription("");
     }
+  };
+
+  const openBalanceModal = (user: AdminUser) => {
+    setSelectedUser(user);
+    setBalanceAmount("");
+    setBalanceDescription("");
+    setBalanceModal(true);
+  };
+
+  const openDisableModal = (user: AdminUser) => {
+    setSelectedUser(user);
+    setReason("");
+    setDisableModal(true);
   };
 
   const runAction = async () => {
@@ -268,6 +284,27 @@ const Users: React.FC = () => {
     }
   };
 
+  const handleDisable = async () => {
+    if (!selectedUser) return;
+    if (!reason.trim()) {
+      toast.error("Please provide a reason");
+      return;
+    }
+    try {
+      await disableMutation.mutateAsync({
+        userId: selectedUser.id,
+        reason: reason.trim(),
+      });
+      toast.success(`${selectedUser.first_name} has been disabled`);
+      setDisableModal(false);
+      setUserModal(false);
+      setSelectedUser(null);
+      setReason("");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Action failed"));
+    }
+  };
+
   const handleBalanceUpdate = async () => {
     if (!selectedUser) return;
     const amount = Number(balanceAmount);
@@ -289,6 +326,7 @@ const Users: React.FC = () => {
       toast.success("User balance updated");
       setBalanceAmount("");
       setBalanceDescription("");
+      setBalanceModal(false);
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to update balance"));
     }
@@ -362,40 +400,46 @@ const Users: React.FC = () => {
           rowId={Number(item.id)}
           onView={() => openUser(item.id)}
           onDelete={() => {
-            openUser(item.id);
+            setSelectedUser(item);
             setConfirmAction("delete");
           }}
-          otherActions={
-            !item.is_disabled
+          otherActions={[
+            {
+              name: "Update Balance",
+              icon: <LuWallet />,
+              tone: "default" as const,
+              action: () => openBalanceModal(item),
+            },
+            ...(!item.is_disabled
               ? [
                   {
                     name: "Disable",
                     icon: <FaLock />,
-                    tone: "danger",
-                    action: () => openUser(item.id),
+                    tone: "danger" as const,
+                    action: () => openDisableModal(item),
                   },
                 ]
               : [
                   {
                     name: "Re-activate",
                     icon: <FaCheck />,
-                    tone: "success",
+                    tone: "success" as const,
                     action: () => {
-                      openUser(item.id);
+                      setSelectedUser(item);
                       setConfirmAction("enable");
                     },
                   },
                   {
                     name: "Restore",
                     icon: <FaRotateLeft />,
-                    tone: "default",
+                    tone: "default" as const,
                     action: () => {
-                      openUser(item.id);
+                      setSelectedUser(item);
                       setConfirmAction("restore");
                     },
                   },
-                ]
-          }
+                ]),
+          ]}
         />
       ),
     },
@@ -506,91 +550,165 @@ const Users: React.FC = () => {
               ))}
             </div>
 
-            {/* Balance update */}
-            <div className="mt-5 rounded-lg border border-[#e3eaf2] p-3">
-              <p className="text-[11px] font-semibold text-[#172b4d]">
-                Update Balance (Hidden Transaction)
-              </p>
+            {/* CTO Clearance Code management */}
+            <UserCtoSection userId={selectedUser.id} />
 
-              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <FormattedInput
-                  name="balanceAmount"
-                  placeholder="Amount"
-                  value={balanceAmount}
-                  onChange={(e) => setBalanceAmount(e.target.value)}
-                  className="h-9 rounded-md border border-[#dfe8f1] px-3 text-[11px] outline-none focus:border-primary"
-                />
-                <input
-                  type="text"
-                  placeholder="Description"
-                  value={balanceDescription}
-                  onChange={(e) => setBalanceDescription(e.target.value)}
-                  className="h-9 rounded-md border border-[#dfe8f1] px-3 text-[11px] outline-none focus:border-primary"
-                />
+            {/* Modal Actions */}
+            <div className="mt-6 space-y-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const target = selectedUser;
+                  setUserModal(false);
+                  openBalanceModal(target);
+                }}
+                className="w-full rounded-lg bg-primary py-2.5 text-xs font-semibold text-white transition hover:bg-primary/80 cursor-pointer"
+              >
+                Update Balance
+              </button>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {!selectedUser.is_disabled ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = selectedUser;
+                      setUserModal(false);
+                      openDisableModal(target);
+                    }}
+                    className="w-full rounded-lg py-2.5 text-xs font-semibold text-white transition cursor-pointer bg-red-500 hover:bg-red-600"
+                  >
+                    Disable Account
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserModal(false);
+                        setConfirmAction("enable");
+                      }}
+                      className="w-full rounded-lg py-2.5 text-xs font-semibold text-white transition cursor-pointer bg-[#05a957] hover:bg-[#04984e]"
+                    >
+                      Re-activate Account
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserModal(false);
+                        setConfirmAction("restore");
+                      }}
+                      className="w-full rounded-lg border border-primary py-2.5 text-xs font-semibold text-primary transition cursor-pointer hover:bg-primary/5"
+                    >
+                      Restore Account
+                    </button>
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserModal(false);
+                    setConfirmAction("delete");
+                  }}
+                  className="w-full rounded-lg border border-red-200 py-2.5 text-xs font-semibold text-red-600 transition cursor-pointer hover:bg-red-50"
+                >
+                  Delete Account
+                </button>
               </div>
+            </div>
+          </div>
+        </Modal>
+      )}
 
+      {/* Update Balance Modal */}
+      {balanceModal && selectedUser && (
+        <Modal onClose={() => setBalanceModal(false)}>
+          <div className="p-4">
+            <h3 className="text-[18px] font-bold text-[#0B2D5B]">
+              Update Balance (Hidden Transaction)
+            </h3>
+            <p className="mt-1 text-[12px] text-[#8190a3]">
+              Update balance for {selectedUser.first_name} {selectedUser.last_name}.
+            </p>
+
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <FormattedInput
+                name="balanceAmount"
+                placeholder="Amount"
+                value={balanceAmount}
+                onChange={(e) => setBalanceAmount(e.target.value)}
+                className="h-9 rounded-md border border-[#dfe8f1] px-3 text-[11px] outline-none focus:border-primary"
+              />
+              <input
+                type="text"
+                placeholder="Description"
+                value={balanceDescription}
+                onChange={(e) => setBalanceDescription(e.target.value)}
+                className="h-9 rounded-md border border-[#dfe8f1] px-3 text-[11px] outline-none focus:border-primary"
+              />
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setBalanceModal(false)}
+                className="rounded-lg border border-[#dfe8f1] px-4 py-2 text-[12px] font-semibold text-[#52677c] transition hover:bg-[#f8fafc] cursor-pointer"
+              >
+                Cancel
+              </button>
               <button
                 type="button"
                 onClick={handleBalanceUpdate}
                 disabled={balanceMutation.isPending}
-                className="mt-2 w-full rounded-md bg-primary py-2 text-[11px] font-semibold text-white transition hover:bg-primary/80 disabled:opacity-60"
+                className="rounded-lg bg-primary px-4 py-2 text-[12px] font-semibold text-white transition hover:bg-primary/80 disabled:opacity-60 cursor-pointer"
               >
                 {balanceMutation.isPending ? "Updating..." : "Update Balance"}
               </button>
             </div>
+          </div>
+        </Modal>
+      )}
 
-            {/* CTO Clearance Code management */}
-            <UserCtoSection userId={selectedUser.id} />
+      {/* Disable Account Modal */}
+      {disableModal && selectedUser && (
+        <Modal onClose={() => setDisableModal(false)}>
+          <div className="p-4">
+            <h3 className="text-[18px] font-bold text-red-600">
+              Disable Account
+            </h3>
+            <p className="mt-1 text-[12px] text-[#8190a3]">
+              {selectedUser.first_name} will lose access to the platform immediately.
+            </p>
 
-            {!selectedUser.is_disabled && (
-              <div className="mt-5 rounded-lg border border-[#e3eaf2] p-3">
-                <p className="text-[11px] font-semibold text-[#172b4d]">
-                  Reason (required to disable)
-                </p>
-                <textarea
-                  rows={2}
-                  placeholder="Reason for disabling this account"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  className="mt-2 w-full resize-none rounded-md border border-[#dfe8f1] px-3 py-2 text-[11px] outline-none focus:border-primary"
-                />
-              </div>
-            )}
+            <div className="mt-4">
+              <label className="mb-1 block text-[11px] font-semibold text-[#172b4d]">
+                Reason (required to disable)
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Reason for disabling this account"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="w-full resize-none rounded-md border border-[#dfe8f1] px-3 py-2 text-[11px] outline-none focus:border-primary"
+              />
+            </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {!selectedUser.is_disabled ? (
-                <button
-                  type="button"
-                  onClick={() => setConfirmAction("disable")}
-                  className="w-full rounded-lg py-3 text-sm font-semibold text-white transition cursor-pointer bg-red-500 hover:bg-red-600"
-                >
-                  Disable Account
-                </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction("enable")}
-                    className="w-full rounded-lg py-3 text-sm font-semibold text-white transition cursor-pointer bg-[#05a957] hover:bg-[#04984e]"
-                  >
-                    Re-activate Account
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction("restore")}
-                    className="w-full rounded-lg border border-primary py-3 text-sm font-semibold text-primary transition cursor-pointer hover:bg-primary/5"
-                  >
-                    Restore Account
-                  </button>
-                </>
-              )}
-
+            <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setConfirmAction("delete")}
-                className="w-full rounded-lg border border-red-200 py-3 text-sm font-semibold text-red-600 transition cursor-pointer hover:bg-red-50"
+                onClick={() => setDisableModal(false)}
+                className="rounded-lg border border-[#dfe8f1] px-4 py-2 text-[12px] font-semibold text-[#52677c] transition hover:bg-[#f8fafc] cursor-pointer"
               >
-                Delete Account
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDisable}
+                disabled={disableMutation.isPending}
+                className="rounded-lg bg-red-500 px-4 py-2 text-[12px] font-semibold text-white transition hover:bg-red-600 disabled:opacity-60 cursor-pointer"
+              >
+                {disableMutation.isPending ? "Disabling..." : "Disable Account"}
               </button>
             </div>
           </div>

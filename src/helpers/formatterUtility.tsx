@@ -194,8 +194,10 @@ export const getPercentOfMax = (
   return Math.min(100, Math.max(0, percent));
 };
 
-export function getInitials(firstName: string, lastName: string) {
-  return firstName.trim()[0].toUpperCase() + lastName.trim()[0].toUpperCase();
+export function getInitials(firstName?: string, lastName?: string) {
+  const f = firstName?.trim()?.[0]?.toUpperCase() ?? "";
+  const l = lastName?.trim()?.[0]?.toUpperCase() ?? "";
+  return `${f}${l}` || "U";
 }
 
 export const formatISODateToYYYYMMDD = (isoString: string): string => {

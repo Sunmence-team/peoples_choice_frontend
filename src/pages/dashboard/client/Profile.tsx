@@ -39,15 +39,6 @@ function ProfileBody() {
   );
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
   const [disableReason, setDisableReason] = useState("");
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
@@ -323,116 +314,8 @@ function ProfileBody() {
       {/* Security */}
       {activeTab === "security" && (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 ">
-          {/* Change Password */}
-          <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-primary">
-                Change Password
-              </h2>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Update your password to keep your account secure.
-              </p>
-            </div>
-
-            {/* Current Password */}
-            <div className="mb-5">
-              <label className="mb-2 block text-sm font-medium text-[#40556d]">
-                Current Password
-              </label>
-
-              <div className="relative">
-                <input
-                  type={showCurrentPassword ? "text" : "password"}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password"
-                  className="w-full rounded-lg border border-[#d8e4ef] bg-white px-4 py-3 pr-12 text-sm text-[#243b53] outline-none transition focus:border-primary"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 hover:text-primary"
-                >
-                  {showCurrentPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-
-            {/* New Password */}
-            <div className="mb-5">
-              <label className="mb-2 block text-sm font-medium text-[#40556d]">
-                New Password
-              </label>
-
-              <div className="relative">
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  className="w-full rounded-lg border border-[#d8e4ef] bg-white px-4 py-3 pr-12 text-sm text-[#243b53] outline-none transition focus:border-primary"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 hover:text-primary"
-                >
-                  {showNewPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="mb-6">
-              <label className="mb-2 block text-sm font-medium text-[#40556d]">
-                Confirm New Password
-              </label>
-
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  className="w-full rounded-lg border border-[#d8e4ef] bg-white px-4 py-3 pr-12 text-sm text-[#243b53] outline-none transition focus:border-primary"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 hover:text-primary"
-                >
-                  {showConfirmPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (!currentPassword || !newPassword) {
-                  toast.error("All password fields are required");
-                  return;
-                }
-
-                if (newPassword !== confirmPassword) {
-                  toast.error("Passwords do not match");
-                  return;
-                }
-
-                toast.info("Password change is not available yet");
-              }}
-              className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-[#04984e]"
-            >
-              Update Password
-            </button>
-          </div>
-
           {/* Security Settings */}
-          <div className="rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
+          <div className="col-span-2 rounded-xl border border-[#dce8f3] bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-primary">
               Security Settings
             </h2>
@@ -440,33 +323,6 @@ function ProfileBody() {
             <p className="mt-1 text-sm text-gray-500">
               Manage additional security features for your account.
             </p>
-
-            {/* 2FA */}
-            <div className="mt-6 flex items-center justify-between rounded-lg border border-[#e1eaf2] p-4">
-              <div className="pr-4">
-                <h3 className="text-sm font-semibold text-[#243b53]">
-                  Two-Factor Authentication
-                </h3>
-
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Add an extra layer of security when logging into your account.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-                  twoFactorEnabled ? "bg-tertiary" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition ${
-                    twoFactorEnabled ? "left-6" : "left-1"
-                  }`}
-                />
-              </button>
-            </div>
 
             {/* Email Verification */}
             <div className="mt-4 flex items-center justify-between rounded-lg border border-[#e1eaf2] p-4">
