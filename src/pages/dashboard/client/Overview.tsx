@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -7,28 +7,34 @@ import {
   Wallet,
 } from "lucide-react";
 import { IoMdArrowForward } from "react-icons/io";
-import { ActionCard } from '../../../components/cards/ActionCard';
-import ActionCell from '../../../components/ui/ActionCell';
-import ReusableTable from '../../../utility/ReusableTable';
-import { useUser } from '../../../hooks/useUser';
-import { useDashboard, useTransactionLedger } from '../../../hooks/useClientData';
-import { useNavigate } from 'react-router-dom';
-import type { TableColumnProps, Transaction } from '../../../lib/interfaces';
-import ViewTransactionModal from '../../../components/modal/ViewTransactionModal';
+import { ActionCard } from "../../../components/cards/ActionCard";
+import ActionCell from "../../../components/ui/ActionCell";
+import ReusableTable from "../../../utility/ReusableTable";
+import { useUser } from "../../../hooks/useUser";
+import {
+  useDashboard,
+  useTransactionLedger,
+} from "../../../hooks/useClientData";
+import { useNavigate } from "react-router-dom";
+import type { TableColumnProps, Transaction } from "../../../lib/interfaces";
+import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
 import { GoArrowUpRight } from "react-icons/go";
 import { Eye, EyeOff } from "lucide-react";
-import { formatISODateToCustom } from '../../../helpers/formatterUtility';
+import { formatISODateToCustom } from "../../../helpers/formatterUtility";
 
 export default function Overview() {
-
   const { user } = useUser();
   const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = useDashboard();
   const [currentPage, setCurrentPage] = React.useState(1);
-  const { data: ledger, isLoading: ledgerLoading, error: ledgerError } =
-    useTransactionLedger(currentPage, 5);
+  const {
+    data: ledger,
+    isLoading: ledgerLoading,
+    error: ledgerError,
+  } = useTransactionLedger(currentPage, 5);
 
-  const [selectedTransaction, setSelectedTransaction] = React.useState<Transaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    React.useState<Transaction | null>(null);
   const [viewModal, setViewModal] = React.useState(false);
   const [showBalance, setShowBalance] = React.useState(false);
 
@@ -41,16 +47,18 @@ export default function Overview() {
     {
       label: "TRANSACTION ID",
       key: "transaction_id",
-      render: (item) => item.transaction_id || "-"
+      render: (item) => item.transaction_id || "-",
     },
     {
       label: "TYPE",
       key: "type",
       render: (item) => (
-        <span className={`px-3 py-1 rounded-xl font-medium ${item.type === "deposit" ? "bg-green-100 text-green-500" : item.type === "withdrawal" ? "bg-primary/10 text-primary" : "bg-gray-100 text-black"}`}>
+        <span
+          className={`px-3 py-1 rounded-xl font-medium ${item.type === "deposit" ? "bg-green-100 text-green-500" : item.type === "withdrawal" ? "bg-primary/10 text-primary" : "bg-gray-100 text-black"}`}
+        >
           {item.type}
         </span>
-      )
+      ),
     },
     {
       label: "AMOUNT (USDT)",
@@ -71,10 +79,12 @@ export default function Overview() {
       label: "STATUS",
       key: "status",
       render: (item) => (
-        <span className={`px-3 py-1 rounded-xl font-medium ${item.status === "completed" ? "bg-green-100 text-green-500" : item.status === "pending" ? "bg-gray-100 text-black" : "bg-primary/10 text-primary"}`}>
+        <span
+          className={`px-3 py-1 rounded-xl font-medium ${item.status === "completed" ? "bg-green-100 text-green-500" : item.status === "pending" ? "bg-gray-100 text-black" : "bg-primary/10 text-primary"}`}
+        >
           {item.status}
         </span>
-      )
+      ),
     },
     {
       label: "Action",
@@ -85,7 +95,7 @@ export default function Overview() {
           rowId={Number(item.id ?? 0)}
           onView={(id) => {
             const row = recentTransactions.find(
-              (transactionItem) => Number(transactionItem.id) === id
+              (transactionItem) => Number(transactionItem.id) === id,
             );
             if (row) {
               setSelectedTransaction(row);
@@ -93,14 +103,13 @@ export default function Overview() {
             }
           }}
         />
-      )
+      ),
     },
   ];
 
   return (
     <>
-
-      <div className='mb-6'>
+      <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-[-0.4px] text-[#0B2D5B]">
           Good morning, {user?.first_name}
         </h1>
@@ -109,17 +118,15 @@ export default function Overview() {
         </p>
       </div>
 
-      <div className='grid grid-cols-1 gap-4 lg:grid-cols-[1.55fr_1fr]'>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.55fr_1fr]">
         <div className="relative min-h-[140px] overflow-hidden rounded-xl bg-[#0B2D5B] p-4 text-white shadow-sm">
           {/* Background decoration */}
           <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/5" />
 
           {/* Main content */}
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
-
             {/* Wallet Balance */}
             <div className="flex min-w-0 flex-1 flex-col gap-3">
-
               {/* Header */}
               <div className="flex items-center gap-2 text-[#d9e4f0]">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/20 bg-white/10">
@@ -145,7 +152,11 @@ export default function Overview() {
               {/* Balance */}
               <div className="mt-2 flex items-end gap-1.5">
                 <span className="break-all text-[26px] font-bold leading-none tracking-[-1px] sm:text-[30px]">
-                  {statsLoading ? "..." : showBalance ? balance.toLocaleString() : "*******"}
+                  {statsLoading
+                    ? "..."
+                    : showBalance
+                      ? balance.toLocaleString()
+                      : "*******"}
                 </span>
 
                 <span className="mb-0.5 shrink-0 text-[9px] font-semibold text-[#dce8f5]">
@@ -155,7 +166,7 @@ export default function Overview() {
 
               {/* Weekly + USD */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                <div className="flex items-center gap-1 text-[12px] text-tetiary sm:text-[13px]">
+                <div className="flex items-center gap-1 text-[12px] text-tertiary sm:text-[13px]">
                   <GoArrowUpRight size={15} />
                   <span>Wallet overview</span>
                 </div>
@@ -169,7 +180,7 @@ export default function Overview() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => navigate("/dashboard/deposit")}
-                  className="cursor-pointer rounded-md bg-tetiary px-3 py-2 text-[12px] font-semibold text-white transition hover:opacity-90"
+                  className="cursor-pointer rounded-md bg-tertiary px-3 py-2 text-[12px] font-semibold text-white transition hover:opacity-90"
                 >
                   Deposit USDT
                 </button>
@@ -188,7 +199,6 @@ export default function Overview() {
 
             {/* Deposit / Withdrawal Stats */}
             <div className="flex w-full flex-col gap-5 lg:w-auto lg:min-w-[280px] lg:pt-5">
-
               {/* Total Deposited */}
               <div className="flex items-start gap-4">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f7ef] text-[#16a34a]">
@@ -237,44 +247,45 @@ export default function Overview() {
               icon={<ArrowDownToLine size={13} />}
               title="Deposit USDT"
               description="Fund your wallet"
-              onClick={() => navigate('/dashboard/deposit')}
+              onClick={() => navigate("/dashboard/deposit")}
             />
 
             <ActionCard
               icon={<ArrowUpFromLine size={13} />}
               title="Withdraw Funds"
               description="Request a withdrawal"
-              onClick={() => navigate('/dashboard/withdrawl')}
+              onClick={() => navigate("/dashboard/withdrawl")}
             />
 
             <ActionCard
               icon={<BarChart3 size={13} />}
               title="Transaction History"
               description="Track your activity"
-
-              onClick={() => navigate('/dashboard/transaction-history')}
+              onClick={() => navigate("/dashboard/transaction-history")}
             />
 
             <ActionCard
               icon={<UserRound size={13} />}
               title="Manage Profile"
               description="Update your details"
-              onClick={() => navigate('/dashboard/profile')}
+              onClick={() => navigate("/dashboard/profile")}
             />
           </div>
         </div>
       </div>
 
       <div className="mt-10">
-        <div className='flex justify-between'>
+        <div className="flex justify-between">
           <h2 className="text-primary font-bold text-xl mb-5">
             Recent Transactions
           </h2>
 
-          <button className='cursor-pointer flex items-center gap-1' onClick={() => navigate('/dashboard/transaction-history')} >
+          <button
+            className="cursor-pointer flex items-center gap-1"
+            onClick={() => navigate("/dashboard/transaction-history")}
+          >
             View all <IoMdArrowForward size={14} />
           </button>
-
         </div>
 
         <ReusableTable
@@ -287,7 +298,7 @@ export default function Overview() {
           totalItems={ledger?.total ?? recentTransactions.length}
           setCurrentPage={setCurrentPage}
           itemsPerPage={5}
-          setItemsPerPage={() => { }}
+          setItemsPerPage={() => {}}
           hasSerialNo={true}
         />
       </div>
@@ -301,7 +312,6 @@ export default function Overview() {
           }}
         />
       )}
-
     </>
-  )
+  );
 }

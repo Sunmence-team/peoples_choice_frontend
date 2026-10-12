@@ -84,7 +84,7 @@ const Features: React.FC = () => {
                 key={index}
                 className="border  border-[#E5E7EB] hover:bg-light/20 px-6 py-4"
               >
-                <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-full bg-tetiary text-xl text-secondary">
+                <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-full bg-tertiary text-xl text-secondary">
                   {feature.icon}
                 </div>
 

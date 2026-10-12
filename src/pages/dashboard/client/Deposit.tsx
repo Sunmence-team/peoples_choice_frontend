@@ -3,11 +3,15 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { QRCodeSVG } from "qrcode.react";
 import { Loader2 } from "lucide-react";
-import DepositStatusTracker, {
-  type DepositStatus,
-} from "../../../components/Tracker/DepositTracker";
-import { useSubmitDeposit, useWallets, useMyDeposits } from "../../../hooks/useClientData";
+import DepositStatusTracker from "../../../components/Tracker/DepositTracker";
+import {
+  useSubmitDeposit,
+  useWallets,
+  useMyDeposits,
+  useDeposit,
+} from "../../../hooks/useClientData";
 import { getErrorMessage } from "../../../helpers/api";
+import type { DepositDetail } from "../../../services/depositServices";
 
 const validationSchema = Yup.object({
   wallet_address_id: Yup.number()
@@ -46,19 +50,27 @@ const validationSchema = Yup.object({
     ),
 });
 
-const statusMap: Record<string, DepositStatus> = {
-  pending: "pending_verification",
-  approved: "approved",
-  completed: "wallet_credited",
-  rejected: "rejected",
-};
-
 const DepositRequest = () => {
   const [copied, setCopied] = useState(false);
+  const [activeDepositId, setActiveDepositId] = useState<number | string | null>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("active_deposit_id");
+      if (saved) return saved;
+    }
+    return null;
+  });
 
   const { data: wallets, isLoading: walletsLoading } = useWallets();
   const { data: deposits } = useMyDeposits(1, 5);
   const submitMutation = useSubmitDeposit();
+
+  const latestDeposit = deposits?.items?.[0];
+  const effectiveDepositId =
+    activeDepositId ?? (latestDeposit?.status === "pending" ? latestDeposit.id : null);
+
+  const { data: depositDetails, isLoading: depositDetailsLoading } = useDeposit(
+    effectiveDepositId
+  );
 
   const formik = useFormik({
     initialValues: {
@@ -73,12 +85,19 @@ const DepositRequest = () => {
       if (!values.proof_image) return;
 
       try {
-        await submitMutation.mutateAsync({
+        const result = await submitMutation.mutateAsync({
           wallet_address_id: values.wallet_address_id,
           amount: values.amount,
           proof_image: values.proof_image,
         });
         helpers.resetForm();
+
+        const newId =
+          (result as DepositDetail)?.id ?? (result as { data?: { id?: number | string } })?.data?.id;
+        if (newId) {
+          setActiveDepositId(newId);
+          localStorage.setItem("active_deposit_id", String(newId));
+        }
       } catch (error) {
         console.error("Deposit failed:", error);
       }
@@ -115,18 +134,13 @@ const DepositRequest = () => {
     formik.setFieldValue("proof_image", file);
   };
 
-  const latestDeposit = deposits?.items?.[0];
-  const trackerStatus: DepositStatus | null = latestDeposit
-    ? statusMap[latestDeposit.status] ?? "pending_verification"
-    : null;
-
   return (
     <div className="w-full">
 
         <h2 className='text-2xl text-primary font-bold'>Deposit USDT</h2>
-        <p className='text-[13px] font-medium w-[530px] text-gray-500 '>
-            Send USDT to your wallet address and submit your payment details. Your deposit will be reviewed manually before your
-            wallet is credited
+        <p className='text-[13px] font-medium w-132.5 text-gray-500 '>
+            Send USDT to your wallet address and submit your payment details. Your deposit will be reviewed and your
+            wallet will be credited.
         </p>
 
 
@@ -397,9 +411,17 @@ const DepositRequest = () => {
             </form>
         </div>
 
-        {trackerStatus && (
+        {effectiveDepositId && (
             <div className="mt-5">
-                <DepositStatusTracker status={trackerStatus} />
+                <DepositStatusTracker
+                    depositId={effectiveDepositId}
+                    deposit={depositDetails}
+                    isLoading={depositDetailsLoading}
+                    onClose={() => {
+                        setActiveDepositId(null);
+                        localStorage.removeItem("active_deposit_id");
+                    }}
+                />
             </div>
         )}
     </div>

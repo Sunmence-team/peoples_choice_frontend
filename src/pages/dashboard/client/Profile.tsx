@@ -307,7 +307,7 @@ function ProfileBody() {
 
             {/* Verification Notice */}
             <div className="mt-5 flex gap-3 rounded-lg bg-[#e9f9f2] p-4">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tetiary text-xs font-bold text-white">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tertiary text-xs font-bold text-white">
                 ✓
               </div>
 
@@ -457,7 +457,7 @@ function ProfileBody() {
                 type="button"
                 onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
                 className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-                  twoFactorEnabled ? "bg-tetiary" : "bg-gray-300"
+                  twoFactorEnabled ? "bg-tertiary" : "bg-gray-300"
                 }`}
               >
                 <span

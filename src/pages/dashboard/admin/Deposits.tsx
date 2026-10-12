@@ -37,7 +37,7 @@ const Deposits: React.FC = () => {
 
   const runAction = async () => {
     if (!actionTarget) return;
-    if (!remarks.trim()) {
+    if (actionType === "reject" && !remarks.trim()) {
       toast.error("Remarks are required");
       return;
     }
@@ -190,7 +190,7 @@ const Deposits: React.FC = () => {
 
             <div className="mt-5">
               <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
-                Remarks
+                Remarks {actionType === "approve" && <p>Optional</p>}
               </label>
               <textarea
                 rows={3}

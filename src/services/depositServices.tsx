@@ -7,9 +7,38 @@ export interface SubmitDepositPayload {
   proof_image: File;
 }
 
+export interface DepositWalletAddress {
+  id?: number | string;
+  address?: string;
+  type?: string;
+  balance?: string | number;
+  is_deleted?: boolean;
+  is_disabled?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DepositDetail {
+  id: number | string;
+  reference_id: string;
+  user_id?: number | string;
+  wallet_address_id?: number | string;
+  amount: string | number;
+  proof_image?: string;
+  proof_image_url?: string;
+  status: string;
+  remarks?: string;
+  note?: string;
+  admin_remarks?: string;
+  created_at: string;
+  updated_at?: string;
+  wallet_address?: DepositWalletAddress;
+  [key: string]: unknown;
+}
+
 export const submitDepositService = async (
   payload: SubmitDepositPayload
-): Promise<unknown> => {
+): Promise<DepositDetail> => {
   const formData = new FormData();
   formData.append("wallet_address_id", String(payload.wallet_address_id));
   formData.append("amount", String(payload.amount));
@@ -18,7 +47,7 @@ export const submitDepositService = async (
   const res = await api.post("/deposits", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return unwrap(res.data);
+  return unwrap(res.data) as DepositDetail;
 };
 
 export const getMyDepositsService = async (params?: {
@@ -31,7 +60,7 @@ export const getMyDepositsService = async (params?: {
 
 export const getDepositService = async (
   depositId: number | string
-): Promise<unknown> => {
+): Promise<DepositDetail> => {
   const res = await api.get(`/deposits/${depositId}`);
-  return unwrap(res.data);
+  return unwrap(res.data) as DepositDetail;
 };
