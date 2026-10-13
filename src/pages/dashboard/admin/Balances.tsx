@@ -50,7 +50,7 @@ const Balances: React.FC = () => {
           ? deleteMutation
           : restoreMutation;
 
-  const totalValue = wallets.reduce((sum, item) => sum + item.balance, 0);
+  const totalValue = wallets.reduce((sum, item) => sum + (+item.balance), 0);
 
   const openCreate = () => {
     setSelected(null);
@@ -381,7 +381,7 @@ const Balances: React.FC = () => {
                   name="balance"
                   value={form.balance}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, balance: e.target.value }))
+                    setForm((prev) => ({ ...prev, balance: String(e.target.value) }))
                   }
                   placeholder="0.00"
                   className="w-full rounded-lg border border-[#dfe8f1] px-3 py-2.5 text-sm outline-none focus:border-primary"

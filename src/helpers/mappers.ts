@@ -210,7 +210,7 @@ export interface CompanyWallet {
   id: number;
   address: string;
   type: string;
-  balance: number;
+  balance: number |string;
   status: "active" | "disabled";
   created_at?: string;
 }

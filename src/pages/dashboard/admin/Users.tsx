@@ -158,7 +158,7 @@ const UserCtoSection: React.FC<{ userId: number }> = ({ userId }) => {
               name="amount"
               placeholder="Amount (optional)"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => setAmount(String(e.target.value))}
               className="h-8 rounded-md border border-[#dfe8f1] bg-white px-2.5 text-[11px] outline-none focus:border-primary"
             />
           </div>
@@ -629,7 +629,8 @@ const Users: React.FC = () => {
               Update Balance (Hidden Transaction)
             </h3>
             <p className="mt-1 text-[12px] text-[#8190a3]">
-              Update balance for {selectedUser.first_name} {selectedUser.last_name}.
+              Update balance for {selectedUser.first_name}{" "}
+              {selectedUser.last_name}.
             </p>
 
             <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -637,7 +638,7 @@ const Users: React.FC = () => {
                 name="balanceAmount"
                 placeholder="Amount"
                 value={balanceAmount}
-                onChange={(e) => setBalanceAmount(e.target.value)}
+                onChange={(e) => setBalanceAmount(String(e.target.value))}
                 className="h-9 rounded-md border border-[#dfe8f1] px-3 text-[11px] outline-none focus:border-primary"
               />
               <input
@@ -678,7 +679,8 @@ const Users: React.FC = () => {
               Disable Account
             </h3>
             <p className="mt-1 text-[12px] text-[#8190a3]">
-              {selectedUser.first_name} will lose access to the platform immediately.
+              {selectedUser.first_name} will lose access to the platform
+              immediately.
             </p>
 
             <div className="mt-4">
