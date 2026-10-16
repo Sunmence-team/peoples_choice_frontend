@@ -10,7 +10,7 @@ import { isAdminRole } from "../../helpers/role";
 const Sidebar = ({
   setIsOpen,
 }: {
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const [showLogOutModal, setShowLogOutModal] = useState<boolean>(false);
   const { role } = useUser();
@@ -47,7 +47,7 @@ const Sidebar = ({
                     : ""
                 }
                 `}
-                onClick={() => setIsOpen(false)}
+                onClick={() => setIsOpen?.(false)}
               >
                 <span>
                   <item.icon size={13} />
@@ -72,7 +72,7 @@ const Sidebar = ({
                     : ""
                 }
               `}
-                onClick={() => setIsOpen(false)}
+                onClick={() => setIsOpen?.(false)}
               >
                 <span>
                   <item.icon size={13} />

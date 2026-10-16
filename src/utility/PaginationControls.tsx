@@ -17,7 +17,7 @@ const PaginationControls: React.FC<PaginationControlProps> = ({
   const end = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex justify-center items-center gap-6 text-[10px]">
+    <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 sm:gap-6 text-[10px]">
       <div className="flex items-center gap-2">
         <span>Items per page:</span>
         <select
