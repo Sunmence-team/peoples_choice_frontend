@@ -1,10 +1,9 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import TopNav from "../components/navs/TopNav";
-import { HiBars3 } from "react-icons/hi2";
-import { FaXmark } from "react-icons/fa6";
+import BottomNav from "../components/navs/BottomNav";
 import Sidebar from "../components/navs/Sidebar";
 
 type LayoutProps = {
@@ -97,35 +96,14 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
     };
   }, [location.pathname]);
 
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <div className="flex flex-col w-full relative! bg-secondary/80 h-dvh overflow-hidden">
       <div className="md:px-6 py-2 px-4 flex md:flex gap-4 sticky top-0 z-10 items-center bg-white">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="md:flex lg:hidden block"
-        >
-          <HiBars3 size={30} />
-        </button>
         <TopNav />
       </div>
-      <div className="flex items-start h-[calc(100vh-58px)]">
-        <div
-          className={`lg:w-[20%] z-100 bg-black/50 overflow-hidden h-full w-full lg:sticky absolute transition-all duration-500 ${
-            isOpen ? "left-0" : "-left-full"
-          }`}
-        >
-          {/* Left Navigation */}
-          <button
-            type="button"
-            className="lg:hidden top-4 lg:left-[70%] md:left-[53%] left-[70%] block absolute text-secClr"
-            onClick={() => setIsOpen(false)}
-          >
-            <FaXmark size={30} />
-          </button>
-          <Sidebar setIsOpen={setIsOpen} />
+      <div className="flex flex-1 min-h-0">
+        <div className="hidden lg:block lg:w-[20%] h-full shrink-0 overflow-hidden">
+          <Sidebar />
         </div>
         <div className={`lg:w-[80%] w-full h-full overflow-hidden`}>
           <div
@@ -157,6 +135,8 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
           </div>
         </div>
       </div>
+
+      <BottomNav />
     </div>
   );
 };
