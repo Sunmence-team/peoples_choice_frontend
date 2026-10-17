@@ -1,17 +1,5 @@
 import api from "../helpers/api";
 import { unwrap } from "../helpers/response";
-import type {
-  Beneficiary,
-  InternalTransferPayload,
-  ExternalWireTransferPayload,
-  Transaction,
-  UserProps,
-} from "../lib/interfaces";
-import {
-  requestWithdrawalOtpService,
-  submitWithdrawalService,
-} from "./withdrawalServices";
-import type { WalletAddress } from "../helpers/mappers";
 
 export const BANK_METADATA = {
   bankName: "People's Choice Bank, N.A.",
@@ -24,284 +12,168 @@ export const BANK_METADATA = {
   dailyTransferLimit: 100000,
 };
 
-export const POPULAR_BANKS = [
-  "JPMorgan Chase Bank",
-  "Bank of America",
-  "Wells Fargo",
-  "Citibank",
-  "Barclays Bank",
-  "HSBC Bank",
-  "Capital One",
-  "Morgan Stanley Private Bank",
-  "Goldman Sachs Bank",
-  "Standard Chartered",
-  "Other / International Bank",
-];
-
-export const INITIAL_BENEFICIARIES: Beneficiary[] = [
-  {
-    id: "ben-1",
-    name: "Sarah Mitchell",
-    account_number: "1048291042",
-    username: "sarahm",
-    bank_name: "People's Choice Bank",
-    avatar_color: "bg-emerald-600",
-  },
-  {
-    id: "ben-2",
-    name: "David Kim",
-    account_number: "1048291088",
-    username: "davidk",
-    bank_name: "People's Choice Bank",
-    avatar_color: "bg-blue-600",
-  },
-  {
-    id: "ben-3",
-    name: "Elena Rostova",
-    account_number: "1048291120",
-    username: "elenar",
-    bank_name: "People's Choice Bank",
-    avatar_color: "bg-purple-600",
-  },
-  {
-    id: "ben-4",
-    name: "Marcus Vance",
-    account_number: "1048291155",
-    username: "marcusv",
-    bank_name: "People's Choice Bank",
-    avatar_color: "bg-amber-600",
-  },
-];
-
 /**
- * Returns a stable, deterministic 10-digit account number based on the user's ID
+ * Returns user account number or derives bank account number from user ID
  */
-export const getBankAccountNumber = (user?: UserProps | null): string => {
-  if (!user?.id) return "1048290001";
+export const getBankAccountNumber = (user?: { id?: number | string; account_number?: string } | null): string => {
+  if (user?.account_number) return user.account_number;
+  if (!user?.id) return "3081000001";
   const paddedId = String(user.id).padStart(4, "0");
-  return `104829${paddedId}`;
+  return `308100${paddedId}`;
 };
 
-export const getRecentBeneficiaries = (): Beneficiary[] => {
-  if (typeof window === "undefined") return INITIAL_BENEFICIARIES;
-  try {
-    const raw = localStorage.getItem("pc_recent_beneficiaries");
-    if (!raw) return INITIAL_BENEFICIARIES;
-    const parsed = JSON.parse(raw) as Beneficiary[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_BENEFICIARIES;
-  } catch {
-    return INITIAL_BENEFICIARIES;
-  }
-};
+export interface BankCountry {
+  name: string;
+  iso_code: string;
+  currency: string;
+  calling_code: string;
+}
 
-export const saveRecentBeneficiary = (beneficiary: Beneficiary): void => {
-  if (typeof window === "undefined") return;
-  try {
-    const existing = getRecentBeneficiaries().filter(
-      (b) => b.account_number !== beneficiary.account_number
-    );
-    const updated = [beneficiary, ...existing].slice(0, 8);
-    localStorage.setItem("pc_recent_beneficiaries", JSON.stringify(updated));
-  } catch (e) {
-    console.error("Failed to save beneficiary", e);
-  }
-};
+export interface BankItem {
+  name: string;
+  code: string;
+  slug?: string;
+  currency?: string;
+  type?: string;
+  active?: boolean;
+}
 
-/**
- * Validates a recipient within the People's Choice Bank ecosystem
- */
-export const validateRecipientLookup = (identifier: string): {
+export interface RecipientLookupResult {
   valid: boolean;
   name: string;
   accountNumber: string;
-} => {
-  const clean = identifier.trim().toLowerCase();
+  id?: number;
+  username?: string;
+  message?: string;
+}
+
+export interface InternalTransferPayload {
+  recipient_account: string;
+  amount: number;
+  notes?: string;
+}
+
+export interface InternalTransferResponse {
+  message: string;
+  data?: {
+    id: number;
+    reference_id: string;
+    user_id: number;
+    recipient_id: number;
+    type: string;
+    amount: string;
+    status: string;
+    notes?: string;
+  };
+  current_balance?: string | number;
+}
+
+export interface ExternalWirePayload {
+  amount: number;
+  bank_name: string;
+  bank_code: string;
+  bank_country: string;
+  recipient_account_number: string;
+  recipient_name: string;
+  routing_number?: string;
+  swift_bic?: string;
+  notes?: string;
+}
+
+export interface ExternalWireResponse {
+  message: string;
+  data?: {
+    id?: number;
+    reference_id?: string;
+    amount?: string | number;
+    status?: string;
+    [key: string]: unknown;
+  };
+  current_balance?: string | number;
+}
+
+/**
+ * 1.1 Live Online Country Lookup (GET /api/banks/countries)
+ */
+export const getSupportedCountriesService = async (): Promise<BankCountry[]> => {
+  const res = await api.get("/banks/countries");
+  const data = unwrap<BankCountry[]>(res.data);
+  return Array.isArray(data) ? data : [];
+};
+
+/**
+ * 1.2 Live Online Bank Lookup by Country (GET /api/banks?country={iso}&search={query})
+ */
+export const getBanksByCountryService = async (
+  country: string,
+  search?: string
+): Promise<BankItem[]> => {
+  const params: Record<string, string> = { country: country.toLowerCase() };
+  if (search && search.trim()) params.search = search.trim();
+  const res = await api.get("/banks", { params });
+  const data = unwrap<BankItem[]>(res.data);
+  return Array.isArray(data) ? data : [];
+};
+
+/**
+ * 3.1 Live Recipient Lookup via Backend (POST /api/transfers/lookup)
+ * Accepts 10-digit account number, username, or email
+ */
+export const lookupRecipientService = async (
+  account: string
+): Promise<RecipientLookupResult> => {
+  const clean = account.trim();
   if (!clean) {
     return { valid: false, name: "", accountNumber: "" };
   }
 
-  // Check known beneficiaries first
-  const known = getRecentBeneficiaries().find(
-    (b) =>
-      b.account_number === clean ||
-      b.username?.toLowerCase() === clean ||
-      b.name.toLowerCase() === clean
-  );
-
-  if (known) {
-    return {
-      valid: true,
-      name: known.name,
-      accountNumber: known.account_number,
+  const res = await api.post("/transfers/lookup", { account: clean });
+  const body = res.data as {
+    message?: string;
+    data?: {
+      id: number;
+      name: string;
+      username: string;
+      account_number: string;
     };
-  }
-
-  // If input is an account number format (8-12 digits)
-  if (/^\d{8,12}$/.test(clean)) {
-    return {
-      valid: true,
-      name: "Verified PC Bank Client",
-      accountNumber: clean,
-    };
-  }
-
-  // If input is an email address
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
-    const namePart = clean.split("@")[0].replace(/[._]/g, " ");
-    const formattedName = namePart
-      .split(" ")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
-    return {
-      valid: true,
-      name: `${formattedName} (Verified Member)`,
-      accountNumber: `104829${Math.abs(clean.split("").reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000 + 1000)}`,
-    };
-  }
-
-  // If input is a username (@someone or someone)
-  if (clean.length >= 3) {
-    const name = clean.replace(/^@/, "");
-    return {
-      valid: true,
-      name: `@${name} (Verified Account)`,
-      accountNumber: `104829${Math.abs(name.split("").reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000 + 1000)}`,
-    };
-  }
-
-  return { valid: false, name: "", accountNumber: "" };
-};
-
-export const getStoredInternalTransfers = (): Transaction[] => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem("pc_internal_transfers");
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as Transaction[]) : [];
-  } catch {
-    return [];
-  }
-};
-
-export const getStoredBalanceAdjustment = (): number => {
-  if (typeof window === "undefined") return 0;
-  try {
-    const raw = localStorage.getItem("pc_balance_deduction");
-    return raw ? Number(raw) || 0 : 0;
-  } catch {
-    return 0;
-  }
-};
-
-/**
- * Execute an internal money transfer between People's Choice Bank users
- */
-export const submitInternalTransferService = async (
-  payload: InternalTransferPayload,
-  currentUser: UserProps | null
-): Promise<Transaction> => {
-  const amountNumber = Number(payload.amount);
-  const formattedAmount = `-$${amountNumber.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} USD`;
-
-  const newTxId = `TRF-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-  // Attempt backend API call if backend has /transfer
-  try {
-    const res = await api.post("/transfer", {
-      recipient: payload.recipient_identifier,
-      recipient_name: payload.recipient_name,
-      amount: amountNumber,
-      category: payload.category || "General",
-      note: payload.note,
-    });
-    const unwrapRes = unwrap(res.data) as Record<string, unknown>;
-    if (unwrapRes && typeof unwrapRes === "object") {
-      // Backend responded successfully
-    }
-  } catch {
-    // If backend doesn't have custom /transfer endpoint yet,
-    // continue with bank-grade local simulation and persistent ledger
-  }
-
-  const transactionRecord: Transaction = {
-    id: `internal-${Date.now()}`,
-    transaction_id: newTxId,
-    type: "transfer",
-    network: "PC Bank Internal Transfer",
-    amount: formattedAmount,
-    status: "completed",
-    date: new Date().toISOString(),
-    recipient_name: payload.recipient_name || "PC Bank Account Holder",
-    recipient_account: payload.recipient_identifier,
-    sender_name: currentUser?.full_name || currentUser?.first_name || "Account Owner",
-    bank_name: "People's Choice Bank, N.A.",
-    note: payload.note || payload.category || "Direct P2P Account Transfer",
-    transfer_category: payload.category || "General",
-    fee: "$0.00",
   };
 
-  // Persist transaction
-  const existingTransfers = getStoredInternalTransfers();
-  const updatedTransfers = [transactionRecord, ...existingTransfers];
-  localStorage.setItem("pc_internal_transfers", JSON.stringify(updatedTransfers));
-
-  // Update total deduction
-  const currentDeduction = getStoredBalanceAdjustment();
-  localStorage.setItem("pc_balance_deduction", String(currentDeduction + amountNumber));
-
-  // Save recipient to recent beneficiaries
-  if (payload.recipient_name && payload.recipient_identifier) {
-    saveRecentBeneficiary({
-      id: `ben-${Date.now()}`,
-      name: payload.recipient_name,
-      account_number: payload.recipient_identifier,
-      bank_name: "People's Choice Bank",
-      avatar_color: "bg-emerald-600",
-    });
+  const recipient = body?.data;
+  if (recipient && recipient.account_number) {
+    return {
+      valid: true,
+      id: recipient.id,
+      name: recipient.name,
+      username: recipient.username,
+      accountNumber: recipient.account_number,
+      message: body.message,
+    };
   }
 
-  // Notify listeners to update state immediately
-  window.dispatchEvent(new Event("pc_balance_updated"));
-
-  return transactionRecord;
+  return {
+    valid: false,
+    name: "",
+    accountNumber: "",
+    message: body?.message || "Recipient account not found",
+  };
 };
 
 /**
- * External Wire Transfer to any bank outside People's Choice Bank
- * Uses backend withdrawal OTP & CTO verification endpoints
+ * 3.2 Execute an internal money transfer (POST /api/transfers/internal)
  */
-export const requestExternalTransferOtpService = async (amount: number | string) => {
-  return await requestWithdrawalOtpService({ amount });
+export const submitInternalTransferService = async (
+  payload: InternalTransferPayload
+): Promise<InternalTransferResponse> => {
+  const res = await api.post("/transfers/internal", payload);
+  return res.data;
 };
 
+/**
+ * 3.3 Outside Bank Transfer (Wire / ACH) (POST /api/transfers/external)
+ */
 export const submitExternalWireTransferService = async (
-  payload: ExternalWireTransferPayload,
-  wallets: WalletAddress[]
-) => {
-  const companyWallet = wallets?.[0];
-  const wireDestination = `Bank: ${payload.bank_name} | Acct: ${payload.account_number} | Routing: ${payload.routing_number} | Beneficiary: ${payload.beneficiary_name}${payload.swift_bic ? ` | SWIFT: ${payload.swift_bic}` : ""}`;
-
-  const res = await submitWithdrawalService({
-    amount: payload.amount,
-    destination_address: wireDestination,
-    wallet_address_id: companyWallet?.id ?? 1,
-    crypto_type: "USD_WIRE",
-    otp_code: payload.otp_code,
-    cto_code: payload.cto_code,
-  });
-
-  // Also save recipient
-  saveRecentBeneficiary({
-    id: `ben-${Date.now()}`,
-    name: payload.beneficiary_name,
-    account_number: payload.account_number,
-    bank_name: payload.bank_name,
-    avatar_color: "bg-blue-600",
-  });
-
-  return res;
+  payload: ExternalWirePayload
+): Promise<ExternalWireResponse> => {
+  const res = await api.post("/transfers/external", payload);
+  return res.data;
 };

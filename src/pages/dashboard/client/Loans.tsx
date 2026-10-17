@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   ShieldCheck,
@@ -9,30 +9,54 @@ import {
 } from "lucide-react";
 import {
   LOAN_TYPES,
-  getStoredLoans,
+  getLoansService,
   submitLoanApplicationService,
+  repayLoanService,
   type LoanApplication,
 } from "../../../services/loanServices";
 import { useDashboard } from "../../../hooks/useClientData";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
+import { getErrorMessage } from "../../../helpers/api";
 
 export default function Loans() {
   const { data: stats } = useDashboard();
   const availableBalance = stats?.balance ?? 0;
 
   const [activeTab, setActiveTab] = useState<"apply" | "history">("apply");
-  const [loans, setLoans] = useState<LoanApplication[]>(() => getStoredLoans());
+  const [loans, setLoans] = useState<LoanApplication[]>([]);
+  const [loadingLoans, setLoadingLoans] = useState<boolean>(true);
+
+  const loadLoans = async () => {
+    setLoadingLoans(true);
+    try {
+      const data = await getLoansService();
+      setLoans(data);
+    } catch (err) {
+      console.error("Failed to load loans", err);
+    } finally {
+      setLoadingLoans(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLoans();
+  }, []);
 
   // Form state
   const [selectedType, setSelectedType] = useState(LOAN_TYPES[0].label);
   const [amount, setAmount] = useState<number>(5000);
   const [tenure, setTenure] = useState<number>(12);
   const [purpose, setPurpose] = useState<string>("");
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(4500);
+  const [employmentStatus, setEmploymentStatus] = useState<string>("Employed");
   const [collateralAccepted, setCollateralAccepted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Selected loan for view modal
+  // Selected loan for view modal & repayment
   const [selectedLoan, setSelectedLoan] = useState<LoanApplication | null>(null);
+  const [repayLoan, setRepayLoan] = useState<LoanApplication | null>(null);
+  const [repayAmount, setRepayAmount] = useState<string>("");
+  const [isSubmittingRepay, setIsSubmittingRepay] = useState<boolean>(false);
 
   const currentTypeConfig =
     LOAN_TYPES.find((t) => t.label === selectedType) || LOAN_TYPES[0];
@@ -83,18 +107,48 @@ export default function Loans() {
         amount,
         tenure_months: tenure,
         purpose: purpose.trim(),
+        monthly_income: monthlyIncome,
+        employment_status: employmentStatus,
         collateral_accepted: collateralAccepted,
       });
 
       toast.success(res.message);
-      setLoans(getStoredLoans());
+      await loadLoans();
       setPurpose("");
       setCollateralAccepted(false);
       setActiveTab("history");
-    } catch {
-      toast.error("Failed to submit loan request. Please try again.");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to submit loan request. Please try again."));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRepaySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const num = parseFloat(repayAmount);
+    if (isNaN(num) || num <= 0) {
+      toast.error("Please enter a valid repayment amount");
+      return;
+    }
+    if (!repayLoan) return;
+
+    if (num > availableBalance) {
+      toast.error(`Repayment cannot exceed your available balance of $${availableBalance.toLocaleString()}`);
+      return;
+    }
+
+    setIsSubmittingRepay(true);
+    try {
+      const res = await repayLoanService(repayLoan.id, num);
+      toast.success(res.message);
+      await loadLoans();
+      setRepayLoan(null);
+      setRepayAmount("");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to process loan repayment"));
+    } finally {
+      setIsSubmittingRepay(false);
     }
   };
 
@@ -299,6 +353,39 @@ export default function Loans() {
                   </div>
                 </div>
 
+                {/* Monthly Income & Employment Status */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="mb-1 block text-[11px] font-semibold text-primary">
+                      Monthly Verified Income (USD)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={500}
+                      value={monthlyIncome}
+                      onChange={(e) => setMonthlyIncome(Number(e.target.value))}
+                      className="h-9 w-full rounded-lg border border-secondary bg-white px-3 text-xs text-primary font-semibold outline-none transition focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-[11px] font-semibold text-primary">
+                      Employment Status
+                    </label>
+                    <select
+                      value={employmentStatus}
+                      onChange={(e) => setEmploymentStatus(e.target.value)}
+                      className="h-9 w-full rounded-lg border border-secondary bg-white px-2.5 text-xs text-primary font-semibold outline-none transition focus:border-primary cursor-pointer"
+                    >
+                      <option value="Employed">Employed (Full-Time)</option>
+                      <option value="Self-Employed">Self-Employed / Contractor</option>
+                      <option value="Business Owner">Business Owner / Partner</option>
+                      <option value="Professional">Professional Practitioner</option>
+                    </select>
+                  </div>
+                </div>
+
                 {/* Purpose of Loan */}
                 <div>
                   <label className="mb-1.5 block text-[11px] font-semibold text-primary">
@@ -431,7 +518,11 @@ export default function Loans() {
         {/* Tab 2: Loan History */}
         {activeTab === "history" && (
           <div className="space-y-3">
-            {loans.length === 0 ? (
+            {loadingLoans ? (
+              <div className="flex h-32 items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              </div>
+            ) : loans.length === 0 ? (
               <div className="text-center py-10 text-gray-400">
                 <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p className="text-xs font-semibold">No loan applications on record.</p>
@@ -493,7 +584,19 @@ export default function Loans() {
                           <td className="py-2.5 px-2 text-gray-500 text-[10.5px]">
                             {formatISODateToCustom(loan.created_at) || loan.created_at.slice(0, 10)}
                           </td>
-                          <td className="py-2.5 px-2 text-right">
+                          <td className="py-2.5 px-2 text-right space-x-2">
+                            {loan.status === "active" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRepayLoan(loan);
+                                  setRepayAmount(String(loan.monthly_payment));
+                                }}
+                                className="rounded-md bg-green-50 text-green-700 hover:bg-green-100 px-2 py-0.5 text-[9.5px] font-bold border border-green-200 cursor-pointer transition"
+                              >
+                                Repay
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => setSelectedLoan(loan)}
@@ -589,6 +692,88 @@ export default function Loans() {
                 Close Summary
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loan Repayment Modal */}
+      {repayLoan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-white p-4 shadow-xl border border-secondary animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2.5 mb-3">
+              <div>
+                <h3 className="text-xs sm:text-[13px] font-bold text-primary">
+                  Make Loan Repayment
+                </h3>
+                <span className="font-mono text-[9px] text-gray-400">
+                  Ref: {repayLoan.id}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRepayLoan(null)}
+                className="text-gray-400 hover:text-gray-600 text-sm font-bold cursor-pointer p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleRepaySubmit} className="space-y-3">
+              <div className="rounded-lg bg-gray-50 p-2.5 border border-secondary text-xs space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-400 text-[10.5px]">Monthly Installment</span>
+                  <span className="font-bold text-primary">
+                    ${repayLoan.monthly_payment.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400 text-[10.5px]">Remaining Balance</span>
+                  <span className="font-semibold text-gray-700">
+                    ${(repayLoan.total_repayment - (repayLoan.total_paid || 0)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400 text-[10.5px]">Available Account Balance</span>
+                  <span className="font-semibold text-green-600">
+                    ${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-primary mb-1">
+                  Repayment Amount (USD)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min={1}
+                  required
+                  placeholder={`Recommended: ${repayLoan.monthly_payment}`}
+                  value={repayAmount}
+                  onChange={(e) => setRepayAmount(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-secondary bg-white px-3 text-xs font-semibold text-primary outline-none focus:border-primary transition"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRepayLoan(null)}
+                  className="flex-1 h-9 rounded-lg border border-secondary text-xs font-semibold text-gray-600 hover:bg-gray-50 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingRepay}
+                  className="flex-1 h-9 rounded-lg bg-primary text-xs font-semibold text-white hover:bg-primary/90 transition disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {isSubmittingRepay ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  <span>Confirm Repayment</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

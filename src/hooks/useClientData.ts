@@ -36,11 +36,20 @@ import type { Transaction } from "../lib/interfaces";
 import { useUser } from "./useUser";
 
 import {
-  getStoredBalanceAdjustment,
-  getStoredInternalTransfers,
   submitInternalTransferService,
+  type InternalTransferPayload,
 } from "../services/transferServices";
-import type { InternalTransferPayload } from "../lib/interfaces";
+import { getKYCStatusService, type KYCStatusResponse } from "../services/kycServices";
+
+export const useKYCStatus = () => {
+  const { token } = useUser();
+  return useQuery<KYCStatusResponse>({
+    queryKey: ["kyc-status"],
+    enabled: !!token,
+    queryFn: () => getKYCStatusService(),
+    staleTime: 30000,
+  });
+};
 
 export const useDashboard = () => {
   const { token } = useUser();
@@ -48,14 +57,7 @@ export const useDashboard = () => {
     queryKey: ["dashboard"],
     enabled: !!token,
     queryFn: async () => {
-      const stats = toDashboardStats(await getDashboardService());
-      const deduction = getStoredBalanceAdjustment();
-      const adjustedBalance = Math.max(0, stats.balance - deduction);
-      return {
-        ...stats,
-        balance: adjustedBalance,
-        totalWithdrawn: stats.totalWithdrawn + deduction,
-      };
+      return toDashboardStats(await getDashboardService());
     },
   });
 };
@@ -84,30 +86,20 @@ export const useTransactionLedger = (
       });
       const paged = toPaged<unknown>(body, perPage);
       const serverItems = paged.items.map((item) => toClientTransaction(item));
-      const localTransfers = getStoredInternalTransfers();
 
-      let combined: Transaction[] = [];
+      let filtered = serverItems;
       if (type === "transfer") {
-        combined = [...localTransfers, ...serverItems.filter((i) => i.type === "transfer")];
+        filtered = serverItems.filter((i) => i.type === "transfer");
       } else if (type === "deposit") {
-        combined = serverItems.filter((i) => i.type === "deposit");
+        filtered = serverItems.filter((i) => i.type === "deposit");
       } else if (type === "withdrawal") {
-        combined = serverItems.filter((i) => i.type === "withdrawal");
-      } else {
-        combined = [...localTransfers, ...serverItems];
+        filtered = serverItems.filter((i) => i.type === "withdrawal");
       }
-
-      // Sort by date descending
-      combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      const total = (paged.total || serverItems.length) + (type !== "deposit" && type !== "withdrawal" ? localTransfers.length : 0);
-      const totalPages = Math.max(1, Math.ceil(total / perPage));
 
       return {
         ...paged,
-        total,
-        totalPages,
-        items: combined.slice((page - 1) * perPage, page * perPage),
+        total: paged.total || filtered.length,
+        items: filtered,
       };
     },
   });
@@ -115,10 +107,9 @@ export const useTransactionLedger = (
 
 export const useInternalTransfer = () => {
   const queryClient = useQueryClient();
-  const { user } = useUser();
   return useMutation({
     mutationFn: (payload: InternalTransferPayload) =>
-      submitInternalTransferService(payload, user),
+      submitInternalTransferService(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["ledger"] });

@@ -3,21 +3,23 @@ import { toast } from "sonner";
 import {
   useDashboard,
   useInternalTransfer,
-  useWallets,
 } from "../../../hooks/useClientData";
 import {
-  POPULAR_BANKS,
-  validateRecipientLookup,
-  requestExternalTransferOtpService,
+  lookupRecipientService,
+  getSupportedCountriesService,
+  getBanksByCountryService,
   submitExternalWireTransferService,
+  type BankCountry,
+  type BankItem,
+  type RecipientLookupResult,
 } from "../../../services/transferServices";
 import { getErrorMessage } from "../../../helpers/api";
+import { CheckCircle2, Search, Building2, Globe2, AlertCircle } from "lucide-react";
 
 type TransferTab = "internal" | "external";
 
 export default function Transfer() {
   const { data: stats } = useDashboard();
-  const { data: wallets } = useWallets();
   const internalTransferMutation = useInternalTransfer();
 
   const availableBalance = stats?.balance ?? 0;
@@ -25,40 +27,115 @@ export default function Transfer() {
 
   // Internal form state
   const [recipientInput, setRecipientInput] = useState("");
-  const [recipientVerification, setRecipientVerification] = useState<{
-    valid: boolean;
-    name: string;
-    accountNumber: string;
-  }>({ valid: false, name: "", accountNumber: "" });
+  const [recipientVerification, setRecipientVerification] = useState<RecipientLookupResult>({
+    valid: false,
+    name: "",
+    accountNumber: "",
+  });
+  const [isVerifyingRecipient, setIsVerifyingRecipient] = useState(false);
   const [internalAmount, setInternalAmount] = useState("");
   const [internalNote, setInternalNote] = useState("");
   const [isSubmittingInternal, setIsSubmittingInternal] = useState(false);
 
   // External wire state
+  const [countries, setCountries] = useState<BankCountry[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [availableBanks, setAvailableBanks] = useState<BankItem[]>([]);
+  const [isBanksLoading, setIsBanksLoading] = useState(false);
+  const [bankSearch, setBankSearch] = useState("");
+
   const [wireBeneficiary, setWireBeneficiary] = useState("");
-  const [wireBankName, setWireBankName] = useState(POPULAR_BANKS[0]);
+  const [wireBankName, setWireBankName] = useState("");
+  const [wireBankCode, setWireBankCode] = useState("");
   const [wireAccount, setWireAccount] = useState("");
   const [wireRouting, setWireRouting] = useState("021000021");
+  const [wireSwift, setWireSwift] = useState("");
   const [wireAmount, setWireAmount] = useState("");
   const [wireNote, setWireNote] = useState("");
-
-  const [externalStep, setExternalStep] = useState<1 | 2>(1);
-  const [otpCode, setOtpCode] = useState("");
-  const [ctoCode, setCtoCode] = useState("");
-  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [isSubmittingWire, setIsSubmittingWire] = useState(false);
 
+  // 1. Debounced recipient lookup via backend API
   useEffect(() => {
-    const res = validateRecipientLookup(recipientInput);
-    setRecipientVerification(res);
+    if (!recipientInput.trim()) {
+      setRecipientVerification({ valid: false, name: "", accountNumber: "" });
+      setIsVerifyingRecipient(false);
+      return;
+    }
+
+    setIsVerifyingRecipient(true);
+    const handler = setTimeout(async () => {
+      try {
+        const res = await lookupRecipientService(recipientInput);
+        setRecipientVerification(res);
+      } catch (err) {
+        setRecipientVerification({
+          valid: false,
+          name: "",
+          accountNumber: "",
+          message: getErrorMessage(err, "Recipient account not found"),
+        });
+      } finally {
+        setIsVerifyingRecipient(false);
+      }
+    }, 450);
+
+    return () => clearTimeout(handler);
   }, [recipientInput]);
+
+  // 2. Load countries on mount dynamically from GET /api/banks/countries
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await getSupportedCountriesService();
+        if (Array.isArray(res) && res.length > 0) {
+          setCountries(res);
+          setSelectedCountry(res[0].iso_code);
+        }
+      } catch (err) {
+        console.error("Failed to load supported countries", err);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  // 3. Load banks when selected country changes or bankSearch updates dynamically
+  useEffect(() => {
+    if (!selectedCountry) return;
+    const fetchBanks = async () => {
+      setIsBanksLoading(true);
+      try {
+        const banks = await getBanksByCountryService(selectedCountry, bankSearch);
+        setAvailableBanks(banks);
+        if (banks.length > 0 && !bankSearch) {
+          setWireBankName(banks[0].name);
+          setWireBankCode(banks[0].code || "");
+          setWireSwift(banks[0].code ? `${banks[0].code}XXX` : "");
+        }
+      } catch (err) {
+        console.error("Failed to load banks for country", err);
+      } finally {
+        setIsBanksLoading(false);
+      }
+    };
+    fetchBanks();
+  }, [selectedCountry, bankSearch]);
+
+  const handleBankSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = e.target.value;
+    setWireBankName(selected);
+    const found = availableBanks.find((b) => b.name === selected);
+    if (found) {
+      setWireBankCode(found.code || "");
+      setWireSwift(found.code ? `${found.code}XXX` : "");
+    }
+  };
 
   const handleInternalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = parseFloat(internalAmount);
 
     if (!recipientVerification.valid) {
-      toast.error("Please enter a valid recipient account or username");
+      toast.error(recipientVerification.message || "Please enter a valid recipient account or username");
       return;
     }
     if (isNaN(amountNum) || amountNum <= 0) {
@@ -72,14 +149,13 @@ export default function Transfer() {
 
     setIsSubmittingInternal(true);
     try {
-      await internalTransferMutation.mutateAsync({
-        recipient_identifier: recipientVerification.accountNumber || recipientInput,
-        recipient_name: recipientVerification.name,
+      const res = await internalTransferMutation.mutateAsync({
+        recipient_account: recipientVerification.accountNumber || recipientInput.trim(),
         amount: amountNum,
-        note: internalNote,
+        notes: internalNote.trim() || undefined,
       });
 
-      toast.success("Transfer completed successfully");
+      toast.success(res.message || "Transfer completed successfully");
       setRecipientInput("");
       setInternalAmount("");
       setInternalNote("");
@@ -90,18 +166,20 @@ export default function Transfer() {
     }
   };
 
-  const handleRequestWireOtp = async () => {
+  const handleWireSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     const amountNum = parseFloat(wireAmount);
+
     if (!wireBeneficiary.trim()) {
-      toast.error("Beneficiary name is required");
+      toast.error("Beneficiary full name is required");
       return;
     }
     if (!wireAccount.trim()) {
-      toast.error("Account number is required");
+      toast.error("Recipient account number / IBAN is required");
       return;
     }
     if (isNaN(amountNum) || amountNum <= 0) {
-      toast.error("Please enter a valid transfer amount");
+      toast.error("Please enter a valid wire amount");
       return;
     }
     if (amountNum > availableBalance) {
@@ -109,53 +187,25 @@ export default function Transfer() {
       return;
     }
 
-    setIsRequestingOtp(true);
-    try {
-      const res = await requestExternalTransferOtpService(amountNum);
-      toast.success(res.message || "OTP sent to your registered email");
-      setExternalStep(2);
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to request OTP"));
-    } finally {
-      setIsRequestingOtp(false);
-    }
-  };
-
-  const handleWireSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpCode.trim() || otpCode.trim().length !== 6) {
-      toast.error("Please enter the 6-digit email OTP");
-      return;
-    }
-    if (!ctoCode.trim()) {
-      toast.error("Please enter your CTO clearance code");
-      return;
-    }
-
     setIsSubmittingWire(true);
     try {
-      const res = await submitExternalWireTransferService(
-        {
-          beneficiary_name: wireBeneficiary,
-          bank_name: wireBankName,
-          account_number: wireAccount,
-          routing_number: wireRouting,
-          amount: wireAmount,
-          note: wireNote,
-          otp_code: otpCode.trim(),
-          cto_code: ctoCode.trim(),
-        },
-        wallets ?? []
-      );
+      const res = await submitExternalWireTransferService({
+        recipient_name: wireBeneficiary.trim(),
+        bank_name: wireBankName,
+        bank_code: wireBankCode || wireSwift || "PCBKUS33",
+        bank_country: selectedCountry || "US",
+        recipient_account_number: wireAccount.trim(),
+        routing_number: wireRouting.trim() || undefined,
+        swift_bic: wireSwift.trim() || undefined,
+        amount: amountNum,
+        notes: wireNote.trim() || undefined,
+      });
 
-      toast.success(res.message || "Wire request submitted successfully");
-      setExternalStep(1);
+      toast.success(res.message || "External wire transfer submitted successfully and pending clearance");
       setWireBeneficiary("");
       setWireAccount("");
       setWireAmount("");
       setWireNote("");
-      setOtpCode("");
-      setCtoCode("");
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to submit wire transfer"));
     } finally {
@@ -168,7 +218,7 @@ export default function Transfer() {
       <div className="mb-3 sm:mb-4">
         <h2 className="text-base sm:text-lg text-primary font-bold">Transfer Money</h2>
         <p className="hidden md:block mt-0.5 text-xs font-medium text-gray-500">
-          Transfer funds within People's Choice Bank or wire to external accounts.
+          Transfer funds within People's Choice Bank or wire to external accounts globally.
         </p>
       </div>
 
@@ -176,10 +226,7 @@ export default function Transfer() {
         <div className="grid grid-cols-2 gap-1.5 sm:flex sm:gap-2 border-b border-gray-200 pb-3 mb-4 max-w-xl">
           <button
             type="button"
-            onClick={() => {
-              setActive("internal");
-              setExternalStep(1);
-            }}
+            onClick={() => setActive("internal")}
             className={`rounded-lg py-2 px-2 text-[11px] sm:text-xs font-semibold text-center transition cursor-pointer ${
               active === "internal"
                 ? "bg-primary text-white shadow-sm"
@@ -190,10 +237,7 @@ export default function Transfer() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              setActive("external");
-              setExternalStep(1);
-            }}
+            onClick={() => setActive("external")}
             className={`rounded-lg py-2 px-2 text-[11px] sm:text-xs font-semibold text-center transition cursor-pointer ${
               active === "external"
                 ? "bg-primary text-white shadow-sm"
@@ -207,7 +251,9 @@ export default function Transfer() {
         {/* Available Balance banner */}
         <div className="mb-4 flex items-center justify-between rounded-lg bg-gray-50 p-2.5 sm:p-3 border border-gray-200 text-xs max-w-xl">
           <span className="text-gray-500 font-medium">Available Account Balance:</span>
-          <span className="font-bold text-primary">${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD</span>
+          <span className="font-bold text-primary">
+            ${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD
+          </span>
         </div>
 
         {/* Tab 1: Within PC Bank */}
@@ -217,17 +263,39 @@ export default function Transfer() {
               <label className="mb-2 block text-[11px] font-bold text-primary">
                 Recipient (Account Number, Username, or Email)
               </label>
-              <input
-                type="text"
-                value={recipientInput}
-                onChange={(e) => setRecipientInput(e.target.value)}
-                placeholder="e.g. 1048291042 or @username"
-                required
-                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={recipientInput}
+                  onChange={(e) => setRecipientInput(e.target.value)}
+                  placeholder="e.g. 3081234567 or @username or email"
+                  required
+                  className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary pr-9"
+                />
+                {isVerifyingRecipient && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                )}
+                {recipientVerification.valid && !isVerifyingRecipient && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
+
               {recipientVerification.valid && (
-                <p className="mt-1 text-[11px] text-green-600 font-medium">
-                  Verified: {recipientVerification.name} (Acct: {recipientVerification.accountNumber})
+                <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-green-600 font-semibold">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>
+                    Verified: {recipientVerification.name} (Acct: {recipientVerification.accountNumber})
+                  </span>
+                </p>
+              )}
+              {!recipientVerification.valid && recipientInput.trim().length >= 4 && !isVerifyingRecipient && (
+                <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-amber-600">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>{recipientVerification.message || "Recipient not verified in registry"}</span>
                 </p>
               )}
             </div>
@@ -257,7 +325,7 @@ export default function Transfer() {
                 type="text"
                 value={internalNote}
                 onChange={(e) => setInternalNote(e.target.value)}
-                placeholder="e.g. Project payment"
+                placeholder="e.g. Project payment or invoice settlement"
                 className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
               />
             </div>
@@ -274,159 +342,165 @@ export default function Transfer() {
 
         {/* Tab 2: Outside App (Bank Wire) */}
         {active === "external" && (
-          <div className="max-w-xl">
-            {externalStep === 1 ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-[11px] font-bold text-primary">
-                    Beneficiary Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={wireBeneficiary}
-                    onChange={(e) => setWireBeneficiary(e.target.value)}
-                    placeholder="Recipient full legal name"
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-2 block text-[11px] font-bold text-primary">
-                      Destination Bank Institution
-                    </label>
-                    <select
-                      value={wireBankName}
-                      onChange={(e) => setWireBankName(e.target.value)}
-                      className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
-                    >
-                      {POPULAR_BANKS.map((b) => (
-                        <option key={b} value={b}>
-                          {b}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-[11px] font-bold text-primary">
-                      Routing Number (ABA)
-                    </label>
-                    <input
-                      type="text"
-                      value={wireRouting}
-                      onChange={(e) => setWireRouting(e.target.value)}
-                      placeholder="e.g. 021000021"
-                      className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-[11px] font-bold text-primary">
-                    Destination Account / Address
-                  </label>
-                  <input
-                    type="text"
-                    value={wireAccount}
-                    onChange={(e) => setWireAccount(e.target.value)}
-                    placeholder="External Account Number / IBAN / Destination Address"
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-[11px] font-bold text-primary">
-                    Wire Amount (USD)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="1"
-                    max={availableBalance}
-                    value={wireAmount}
-                    onChange={(e) => setWireAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-[11px] font-bold text-primary">
-                    Transfer Note / Purpose
-                  </label>
-                  <input
-                    type="text"
-                    value={wireNote}
-                    onChange={(e) => setWireNote(e.target.value)}
-                    placeholder="Transfer memo"
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleRequestWireOtp}
-                  disabled={isRequestingOtp}
-                  className="flex h-10 w-full items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-white transition hover:opacity-90 cursor-pointer disabled:opacity-60"
+          <form onSubmit={handleWireSubmit} className="space-y-4 max-w-xl">
+            {/* Country and Bank Selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-primary">
+                  <Globe2 className="h-3.5 w-3.5 text-gray-500" />
+                  <span>Destination Country</span>
+                </label>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
                 >
-                  {isRequestingOtp ? "Requesting OTP..." : "Proceed to Security Verification"}
-                </button>
+                  {countries.length === 0 ? (
+                    <option value="">Loading countries...</option>
+                  ) : (
+                    countries.map((c) => (
+                      <option key={c.iso_code} value={c.iso_code}>
+                        {c.name} ({c.currency})
+                      </option>
+                    ))
+                  )}
+                </select>
               </div>
-            ) : (
-              <form onSubmit={handleWireSubmit} className="space-y-4">
-                <p className="text-xs text-gray-500">
-                  Please enter the 6-digit OTP code sent to your registered email and the CTO clearance code from your administrator.
-                </p>
 
-                <div>
-                  <label className="mb-2 block text-[11px] font-bold text-primary">
-                    Email OTP Code (6 Digits)
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    placeholder="123456"
-                    required
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary font-mono text-center tracking-widest font-bold"
-                  />
-                </div>
+              <div>
+                <label className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-primary">
+                  <Building2 className="h-3.5 w-3.5 text-gray-500" />
+                  <span>Destination Bank</span>
+                </label>
+                <select
+                  value={wireBankName}
+                  onChange={handleBankSelect}
+                  disabled={isBanksLoading}
+                  className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary disabled:opacity-60"
+                >
+                  {isBanksLoading ? (
+                    <option value="">Querying live banks...</option>
+                  ) : availableBanks.length === 0 ? (
+                    <option value="">No institutions found for country</option>
+                  ) : (
+                    availableBanks.map((b) => (
+                      <option key={b.name} value={b.name}>
+                        {b.name} {b.code ? `(${b.code})` : ""}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
 
-                <div>
-                  <label className="mb-2 block text-[11px] font-bold text-primary">
-                    Admin CTO Clearance Code
-                  </label>
-                  <input
-                    type="text"
-                    value={ctoCode}
-                    onChange={(e) => setCtoCode(e.target.value)}
-                    placeholder="e.g. CTO-AB12CD"
-                    required
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary font-mono text-center tracking-widest font-bold"
-                  />
-                </div>
+            {/* Bank Search filter */}
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={bankSearch}
+                onChange={(e) => setBankSearch(e.target.value)}
+                placeholder="Search live SWIFT directory..."
+                className="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pl-8 pr-3 text-[11px] text-primary outline-none transition focus:border-primary focus:bg-white"
+              />
+            </div>
 
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setExternalStep(1)}
-                    className="flex h-10 w-1/3 items-center justify-center rounded-lg bg-secondary text-[11px] font-medium border border-primary/10 cursor-pointer"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmittingWire}
-                    className="flex h-10 w-2/3 items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-white transition hover:opacity-90 cursor-pointer disabled:opacity-60"
-                  >
-                    {isSubmittingWire ? "Authorizing..." : "Submit Wire Transfer"}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+            <div>
+              <label className="mb-2 block text-[11px] font-bold text-primary">
+                Beneficiary Full Legal Name
+              </label>
+              <input
+                type="text"
+                value={wireBeneficiary}
+                onChange={(e) => setWireBeneficiary(e.target.value)}
+                placeholder="Recipient full legal name"
+                required
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-[11px] font-bold text-primary">
+                Destination Account Number / IBAN
+              </label>
+              <input
+                type="text"
+                value={wireAccount}
+                onChange={(e) => setWireAccount(e.target.value)}
+                placeholder="External account number or IBAN"
+                required
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="mb-2 block text-[11px] font-bold text-primary">
+                  Routing Number (ABA / Sort Code)
+                </label>
+                <input
+                  type="text"
+                  value={wireRouting}
+                  onChange={(e) => setWireRouting(e.target.value)}
+                  placeholder="e.g. 021000021"
+                  required
+                  className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-bold text-primary">
+                  SWIFT / BIC Code
+                </label>
+                <input
+                  type="text"
+                  value={wireSwift}
+                  onChange={(e) => setWireSwift(e.target.value)}
+                  placeholder="e.g. CHASUS33XXX"
+                  required
+                  className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary font-mono uppercase"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-[11px] font-bold text-primary">
+                Wire Amount (USD)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="1"
+                max={availableBalance}
+                value={wireAmount}
+                onChange={(e) => setWireAmount(e.target.value)}
+                placeholder="0.00"
+                required
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-[11px] font-bold text-primary">
+                Transfer Memo / Purpose
+              </label>
+              <input
+                type="text"
+                value={wireNote}
+                onChange={(e) => setWireNote(e.target.value)}
+                placeholder="e.g. Commercial invoice settlement"
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmittingWire}
+              className="flex h-10 w-full items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-white transition hover:opacity-90 cursor-pointer disabled:opacity-60"
+            >
+              {isSubmittingWire ? "Submitting Wire..." : "Submit Wire Transfer"}
+            </button>
+          </form>
         )}
       </div>
     </div>

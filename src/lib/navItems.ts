@@ -7,13 +7,25 @@ import {
   IoSwapHorizontal,
 } from "react-icons/io5";
 import { LuUsersRound } from "react-icons/lu";
-import { User, Landmark, Gift } from "lucide-react";
+import { User, Landmark, Gift, CreditCard, ShieldCheck } from "lucide-react";
 
 export const navItems = [
   {
     name: "Dashboard",
     icon: RxDashboard,
     path: "/dashboard/overview",
+    role: ["*"],
+  },
+  {
+    name: "Cards & Digital Wallets",
+    icon: CreditCard,
+    path: "/dashboard/cards",
+    role: ["*"],
+  },
+  {
+    name: "Identity (KYC)",
+    icon: ShieldCheck,
+    path: "/dashboard/kyc",
     role: ["*"],
   },
   {

@@ -26,6 +26,8 @@ import DepositRequest from "./pages/dashboard/client/Deposit";
 import TransferPage from "./pages/dashboard/client/Transfer";
 import Loans from "./pages/dashboard/client/Loans";
 import Referrals from "./pages/dashboard/client/Referrals";
+import Cards from "./pages/dashboard/client/Cards";
+import KYC from "./pages/dashboard/client/KYC";
 
 // Admin Dashboards
 import AdminOverview from "./pages/dashboard/admin/Overview";
@@ -128,6 +130,26 @@ function App() {
             <ProtectedRoute>
               <MainLayout pageName="Referral History">
                 <Referrals />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/cards"
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Cards & Digital Wallets">
+                <Cards />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/kyc"
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Identity Verification">
+                <KYC />
               </MainLayout>
             </ProtectedRoute>
           }

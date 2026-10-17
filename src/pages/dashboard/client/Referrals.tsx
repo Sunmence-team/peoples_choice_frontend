@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Users,
@@ -9,20 +9,30 @@ import {
 } from "lucide-react";
 import { useUser } from "../../../hooks/useUser";
 import {
-  getStoredReferrals,
   getReferralSummary,
+  fetchReferralStatsService,
   type ReferralRecord,
+  type ReferralSummary,
 } from "../../../services/referralServices";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
 
 export default function Referrals() {
   const { user } = useUser();
-  const summary = getReferralSummary(user?.username, user?.id);
-  const [referrals] = useState<ReferralRecord[]>(() => getStoredReferrals());
+  const [summary, setSummary] = useState<ReferralSummary>(() =>
+    getReferralSummary(user?.username, user?.id)
+  );
+  const [referrals, setReferrals] = useState<ReferralRecord[]>(() => summary.referrals || []);
   const [search, setSearch] = useState("");
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  useEffect(() => {
+    fetchReferralStatsService(user?.username, user?.id).then((res) => {
+      setSummary(res);
+      setReferrals(res.referrals || []);
+    });
+  }, [user?.username, user?.id]);
 
   const handleCopyCode = async () => {
     try {
@@ -49,7 +59,7 @@ export default function Referrals() {
   const filteredReferrals = referrals.filter(
     (r) =>
       r.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.email.toLowerCase().includes(search.toLowerCase())
+      (r.email ? r.email.toLowerCase().includes(search.toLowerCase()) : false)
   );
 
   return (
@@ -292,10 +302,10 @@ export default function Referrals() {
                         {item.name}
                       </td>
                       <td className="py-2.5 px-2 font-mono text-[10.5px] text-gray-500">
-                        {item.email}
+                        {item.email || "—"}
                       </td>
                       <td className="py-2.5 px-2 text-gray-500 text-[10.5px]">
-                        {formatISODateToCustom(item.date_joined) || item.date_joined.slice(0, 10)}
+                        {item.date_joined ? formatISODateToCustom(item.date_joined) || item.date_joined.slice(0, 10) : "—"}
                       </td>
                       <td className="py-2.5 px-2">
                         <span

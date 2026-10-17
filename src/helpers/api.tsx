@@ -6,8 +6,8 @@ const API_URL = import.meta.env.VITE_API_BASE_URL;
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    Accept: "application/json"
-  }
+    Accept: "application/json",
+  },
 });
 
 export const setupInterceptors = (logout: () => void) => {
@@ -22,6 +22,15 @@ export const setupInterceptors = (logout: () => void) => {
   api.interceptors.response.use(
     (res) => res,
     (error) => {
+      if (
+        error.response.data.message.includes(
+          "Identity verification (KYC) required to access this feature.",
+        )
+      ) {
+        setTimeout(() => {
+          location.replace("/dashboard/kyc");
+        }, 1000);
+      }
       if (error.code === "ERR_NETWORK") {
         toast.error("No internet or server down");
       } else if (error.response?.status === 401) {
@@ -34,14 +43,13 @@ export const setupInterceptors = (logout: () => void) => {
         }
       }
       return Promise.reject(error);
-    }
+    },
   );
 };
 
-
 export function getErrorMessage(
   error: unknown,
-  fallback = "Something went wrong"
+  fallback = "Something went wrong",
 ): string {
   if (axios.isAxiosError(error)) {
     return error.response?.data?.message || error.message || fallback;

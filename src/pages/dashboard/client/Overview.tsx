@@ -28,11 +28,13 @@ import {
 import { GoArrowUpRight } from "react-icons/go";
 import { Eye, EyeOff } from "lucide-react";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
+import { useKYCStatus } from "../../../hooks/useClientData";
 
 export default function Overview() {
   const { user } = useUser();
   const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = useDashboard();
+  const { data: kycStatus } = useKYCStatus();
   const [currentPage, setCurrentPage] = React.useState(1);
   const {
     data: ledger,
@@ -262,6 +264,20 @@ export default function Overview() {
                   Routing: {BANK_METADATA.routingNumber} • Acct: ••••
                   {accountNumber.slice(-4)}
                 </p>
+
+                {(kycStatus?.is_verified || kycStatus?.kyc_status === "verified") ? (
+                  <span className="rounded-sm bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-300 border border-emerald-500/30">
+                    Tier 3 Verified
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/dashboard/kyc")}
+                    className="rounded-sm bg-amber-400/20 px-1.5 py-0.2 text-[9px] font-bold text-amber-200 border border-amber-400/30 hover:bg-amber-400/30 transition cursor-pointer"
+                  >
+                    Complete KYC
+                  </button>
+                )}
               </div>
 
               {/* Action Buttons */}

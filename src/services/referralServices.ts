@@ -1,11 +1,15 @@
+import api from "../helpers/api";
+import { unwrap } from "../helpers/response";
+
 export interface ReferralRecord {
-  id: string;
+  id: string | number;
   name: string;
-  email: string;
-  date_joined: string;
-  status: "verified" | "funded" | "pending";
+  email?: string;
+  date_joined?: string;
+  registered_at?: string;
+  status: "verified" | "funded" | "pending" | "registered";
   reward_amount: number;
-  reward_status: "credited" | "pending";
+  reward_status: "credited" | "pending" | "paid";
 }
 
 export interface ReferralSummary {
@@ -16,93 +20,94 @@ export interface ReferralSummary {
   totalBonusEarned: number;
   pendingBonus: number;
   bonusPerReferral: number;
+  referrals: ReferralRecord[];
 }
 
-const STORAGE_KEY = "pc_bank_referrals_v1";
+export interface ApiReferralResponse {
+  referral_code?: string;
+  referral_link?: string;
+  total_referrals?: number;
+  total_earned?: number | string;
+  pending_rewards?: number | string;
+  referred_users?: Array<{
+    id: number | string;
+    name: string;
+    email?: string;
+    status: "verified" | "funded" | "pending" | "registered";
+    reward_amount: number | string;
+    reward_status: "paid" | "pending" | "credited";
+    registered_at?: string;
+    date_joined?: string;
+  }>;
+}
 
-const INITIAL_REFERRALS: ReferralRecord[] = [
-  {
-    id: "REF-001",
-    name: "Brandon Hayes",
-    email: "b.hayes***@gmail.com",
-    date_joined: "2026-10-12T11:20:00Z",
-    status: "funded",
-    reward_amount: 50.0,
-    reward_status: "credited",
-  },
-  {
-    id: "REF-002",
-    name: "Catherine Wu",
-    email: "c.wu99***@yahoo.com",
-    date_joined: "2026-10-08T15:45:00Z",
-    status: "funded",
-    reward_amount: 50.0,
-    reward_status: "credited",
-  },
-  {
-    id: "REF-003",
-    name: "Marcus Vance",
-    email: "m.vance***@outlook.com",
-    date_joined: "2026-09-28T09:10:00Z",
-    status: "verified",
-    reward_amount: 50.0,
-    reward_status: "credited",
-  },
-  {
-    id: "REF-004",
-    name: "Jessica Alvarez",
-    email: "j.alvarez***@gmail.com",
-    date_joined: "2026-09-19T18:05:00Z",
-    status: "funded",
-    reward_amount: 50.0,
-    reward_status: "credited",
-  },
-  {
-    id: "REF-005",
-    name: "Liam O'Connor",
-    email: "liam.oc***@proton.me",
-    date_joined: "2026-09-02T13:30:00Z",
-    status: "pending",
-    reward_amount: 50.0,
-    reward_status: "pending",
-  },
-];
+/**
+ * 7.2 User Referral Dashboard / Stats (GET /api/user/referrals)
+ */
+export const fetchReferralStatsService = async (
+  username?: string,
+  userId?: string | number
+): Promise<ReferralSummary> => {
+  const defaultCode = (username || (userId ? `PCB-${userId}` : "PCB-VIP100"))
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, "");
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://peopleschoicebk.com";
 
-export const getStoredReferrals = (): ReferralRecord[] => {
-  if (typeof window === "undefined") return INITIAL_REFERRALS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_REFERRALS));
-      return INITIAL_REFERRALS;
-    }
-    return JSON.parse(raw);
-  } catch {
-    return INITIAL_REFERRALS;
-  }
+  const res = await api.get("/user/referrals");
+  const data = unwrap<ApiReferralResponse>(res.data);
+
+  const refCode = data?.referral_code || defaultCode;
+  const refLink = data?.referral_link || `${origin}/register?ref=${refCode}`;
+
+  const records: ReferralRecord[] = (data?.referred_users || []).map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    date_joined: u.registered_at || u.date_joined,
+    status: u.status,
+    reward_amount:
+      typeof u.reward_amount === "number"
+        ? u.reward_amount
+        : parseFloat(u.reward_amount) || 0,
+    reward_status: u.reward_status === "paid" ? "credited" : "pending",
+  }));
+
+  const total = data?.total_referrals ?? records.length;
+  const verified = records.filter(
+    (r) => r.status === "verified" || r.status === "funded"
+  ).length;
+  const totalEarned = Number(data?.total_earned) || 0;
+  const pending = Number(data?.pending_rewards) || 0;
+
+  return {
+    referralCode: refCode,
+    referralLink: refLink,
+    totalReferrals: total,
+    verifiedReferrals: verified,
+    totalBonusEarned: totalEarned,
+    pendingBonus: pending,
+    bonusPerReferral: 50.0,
+    referrals: records,
+  };
 };
 
-export const getReferralSummary = (username?: string, userId?: string | number): ReferralSummary => {
-  const referrals = getStoredReferrals();
-  const code = (username || (userId ? `PCB-${userId}` : "PC-CLIENT")).toUpperCase().replace(/[^A-Z0-9-]/g, "");
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://peopleschoicebank.com";
-
-  const totalReferrals = referrals.length;
-  const verifiedReferrals = referrals.filter((r) => r.status === "funded" || r.status === "verified").length;
-  const totalBonusEarned = referrals
-    .filter((r) => r.reward_status === "credited")
-    .reduce((sum, r) => sum + r.reward_amount, 0);
-  const pendingBonus = referrals
-    .filter((r) => r.reward_status === "pending")
-    .reduce((sum, r) => sum + r.reward_amount, 0);
+export const getReferralSummary = (
+  username?: string,
+  userId?: string | number
+): ReferralSummary => {
+  const code = (username || (userId ? `PCB-${userId}` : "PCB-VIP100"))
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, "");
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://peopleschoicebk.com";
 
   return {
     referralCode: code,
-    referralLink: `${origin}/signup?ref=${code}`,
-    totalReferrals,
-    verifiedReferrals,
-    totalBonusEarned,
-    pendingBonus,
+    referralLink: `${origin}/register?ref=${code}`,
+    totalReferrals: 0,
+    verifiedReferrals: 0,
+    totalBonusEarned: 0,
+    pendingBonus: 0,
     bonusPerReferral: 50.0,
+    referrals: [],
   };
 };
