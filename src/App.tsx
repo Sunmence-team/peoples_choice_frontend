@@ -24,6 +24,8 @@ import Transaction from "./pages/dashboard/client/Transaction";
 import Withdrawl from "./pages/dashboard/client/Withdrawl";
 import DepositRequest from "./pages/dashboard/client/Deposit";
 import TransferPage from "./pages/dashboard/client/Transfer";
+import Loans from "./pages/dashboard/client/Loans";
+import Referrals from "./pages/dashboard/client/Referrals";
 
 // Admin Dashboards
 import AdminOverview from "./pages/dashboard/admin/Overview";
@@ -106,6 +108,26 @@ function App() {
             <ProtectedRoute>
               <MainLayout pageName="Transaction History">
                 <Transaction />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/loans"
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Loans & Credit">
+                <Loans />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/referrals"
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Referral History">
+                <Referrals />
               </MainLayout>
             </ProtectedRoute>
           }

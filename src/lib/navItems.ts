@@ -7,13 +7,25 @@ import {
   IoSwapHorizontal,
 } from "react-icons/io5";
 import { LuUsersRound } from "react-icons/lu";
-import { User } from "lucide-react";
+import { User, Landmark, Gift } from "lucide-react";
 
 export const navItems = [
   {
     name: "Dashboard",
     icon: RxDashboard,
     path: "/dashboard/overview",
+    role: ["*"],
+  },
+  {
+    name: "Loans & Credit",
+    icon: Landmark,
+    path: "/dashboard/loans",
+    role: ["*"],
+  },
+  {
+    name: "Referral History",
+    icon: Gift,
+    path: "/dashboard/referrals",
     role: ["*"],
   },
   {

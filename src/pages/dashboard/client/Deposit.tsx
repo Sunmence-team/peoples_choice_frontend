@@ -138,10 +138,9 @@ const DepositRequest = () => {
   return (
     <div className="w-full">
 
-        <h2 className='text-base sm:text-lg text-primary font-bold'>Deposit Funds & Account Inflow</h2>
-        <p className='text-[11px] sm:text-xs font-medium max-w-2xl text-gray-500 mt-0.5'>
-            Fund your People's Choice Bank account balance securely via our automated clearing network or cryptocurrency deposit gateway. All confirmed deposits are instantly credited to your available USD account balance.
-        </p>
+        <div className="mb-3 sm:mb-4">
+            <h2 className='text-base sm:text-lg text-primary font-bold'>Deposit Funds & Account Inflow</h2>
+        </div>
 
 
         <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 mt-4 sm:mt-6">

@@ -167,9 +167,6 @@ export default function Transfer() {
     <div>
       <div className="mb-3 sm:mb-4">
         <h2 className="text-base sm:text-lg text-primary font-bold">Transfer Money</h2>
-        <p className="text-[11px] sm:text-xs font-medium text-gray-500">
-          Transfer funds within People's Choice Bank or wire to external accounts.
-        </p>
       </div>
 
       <div className="rounded-xl border border-secondary bg-white p-3.5 sm:p-5">

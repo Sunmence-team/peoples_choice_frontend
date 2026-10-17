@@ -4,9 +4,10 @@ import {
   ArrowUpFromLine,
   BarChart3,
   Landmark,
+  CreditCard,
+  Gift,
 } from "lucide-react";
 import { IoMdArrowForward } from "react-icons/io";
-import { IoSwapHorizontal } from "react-icons/io5";
 import { ActionCard } from "../../../components/cards/ActionCard";
 import ActionCell from "../../../components/ui/ActionCell";
 import ReusableTable from "../../../utility/ReusableTable";
@@ -63,10 +64,10 @@ export default function Overview() {
               ? `Transfer to ${item.recipient_name}`
               : "Internal Transfer"
             : item.type === "deposit"
-            ? "Direct Deposit / Inflow"
-            : item.recipient_name
-            ? `Wire to ${item.recipient_name}`
-            : `External Wire (${item.network || "Payout"})`;
+              ? "Direct Deposit / Inflow"
+              : item.recipient_name
+                ? `Wire to ${item.recipient_name}`
+                : `External Wire (${item.network || "Payout"})`;
 
         return (
           <div className="flex flex-col">
@@ -89,8 +90,8 @@ export default function Overview() {
             item.type === "deposit"
               ? "bg-green-100 text-green-700"
               : item.type === "transfer"
-              ? "bg-blue-100 text-blue-700"
-              : "bg-primary/10 text-primary"
+                ? "bg-blue-100 text-blue-700"
+                : "bg-primary/10 text-primary"
           }`}
         >
           {item.type}
@@ -149,15 +150,15 @@ export default function Overview() {
             item.status === "completed" || item.status === "approved"
               ? "bg-green-100 text-green-700"
               : item.status === "pending"
-              ? "bg-amber-100 text-amber-700"
-              : "bg-red-100 text-red-700"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-red-100 text-red-700"
           }`}
         >
           {item.status === "completed" || item.status === "approved"
             ? "Completed"
             : item.status === "pending"
-            ? "Pending"
-            : item.status}
+              ? "Pending"
+              : item.status}
         </span>
       ),
     },
@@ -170,7 +171,7 @@ export default function Overview() {
           rowId={Number(item.id ?? 0)}
           onView={(id) => {
             const row = recentTransactions.find(
-              (transactionItem) => Number(transactionItem.id) === id
+              (transactionItem) => Number(transactionItem.id) === id,
             );
             if (row) {
               setSelectedTransaction(row);
@@ -189,7 +190,8 @@ export default function Overview() {
           Good morning, {user?.first_name}
         </h1>
         <p className="mt-0.5 text-[11px] sm:text-xs text-gray-500">
-          Manage your account funds, transfers, deposits and withdrawals securely.
+          Manage your account funds, transfers, deposits and withdrawals
+          securely.
         </p>
       </div>
 
@@ -237,11 +239,11 @@ export default function Overview() {
                   {statsLoading
                     ? "..."
                     : showBalance
-                    ? `$${balance.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
-                    : "*******"}
+                      ? `$${balance.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
+                      : "*******"}
                 </span>
 
                 <span className="mb-0.5 shrink-0 text-[8.5px] font-semibold text-[#dce8f5]">
@@ -257,7 +259,8 @@ export default function Overview() {
                 </div>
 
                 <p className="text-[9.5px] sm:text-[10.5px] text-[#b9cadc] font-mono break-all">
-                  Routing: {BANK_METADATA.routingNumber} • Acct: ••••{accountNumber.slice(-4)}
+                  Routing: {BANK_METADATA.routingNumber} • Acct: ••••
+                  {accountNumber.slice(-4)}
                 </p>
               </div>
 
@@ -301,7 +304,7 @@ export default function Overview() {
             <div className="h-px w-full bg-white/10 lg:h-auto lg:w-px lg:self-stretch" />
 
             {/* Deposit / Withdrawal Stats */}
-            <div className="flex w-full flex-col gap-3.5 sm:gap-4 lg:w-auto lg:min-w-[240px] lg:pt-2">
+            <div className="flex w-full lg:flex-col justify-between gap-3.5 sm:gap-4 lg:w-auto lg:min-w-[240px] lg:pt-2">
               {/* Total Deposited */}
               <div className="flex items-center sm:items-start gap-2.5 sm:gap-3">
                 <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f7ef] text-[#16a34a]">
@@ -314,7 +317,8 @@ export default function Overview() {
                   </p>
 
                   <p className="mt-0.5 break-words text-[13px] sm:text-[15px] font-bold text-white">
-                    ${totlaDeposit.toLocaleString("en-US", {
+                    $
+                    {totlaDeposit.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}{" "}
@@ -335,7 +339,8 @@ export default function Overview() {
                   </p>
 
                   <p className="mt-0.5 break-words text-[13px] sm:text-[15px] font-bold text-white">
-                    ${totalwithdrawl.toLocaleString("en-US", {
+                    $
+                    {totalwithdrawl.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}{" "}
@@ -355,17 +360,17 @@ export default function Overview() {
 
           <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             <ActionCard
-              icon={<IoSwapHorizontal size={13} />}
-              title="Transfer Money"
-              description="Within & outside app"
-              onClick={() => setShowTransferModal(true)}
+              icon={<CreditCard size={13} />}
+              title="Loans & Credit"
+              description="Instant facility & calculator"
+              onClick={() => navigate("/dashboard/loans")}
             />
 
             <ActionCard
-              icon={<ArrowDownToLine size={13} />}
-              title="Deposit Funds"
-              description="Direct deposit & wires"
-              onClick={() => navigate("/dashboard/deposit")}
+              icon={<Gift size={13} />}
+              title="Referral History"
+              description="Bonus rewards & invite link"
+              onClick={() => navigate("/dashboard/referrals")}
             />
 
             <ActionCard

@@ -104,10 +104,6 @@ function ProfileBody() {
       {/* Header */}
       <div className="mb-3 sm:mb-4">
         <h1 className="text-base sm:text-lg font-bold text-primary">Profile & Account Settings</h1>
-
-        <p className="mt-0.5 text-[11px] sm:text-xs font-medium text-gray-500">
-          Manage your personal information, security credentials and account status.
-        </p>
       </div>
 
       {/* Tabs */}
