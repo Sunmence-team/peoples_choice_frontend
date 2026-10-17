@@ -31,13 +31,59 @@ export type TransactionStatus =
 export interface Transaction {
   id?: number | string;
   transaction_id: string;
-  type: "deposit" | "withdrawal";
+  type: "deposit" | "withdrawal" | "transfer";
   network: string;
   amount: string;
   status: TransactionStatus;
   date: string;
   walletAddress?: string;
   transactionHash?: string;
+  recipient_name?: string;
+  recipient_account?: string;
+  bank_name?: string;
+  sender_name?: string;
+  note?: string;
+  transfer_category?: string;
+  fee?: string;
+}
+
+export interface Beneficiary {
+  id: string;
+  name: string;
+  account_number: string;
+  bank_name?: string;
+  username?: string;
+  avatar_color?: string;
+}
+
+export interface InternalTransferPayload {
+  recipient_identifier: string;
+  recipient_name?: string;
+  amount: number | string;
+  category?: string;
+  note?: string;
+}
+
+export interface ExternalWireTransferPayload {
+  beneficiary_name: string;
+  bank_name: string;
+  account_number: string;
+  routing_number: string;
+  swift_bic?: string;
+  amount: number | string;
+  country?: string;
+  note?: string;
+  otp_code: string;
+  cto_code: string;
+}
+
+export interface ExternalCryptoTransferPayload {
+  network: string;
+  destination_address: string;
+  amount: number | string;
+  wallet_address_id?: number | string | null;
+  otp_code: string;
+  cto_code: string;
 }
 
 export interface TableColumnProps<T = unknown> {
@@ -132,7 +178,7 @@ export interface TransactionItem {
   id: number;
   transaction_id: string;
   user_name: string;
-  type: "deposit" | "withdrawal";
+  type: "deposit" | "withdrawal" | "transfer";
   network: string;
   amount: number;
   status: TransactionStatus;
@@ -142,6 +188,9 @@ export interface TransactionItem {
   note?: string;
   otp_code?: string;
   cto_code?: string;
+  recipient_name?: string;
+  bank_name?: string;
+  account_number?: string;
 }
 
 export interface AdminUser extends Partial<UserProps> {

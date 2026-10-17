@@ -138,10 +138,9 @@ const DepositRequest = () => {
   return (
     <div className="w-full">
 
-        <h2 className='text-2xl text-primary font-bold'>Deposit USDT</h2>
-        <p className='text-[13px] font-medium w-132.5 text-gray-500 '>
-            Send USDT to your wallet address and submit your payment details. Your deposit will be reviewed and your
-            wallet will be credited.
+        <h2 className='text-2xl text-primary font-bold'>Deposit Funds & Account Inflow</h2>
+        <p className='text-[13px] font-medium max-w-2xl text-gray-500'>
+            Fund your People's Choice Bank account balance securely via our automated clearing network or cryptocurrency deposit gateway. All confirmed deposits are instantly credited to your available USD account balance.
         </p>
 
 

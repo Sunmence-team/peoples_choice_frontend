@@ -3,7 +3,8 @@ import {
   IoArrowDown,
   IoArrowUp,
   IoReceipt,
-  IoWalletOutline
+  IoWalletOutline,
+  IoSwapHorizontal,
 } from "react-icons/io5";
 import { LuUsersRound } from "react-icons/lu";
 import { User } from "lucide-react";
@@ -16,13 +17,19 @@ export const navItems = [
     role: ["*"],
   },
   {
-    name: "Deposit USDT",
+    name: "Transfer Money",
+    icon: IoSwapHorizontal,
+    path: "/dashboard/transfer",
+    role: ["*"],
+  },
+  {
+    name: "Deposit Funds",
     icon: IoArrowDown,
     path: "/dashboard/deposit",
     role: ["*"],
   },
   {
-    name: "Withdraw",
+    name: "Withdraw / Payout",
     icon: IoArrowUp,
     path: "/dashboard/withdrawl",
     role: ["*"],
@@ -34,7 +41,7 @@ export const navItems = [
     role: ["*"],
   },
   {
-    name: "Profile",
+    name: "Profile & Settings",
     icon: User,
     path: "/dashboard/profile",
     role: ["*"],

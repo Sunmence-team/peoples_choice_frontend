@@ -219,12 +219,13 @@ export default function Withdrawal() {
   return (
     <div className="w-full">
       {/* Page heading */}
-      <div className="mb-5">
-        <h1 className="text-xl font-bold text-primary">Withdraw Funds</h1>
-
-        <p className="mt-1 text-[13px] font-medium text-gray-500">
-          Request a withdrawal from your available wallet balance.
-        </p>
+      <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-primary">Payout & Withdrawal</h1>
+          <p className="mt-1 text-[13px] font-medium text-gray-500">
+            Request an external funds payout to your designated wallet address or wire clearing destination.
+          </p>
+        </div>
       </div>
 
       {/* Main content */}
@@ -243,30 +244,31 @@ export default function Withdrawal() {
 
                 <div>
                   <p className="text-[10px] font-semibold text-gray-500">
-                    Available Balance
+                    Available Account Balance
                   </p>
 
                   <div className="flex items-baseline gap-1">
                     <span className="text-xl font-bold text-primary">
                       {statsLoading
                         ? "..."
-                        : availableBalance.toLocaleString("en-US", {
+                        : `$${availableBalance.toLocaleString("en-US", {
                             minimumFractionDigits: 2,
-                          })}
+                          })}`}
                     </span>
 
                     <span className="text-[12px] font-bold text-primary">
-                      USDT
+                      USD
                     </span>
                   </div>
 
                   <p className="text-[10px] font-medium text-gray-400">
-                    ≈ $
+                    ≈{" "}
                     {statsLoading
                       ? "..."
                       : availableBalance.toLocaleString("en-US", {
                           minimumFractionDigits: 2,
-                        })}
+                        })}{" "}
+                    USDT Pegged
                   </p>
                 </div>
               </div>

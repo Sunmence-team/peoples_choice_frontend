@@ -23,6 +23,7 @@ import Profile from "./pages/dashboard/client/Profile";
 import Transaction from "./pages/dashboard/client/Transaction";
 import Withdrawl from "./pages/dashboard/client/Withdrawl";
 import DepositRequest from "./pages/dashboard/client/Deposit";
+import TransferPage from "./pages/dashboard/client/Transfer";
 
 // Admin Dashboards
 import AdminOverview from "./pages/dashboard/admin/Overview";
@@ -55,6 +56,16 @@ function App() {
             <ProtectedRoute>
               <MainLayout pageName="Dashboard">
                 <Overview />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/transfer"
+          element={
+            <ProtectedRoute>
+              <MainLayout pageName="Transfer Money">
+                <TransferPage />
               </MainLayout>
             </ProtectedRoute>
           }

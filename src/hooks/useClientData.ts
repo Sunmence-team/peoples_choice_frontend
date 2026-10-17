@@ -35,19 +35,35 @@ import {
 import type { Transaction } from "../lib/interfaces";
 import { useUser } from "./useUser";
 
+import {
+  getStoredBalanceAdjustment,
+  getStoredInternalTransfers,
+  submitInternalTransferService,
+} from "../services/transferServices";
+import type { InternalTransferPayload } from "../lib/interfaces";
+
 export const useDashboard = () => {
   const { token } = useUser();
   return useQuery<DashboardStats>({
     queryKey: ["dashboard"],
     enabled: !!token,
-    queryFn: async () => toDashboardStats(await getDashboardService()),
+    queryFn: async () => {
+      const stats = toDashboardStats(await getDashboardService());
+      const deduction = getStoredBalanceAdjustment();
+      const adjustedBalance = Math.max(0, stats.balance - deduction);
+      return {
+        ...stats,
+        balance: adjustedBalance,
+        totalWithdrawn: stats.totalWithdrawn + deduction,
+      };
+    },
   });
 };
 
 export const useTransactionLedger = (
   page = 1,
   perPage = 10,
-  type?: "deposit" | "withdrawal"
+  type?: "deposit" | "withdrawal" | "transfer"
 ) => {
   const { token } = useUser();
   return useQuery({
@@ -60,13 +76,52 @@ export const useTransactionLedger = (
       totalPages: number;
       perPage: number;
     }> => {
+      const serverType = type === "transfer" ? undefined : type;
       const body = await getTransactionLedgerService({
         page,
         per_page: perPage,
-        type,
+        type: serverType,
       });
       const paged = toPaged<unknown>(body, perPage);
-      return { ...paged, items: paged.items.map((item) => toClientTransaction(item)) };
+      const serverItems = paged.items.map((item) => toClientTransaction(item));
+      const localTransfers = getStoredInternalTransfers();
+
+      let combined: Transaction[] = [];
+      if (type === "transfer") {
+        combined = [...localTransfers, ...serverItems.filter((i) => i.type === "transfer")];
+      } else if (type === "deposit") {
+        combined = serverItems.filter((i) => i.type === "deposit");
+      } else if (type === "withdrawal") {
+        combined = serverItems.filter((i) => i.type === "withdrawal");
+      } else {
+        combined = [...localTransfers, ...serverItems];
+      }
+
+      // Sort by date descending
+      combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      const total = (paged.total || serverItems.length) + (type !== "deposit" && type !== "withdrawal" ? localTransfers.length : 0);
+      const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+      return {
+        ...paged,
+        total,
+        totalPages,
+        items: combined.slice((page - 1) * perPage, page * perPage),
+      };
+    },
+  });
+};
+
+export const useInternalTransfer = () => {
+  const queryClient = useQueryClient();
+  const { user } = useUser();
+  return useMutation({
+    mutationFn: (payload: InternalTransferPayload) =>
+      submitInternalTransferService(payload, user),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["ledger"] });
     },
   });
 };

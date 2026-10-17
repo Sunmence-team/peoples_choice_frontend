@@ -27,7 +27,7 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
     : undefined;
   const amount =
     typeof transaction.amount === "number"
-      ? `${transaction.amount}.00 USDT`
+      ? `${transaction.amount}.00 USD`
       : transaction.amount;
 
   const rows: { label: string; value: React.ReactNode }[] = [
@@ -41,12 +41,18 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
         ]
       : []),
     { label: "Type", value: transaction.type },
-    { label: "Network", value: transaction.network },
+    ...("recipient_name" in transaction && transaction.recipient_name
+      ? [{ label: "Recipient", value: transaction.recipient_name }]
+      : []),
+    ...("recipient_account" in transaction && transaction.recipient_account
+      ? [{ label: "Destination Account", value: transaction.recipient_account }]
+      : []),
+    { label: "Channel", value: transaction.network },
     { label: "Amount", value: amount },
     { label: "Status", value: <StatusBadge status={transaction.status} /> },
     {
       label: "Date & Time",
-      value: formatISODateToCustom(transaction.date),
+      value: formatISODateToCustom(transaction.date) || transaction.date,
     },
     ...(address
       ? [

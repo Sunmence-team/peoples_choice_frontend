@@ -87,25 +87,26 @@ export const normalizeStatus = (
 
 const normalizeType = (
   value: unknown,
-  fallback: "deposit" | "withdrawal" = "deposit"
-): "deposit" | "withdrawal" => {
+  fallback: "deposit" | "withdrawal" | "transfer" = "deposit"
+): "deposit" | "withdrawal" | "transfer" => {
   const type = pickString(value).toLowerCase();
+  if (type.includes("transfer")) return "transfer";
   if (type.includes("withdraw")) return "withdrawal";
   if (type.includes("deposit")) return "deposit";
   return fallback;
 };
 
-const signedAmount = (raw: Dict, fallbackType: "deposit" | "withdrawal"): string => {
+const signedAmount = (raw: Dict, fallbackType: "deposit" | "withdrawal" | "transfer"): string => {
   const amount = pickNumber(raw.amount, raw.credit, raw.debit);
-  const suffix = pickString(raw.currency, raw.symbol) || "USDT";
+  const suffix = pickString(raw.currency, raw.symbol) || "USD";
   const prefix = amount < 0 ? "" : fallbackType === "deposit" ? "+" : "-";
   const abs = Math.abs(amount);
-  return `${prefix}${abs} ${suffix}`.trim();
+  return `${prefix}$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${suffix === "USD" ? "" : suffix}`.trim();
 };
 
 export const toClientTransaction = (
   value: unknown,
-  fallbackType?: "deposit" | "withdrawal"
+  fallbackType?: "deposit" | "withdrawal" | "transfer"
 ): Transaction => {
   const raw = asDict(value) ?? {};
   const type = normalizeType(raw.type ?? raw.transaction_type, fallbackType);
@@ -122,7 +123,7 @@ export const toClientTransaction = (
       raw.chain,
       addressRel?.type,
       raw.currency,
-      "USDT"
+      type === "transfer" ? "Internal Wire" : "USD Clearing"
     ),
     amount: signedAmount(raw, type),
     status: normalizeStatus(raw.status, raw.status === null ? "pending" : undefined),
@@ -132,12 +133,19 @@ export const toClientTransaction = (
       undefined,
     transactionHash:
       pickString(raw.transaction_hash, raw.transactionHash, raw.tx_hash, raw.hash) || undefined,
+    recipient_name: pickString(raw.recipient_name, raw.beneficiary_name) || undefined,
+    recipient_account: pickString(raw.recipient_account, raw.destination_account) || undefined,
+    bank_name: pickString(raw.bank_name, raw.destination_bank) || undefined,
+    sender_name: pickString(raw.sender_name, raw.user_name) || undefined,
+    note: pickString(raw.note, raw.memo, raw.description, raw.remarks) || undefined,
+    transfer_category: pickString(raw.transfer_category, raw.category) || undefined,
+    fee: pickString(raw.fee) || "$0.00",
   };
 };
 
 export const toAdminTransaction = (
   value: unknown,
-  fallbackType?: "deposit" | "withdrawal"
+  fallbackType?: "deposit" | "withdrawal" | "transfer"
 ): TransactionItem => {
   const raw = asDict(value) ?? {};
   const type = normalizeType(raw.type ?? raw.transaction_type, fallbackType);

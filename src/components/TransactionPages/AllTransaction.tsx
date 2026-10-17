@@ -7,7 +7,7 @@ import { formatISODateToCustom } from '../../helpers/formatterUtility';
 import { useTransactionLedger } from '../../hooks/useClientData';
 
 interface AllTransactionsTabProps {
-    type?: 'deposit' | 'withdrawal';
+    type?: 'deposit' | 'withdrawal' | 'transfer';
 }
 
 export default function AllTransactionsTab({ type }: AllTransactionsTabProps = {}) {
@@ -31,7 +31,7 @@ export default function AllTransactionsTab({ type }: AllTransactionsTabProps = {
             label: 'TYPE',
             key: 'type',
             render: (item) => (
-                <span className={`rounded px-3 py-1 text-xs font-semibold ${item.type === 'deposit' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
+                <span className={`rounded px-3 py-1 text-xs font-semibold ${item.type === 'deposit' ? 'bg-green-50 text-green-600' : item.type === 'transfer' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
                     {item.type}
                 </span>
             ),

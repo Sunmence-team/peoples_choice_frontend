@@ -3,10 +3,10 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   BarChart3,
-  UserRound,
   Wallet,
 } from "lucide-react";
 import { IoMdArrowForward } from "react-icons/io";
+import { IoSwapHorizontal } from "react-icons/io5";
 import { ActionCard } from "../../../components/cards/ActionCard";
 import ActionCell from "../../../components/ui/ActionCell";
 import ReusableTable from "../../../utility/ReusableTable";
@@ -18,6 +18,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { TableColumnProps, Transaction } from "../../../lib/interfaces";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
+import TransferModal from "../../../components/modal/TransferModal";
 import { GoArrowUpRight } from "react-icons/go";
 import { Eye, EyeOff } from "lucide-react";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
@@ -37,6 +38,7 @@ export default function Overview() {
     React.useState<Transaction | null>(null);
   const [viewModal, setViewModal] = React.useState(false);
   const [showBalance, setShowBalance] = React.useState(false);
+  const [showTransferModal, setShowTransferModal] = React.useState(false);
 
   const balance = stats?.balance ?? 0;
   const totlaDeposit = stats?.totalDeposited ?? 0;
@@ -54,19 +56,25 @@ export default function Overview() {
       key: "type",
       render: (item) => (
         <span
-          className={`px-3 py-1 rounded-xl font-medium ${item.type === "deposit" ? "bg-green-100 text-green-500" : item.type === "withdrawal" ? "bg-primary/10 text-primary" : "bg-gray-100 text-black"}`}
+          className={`px-3 py-1 rounded-xl font-medium capitalize ${
+            item.type === "deposit"
+              ? "bg-green-100 text-green-500"
+              : item.type === "transfer"
+              ? "bg-blue-100 text-blue-600"
+              : "bg-primary/10 text-primary"
+          }`}
         >
           {item.type}
         </span>
       ),
     },
     {
-      label: "AMOUNT (USDT)",
+      label: "AMOUNT (USD)",
       key: "amount",
       render: (item) => item.amount || "-",
     },
     {
-      label: "NETWORK",
+      label: "CHANNEL",
       key: "network",
       render: (item) => item.network || "-",
     },
@@ -80,7 +88,13 @@ export default function Overview() {
       key: "status",
       render: (item) => (
         <span
-          className={`px-3 py-1 rounded-xl font-medium ${item.status === "completed" ? "bg-green-100 text-green-500" : item.status === "pending" ? "bg-gray-100 text-black" : "bg-primary/10 text-primary"}`}
+          className={`px-3 py-1 rounded-xl font-medium ${
+            item.status === "completed"
+              ? "bg-green-100 text-green-500"
+              : item.status === "pending"
+              ? "bg-gray-100 text-black"
+              : "bg-primary/10 text-primary"
+          }`}
         >
           {item.status}
         </span>
@@ -95,7 +109,7 @@ export default function Overview() {
           rowId={Number(item.id ?? 0)}
           onView={(id) => {
             const row = recentTransactions.find(
-              (transactionItem) => Number(transactionItem.id) === id,
+              (transactionItem) => Number(transactionItem.id) === id
             );
             if (row) {
               setSelectedTransaction(row);
@@ -114,7 +128,7 @@ export default function Overview() {
           Good morning, {user?.first_name}
         </h1>
         <p className="mt-0.5 text-[15px] text-gray-500">
-          Manage your funds, deposits and withdrawals securely.
+          Manage your account funds, transfers, deposits and withdrawals securely.
         </p>
       </div>
 
@@ -134,7 +148,7 @@ export default function Overview() {
                 </span>
 
                 <p className="text-[12px] sm:text-[13px]">
-                  Available Wallet Balance
+                  Available Account Balance
                 </p>
 
                 <button
@@ -155,12 +169,12 @@ export default function Overview() {
                   {statsLoading
                     ? "..."
                     : showBalance
-                      ? balance.toLocaleString()
-                      : "*******"}
+                    ? `$${balance.toLocaleString()}`
+                    : "*******"}
                 </span>
 
                 <span className="mb-0.5 shrink-0 text-[9px] font-semibold text-[#dce8f5]">
-                  USDT
+                  USD
                 </span>
               </div>
 
@@ -168,21 +182,28 @@ export default function Overview() {
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                 <div className="flex items-center gap-1 text-[12px] text-tertiary sm:text-[13px]">
                   <GoArrowUpRight size={15} />
-                  <span>Wallet overview</span>
+                  <span>Premier Checking</span>
                 </div>
 
                 <p className="text-[12px] text-[#b9cadc] sm:text-[13px]">
-                  ≈ ${balance.toLocaleString()}.00
+                  ≈ {balance.toLocaleString()} USDT Backed
                 </p>
               </div>
 
               {/* Buttons */}
               <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => navigate("/dashboard/deposit")}
+                  onClick={() => setShowTransferModal(true)}
                   className="cursor-pointer rounded-md bg-tertiary px-3 py-2 text-[12px] font-semibold text-white transition hover:opacity-90"
                 >
-                  Deposit USDT
+                  Transfer Money
+                </button>
+
+                <button
+                  onClick={() => navigate("/dashboard/deposit")}
+                  className="cursor-pointer rounded-md border border-white/30 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-white/10"
+                >
+                  Deposit
                 </button>
 
                 <button
@@ -207,11 +228,11 @@ export default function Overview() {
 
                 <div className="min-w-0">
                   <p className="text-[13px] text-[#8794a5] sm:text-[14px]">
-                    Total Deposited
+                    Total Inflow / Deposited
                   </p>
 
                   <p className="mt-1 break-words text-[18px] font-bold sm:text-[20px]">
-                    ${totlaDeposit.toLocaleString()}.00 USDT
+                    ${totlaDeposit.toLocaleString()}.00 USD
                   </p>
                 </div>
               </div>
@@ -224,11 +245,11 @@ export default function Overview() {
 
                 <div className="min-w-0">
                   <p className="text-[13px] text-[#8794a5] sm:text-[14px]">
-                    Total Withdrawn
+                    Total Outflow / Withdrawn
                   </p>
 
                   <p className="mt-1 break-words text-[18px] font-bold sm:text-[20px]">
-                    ${totalwithdrawl.toLocaleString()}.00 USDT
+                    ${totalwithdrawl.toLocaleString()}.00 USD
                   </p>
                 </div>
               </div>
@@ -244,9 +265,16 @@ export default function Overview() {
 
           <div className="grid grid-cols-2 gap-2">
             <ActionCard
+              icon={<IoSwapHorizontal size={13} />}
+              title="Transfer Money"
+              description="Within & outside app"
+              onClick={() => setShowTransferModal(true)}
+            />
+
+            <ActionCard
               icon={<ArrowDownToLine size={13} />}
-              title="Deposit USDT"
-              description="Fund your wallet"
+              title="Deposit Funds"
+              description="Fund your account"
               onClick={() => navigate("/dashboard/deposit")}
             />
 
@@ -262,13 +290,6 @@ export default function Overview() {
               title="Transaction History"
               description="Track your activity"
               onClick={() => navigate("/dashboard/transaction-history")}
-            />
-
-            <ActionCard
-              icon={<UserRound size={13} />}
-              title="Manage Profile"
-              description="Update your details"
-              onClick={() => navigate("/dashboard/profile")}
             />
           </div>
         </div>
@@ -310,6 +331,13 @@ export default function Overview() {
             setViewModal(false);
             setSelectedTransaction(null);
           }}
+        />
+      )}
+
+      {showTransferModal && (
+        <TransferModal
+          isOpen={showTransferModal}
+          onClose={() => setShowTransferModal(false)}
         />
       )}
     </>
