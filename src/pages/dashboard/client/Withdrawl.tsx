@@ -219,36 +219,36 @@ export default function Withdrawal() {
   return (
     <div className="w-full">
       {/* Page heading */}
-      <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
         <div>
-          <h1 className="text-xl font-bold text-primary">Payout & Withdrawal</h1>
-          <p className="mt-1 text-[13px] font-medium text-gray-500">
-            Request an external funds payout to your designated wallet address or wire clearing destination.
+          <h1 className="text-base sm:text-lg font-bold text-primary">Payout & External Withdrawal</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs font-medium text-gray-500">
+            Request an external funds payout to your designated bank account or wire clearing destination.
           </p>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="overflow-hidden rounded-xl border border-secondary bg-white">
           {/* Balance */}
-          <div className="border-b border-gray-200 px-5 py-5">
-            <div className="flex items-center justify-between">
+          <div className="border-b border-gray-200 px-3.5 py-3 sm:px-4 sm:py-3.5">
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+                <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-primary">
                   <CircleUserRound
-                    className="h-5 w-5 text-white"
+                    className="h-4 w-4 sm:h-5 sm:w-5 text-white"
                     strokeWidth={2}
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-semibold text-gray-500">
                     Available Account Balance
                   </p>
 
                   <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold text-primary">
+                    <span className="text-base sm:text-lg font-bold text-primary">
                       {statsLoading
                         ? "..."
                         : `$${availableBalance.toLocaleString("en-US", {
@@ -256,24 +256,18 @@ export default function Withdrawal() {
                           })}`}
                     </span>
 
-                    <span className="text-[12px] font-bold text-primary">
+                    <span className="text-[11px] sm:text-[12px] font-bold text-primary">
                       USD
                     </span>
                   </div>
 
                   <p className="text-[10px] font-medium text-gray-400">
-                    ≈{" "}
-                    {statsLoading
-                      ? "..."
-                      : availableBalance.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                    USDT Pegged
+                    Primary Checking • FDIC Insured
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+              <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold text-primary shrink-0">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 <span>{step === 1 ? "Step 1 of 2" : "Step 2 of 2"}</span>
               </div>
@@ -284,7 +278,7 @@ export default function Withdrawal() {
           <form
             onSubmit={formik.handleSubmit}
             noValidate
-            className="space-y-4 p-5"
+            className="space-y-4 p-3.5 sm:p-5"
           >
             {step === 1 ? (
               <>
@@ -294,7 +288,7 @@ export default function Withdrawal() {
                     htmlFor="amount"
                     className="mb-2 block text-[11px] font-bold text-primary"
                   >
-                    Withdrawal Amount (USDT)
+                    Withdrawal Amount (USD)
                   </label>
 
                   <FormattedInput
@@ -324,7 +318,7 @@ export default function Withdrawal() {
                     htmlFor="network"
                     className="mb-2 block text-[11px] font-bold text-primary"
                   >
-                    USDT Network
+                    Clearing Rail / Network
                   </label>
 
                   <div className="relative">
@@ -365,14 +359,14 @@ export default function Withdrawal() {
                     htmlFor="destination_address"
                     className="mb-2 block text-[11px] font-bold text-primary"
                   >
-                    USDT Wallet Address
+                    Destination Account / Wire Settlement Address
                   </label>
 
                   <input
                     id="destination_address"
                     name="destination_address"
                     type="text"
-                    placeholder="Enter wallet address"
+                    placeholder="Enter destination account or wallet address"
                     value={formik.values.destination_address}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -395,7 +389,7 @@ export default function Withdrawal() {
                   type="button"
                   onClick={handleRequestOtp}
                   disabled={requestOtpMutation.isPending}
-                  className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                 >
                   {requestOtpMutation.isPending ? (
                     <>
@@ -421,7 +415,7 @@ export default function Withdrawal() {
                       Sending OTP to Email...
                     </>
                   ) : (
-                    "Request Email OTP & Continue"
+                    "Request 2FA OTP & Continue"
                   )}
                 </button>
               </>
@@ -432,7 +426,7 @@ export default function Withdrawal() {
                   <div className="flex justify-between text-gray-600">
                     <span>Amount:</span>
                     <span className="font-bold text-primary">
-                      {formik.values.amount} USDT
+                      ${formik.values.amount} USD
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-600">

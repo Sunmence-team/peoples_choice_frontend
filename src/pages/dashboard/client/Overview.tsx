@@ -3,7 +3,7 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   BarChart3,
-  Wallet,
+  Landmark,
 } from "lucide-react";
 import { IoMdArrowForward } from "react-icons/io";
 import { IoSwapHorizontal } from "react-icons/io5";
@@ -19,6 +19,11 @@ import { useNavigate } from "react-router-dom";
 import type { TableColumnProps, Transaction } from "../../../lib/interfaces";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
 import TransferModal from "../../../components/modal/TransferModal";
+import AccountDetailsModal from "../../../components/modal/AccountDetailsModal";
+import {
+  BANK_METADATA,
+  getBankAccountNumber,
+} from "../../../services/transferServices";
 import { GoArrowUpRight } from "react-icons/go";
 import { Eye, EyeOff } from "lucide-react";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
@@ -39,28 +44,52 @@ export default function Overview() {
   const [viewModal, setViewModal] = React.useState(false);
   const [showBalance, setShowBalance] = React.useState(false);
   const [showTransferModal, setShowTransferModal] = React.useState(false);
+  const [showAccountDetails, setShowAccountDetails] = React.useState(false);
 
   const balance = stats?.balance ?? 0;
   const totlaDeposit = stats?.totalDeposited ?? 0;
   const totalwithdrawl = stats?.totalWithdrawn ?? 0;
   const recentTransactions = ledger?.items ?? [];
+  const accountNumber = getBankAccountNumber(user);
 
   const columns: TableColumnProps<Transaction>[] = [
     {
-      label: "TRANSACTION ID",
+      label: "DESCRIPTION / BENEFICIARY",
       key: "transaction_id",
-      render: (item) => item.transaction_id || "-",
+      render: (item) => {
+        const title =
+          item.type === "transfer"
+            ? item.recipient_name
+              ? `Transfer to ${item.recipient_name}`
+              : "Internal Transfer"
+            : item.type === "deposit"
+            ? "Direct Deposit / Inflow"
+            : item.recipient_name
+            ? `Wire to ${item.recipient_name}`
+            : `External Wire (${item.network || "Payout"})`;
+
+        return (
+          <div className="flex flex-col">
+            <span className="font-semibold text-[#172b4d] text-[11px] leading-tight">
+              {title}
+            </span>
+            <span className="text-[9px] text-gray-400 font-mono mt-0.5">
+              Ref: {item.transaction_id || "-"}
+            </span>
+          </div>
+        );
+      },
     },
     {
       label: "TYPE",
       key: "type",
       render: (item) => (
         <span
-          className={`px-3 py-1 rounded-xl font-medium capitalize ${
+          className={`px-2 py-0.5 rounded-md font-medium capitalize text-[9.5px] ${
             item.type === "deposit"
-              ? "bg-green-100 text-green-500"
+              ? "bg-green-100 text-green-700"
               : item.type === "transfer"
-              ? "bg-blue-100 text-blue-600"
+              ? "bg-blue-100 text-blue-700"
               : "bg-primary/10 text-primary"
           }`}
         >
@@ -71,12 +100,40 @@ export default function Overview() {
     {
       label: "AMOUNT (USD)",
       key: "amount",
-      render: (item) => item.amount || "-",
+      render: (item) => {
+        const raw =
+          typeof item.amount === "number"
+            ? item.amount
+            : parseFloat(String(item.amount).replace(/[^0-9.-]/g, "")) || 0;
+        const formatted = raw.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        const isPositive = item.type === "deposit";
+        return (
+          <span
+            className={`font-semibold text-[11px] ${
+              isPositive ? "text-green-600" : "text-[#172b4d]"
+            }`}
+          >
+            {isPositive ? `+$${formatted}` : `-$${formatted}`}
+          </span>
+        );
+      },
     },
     {
       label: "CHANNEL",
       key: "network",
-      render: (item) => item.network || "-",
+      render: (item) => {
+        const net = item.network || "-";
+        if (net === "Internal Transfer" || net === "internal")
+          return "PC Bank Instant";
+        if (net === "Wire Transfer" || net === "external")
+          return "Federal Wire Clearing";
+        if (net === "TRC20") return "TRC-20 Clearing Rail";
+        if (net === "ERC20") return "ERC-20 Clearing Rail";
+        return net;
+      },
     },
     {
       label: "DATE",
@@ -88,15 +145,19 @@ export default function Overview() {
       key: "status",
       render: (item) => (
         <span
-          className={`px-3 py-1 rounded-xl font-medium ${
-            item.status === "completed"
-              ? "bg-green-100 text-green-500"
+          className={`px-2 py-0.5 rounded-md font-medium text-[9.5px] capitalize ${
+            item.status === "completed" || item.status === "approved"
+              ? "bg-green-100 text-green-700"
               : item.status === "pending"
-              ? "bg-gray-100 text-black"
-              : "bg-primary/10 text-primary"
+              ? "bg-amber-100 text-amber-700"
+              : "bg-red-100 text-red-700"
           }`}
         >
-          {item.status}
+          {item.status === "completed" || item.status === "approved"
+            ? "Completed"
+            : item.status === "pending"
+            ? "Pending"
+            : item.status}
         </span>
       ),
     },
@@ -123,94 +184,115 @@ export default function Overview() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-[-0.4px] text-[#0B2D5B]">
+      <div className="mb-3 sm:mb-5">
+        <h1 className="text-base sm:text-lg font-bold tracking-tight text-[#0B2D5B]">
           Good morning, {user?.first_name}
         </h1>
-        <p className="mt-0.5 text-[15px] text-gray-500">
+        <p className="mt-0.5 text-[11px] sm:text-xs text-gray-500">
           Manage your account funds, transfers, deposits and withdrawals securely.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.55fr_1fr]">
-        <div className="relative min-h-[140px] overflow-hidden rounded-xl bg-[#0B2D5B] p-4 text-white shadow-sm">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-[1.55fr_1fr]">
+        <div className="relative min-h-[130px] sm:min-h-[140px] overflow-hidden rounded-xl bg-[#0B2D5B] p-3.5 sm:p-4 text-white shadow-sm">
           {/* Background decoration */}
-          <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/5" />
+          <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/5 pointer-events-none" />
 
           {/* Main content */}
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
-            {/* Wallet Balance */}
-            <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div className="relative flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-start lg:gap-8">
+            {/* Account Balance */}
+            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-2.5">
               {/* Header */}
               <div className="flex items-center gap-2 text-[#d9e4f0]">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/20 bg-white/10">
-                  <Wallet size={20} />
+                <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md border border-white/20 bg-white/10">
+                  <Landmark size={16} />
                 </span>
 
-                <p className="text-[12px] sm:text-[13px]">
-                  Available Account Balance
-                </p>
+                <div className="min-w-0">
+                  <p className="text-[11px] sm:text-xs font-medium leading-tight text-white/90">
+                    Available Account Balance
+                  </p>
+                  <p className="text-[9px] sm:text-[10px] text-[#a5c0dc] truncate">
+                    Premier Checking • Acct: •••• {accountNumber.slice(-4)}
+                  </p>
+                </div>
 
                 <button
+                  type="button"
                   onClick={() => setShowBalance((prev) => !prev)}
-                  className="shrink-0 cursor-pointer"
+                  className="shrink-0 cursor-pointer ml-auto p-1 text-white/80 hover:text-white"
+                  title={showBalance ? "Hide balance" : "Show balance"}
                 >
                   {showBalance ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </button>
               </div>
 
               {/* Balance */}
-              <div className="mt-2 flex items-end gap-1.5">
-                <span className="break-all text-[26px] font-bold leading-none tracking-[-1px] sm:text-[30px]">
+              <div className="mt-0.5 sm:mt-1 flex items-end gap-1.5">
+                <span className="break-all text-[19px] sm:text-[23px] font-bold leading-none tracking-tight">
                   {statsLoading
                     ? "..."
                     : showBalance
-                    ? `$${balance.toLocaleString()}`
+                    ? `$${balance.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
                     : "*******"}
                 </span>
 
-                <span className="mb-0.5 shrink-0 text-[9px] font-semibold text-[#dce8f5]">
+                <span className="mb-0.5 shrink-0 text-[8.5px] font-semibold text-[#dce8f5]">
                   USD
                 </span>
               </div>
 
-              {/* Weekly + USD */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                <div className="flex items-center gap-1 text-[12px] text-tertiary sm:text-[13px]">
-                  <GoArrowUpRight size={15} />
-                  <span>Premier Checking</span>
+              {/* Routing & Account Coordinates */}
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+                <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-tertiary font-semibold shrink-0">
+                  <GoArrowUpRight size={13} />
+                  <span>FDIC Insured</span>
                 </div>
 
-                <p className="text-[12px] text-[#b9cadc] sm:text-[13px]">
-                  ≈ {balance.toLocaleString()} USDT Backed
+                <p className="text-[9.5px] sm:text-[10.5px] text-[#b9cadc] font-mono break-all">
+                  Routing: {BANK_METADATA.routingNumber} • Acct: ••••{accountNumber.slice(-4)}
                 </p>
               </div>
 
-              {/* Buttons */}
-              <div className="flex flex-wrap gap-2">
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 pt-1 w-full sm:w-auto">
                 <button
+                  type="button"
                   onClick={() => setShowTransferModal(true)}
-                  className="cursor-pointer rounded-md bg-tertiary px-3 py-2 text-[12px] font-semibold text-white transition hover:opacity-90"
+                  className="w-full sm:w-auto text-center justify-center cursor-pointer rounded-md bg-tertiary px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:opacity-90"
                 >
                   Transfer Money
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => navigate("/dashboard/deposit")}
-                  className="cursor-pointer rounded-md border border-white/30 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-white/10"
+                  className="w-full sm:w-auto text-center justify-center cursor-pointer rounded-md border border-white/30 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-white/10"
                 >
                   Deposit
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => navigate("/dashboard/withdrawl")}
-                  className="cursor-pointer rounded-md border border-white/30 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-white/10"
+                  className="w-full sm:w-auto text-center justify-center cursor-pointer rounded-md border border-white/30 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-white/10"
                 >
                   Withdraw
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAccountDetails(true)}
+                  className="w-full sm:w-auto text-center justify-center cursor-pointer rounded-md border border-white/20 bg-white/10 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-white/20"
+                >
+                  Account Info
                 </button>
               </div>
             </div>
@@ -219,37 +301,45 @@ export default function Overview() {
             <div className="h-px w-full bg-white/10 lg:h-auto lg:w-px lg:self-stretch" />
 
             {/* Deposit / Withdrawal Stats */}
-            <div className="flex w-full flex-col gap-5 lg:w-auto lg:min-w-[280px] lg:pt-5">
+            <div className="flex w-full flex-col gap-3.5 sm:gap-4 lg:w-auto lg:min-w-[240px] lg:pt-2">
               {/* Total Deposited */}
-              <div className="flex items-start gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f7ef] text-[#16a34a]">
-                  <ArrowDownToLine size={18} />
+              <div className="flex items-center sm:items-start gap-2.5 sm:gap-3">
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f7ef] text-[#16a34a]">
+                  <ArrowDownToLine size={15} />
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[13px] text-[#8794a5] sm:text-[14px]">
+                  <p className="text-[10px] sm:text-[11px] text-[#a5c0dc]">
                     Total Inflow / Deposited
                   </p>
 
-                  <p className="mt-1 break-words text-[18px] font-bold sm:text-[20px]">
-                    ${totlaDeposit.toLocaleString()}.00 USD
+                  <p className="mt-0.5 break-words text-[13px] sm:text-[15px] font-bold text-white">
+                    ${totlaDeposit.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    USD
                   </p>
                 </div>
               </div>
 
               {/* Total Withdrawn */}
-              <div className="flex items-start gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef4fb] text-[#0B2D5B]">
-                  <ArrowUpFromLine size={15} />
+              <div className="flex items-center sm:items-start gap-2.5 sm:gap-3">
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-[#eef4fb] text-[#0B2D5B]">
+                  <ArrowUpFromLine size={14} />
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[13px] text-[#8794a5] sm:text-[14px]">
+                  <p className="text-[10px] sm:text-[11px] text-[#a5c0dc]">
                     Total Outflow / Withdrawn
                   </p>
 
-                  <p className="mt-1 break-words text-[18px] font-bold sm:text-[20px]">
-                    ${totalwithdrawl.toLocaleString()}.00 USD
+                  <p className="mt-0.5 break-words text-[13px] sm:text-[15px] font-bold text-white">
+                    ${totalwithdrawl.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    USD
                   </p>
                 </div>
               </div>
@@ -258,12 +348,12 @@ export default function Overview() {
         </div>
 
         {/* Quick Actions */}
-        <div className="rounded-xl border border-[#e3eaf2] bg-white p-3.5 shadow-sm">
-          <h2 className="mb-2.5 text-[11px] font-bold text-[#172b4d]">
+        <div className="rounded-xl border border-[#e3eaf2] bg-white p-2.5 sm:p-3 shadow-sm">
+          <h2 className="mb-2 text-[10px] sm:text-[11px] font-bold text-[#172b4d]">
             Quick Actions
           </h2>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             <ActionCard
               icon={<IoSwapHorizontal size={13} />}
               title="Transfer Money"
@@ -274,38 +364,39 @@ export default function Overview() {
             <ActionCard
               icon={<ArrowDownToLine size={13} />}
               title="Deposit Funds"
-              description="Fund your account"
+              description="Direct deposit & wires"
               onClick={() => navigate("/dashboard/deposit")}
             />
 
             <ActionCard
               icon={<ArrowUpFromLine size={13} />}
               title="Withdraw Funds"
-              description="Request a withdrawal"
+              description="External wire & payout"
               onClick={() => navigate("/dashboard/withdrawl")}
             />
 
             <ActionCard
               icon={<BarChart3 size={13} />}
               title="Transaction History"
-              description="Track your activity"
+              description="Statements & activity"
               onClick={() => navigate("/dashboard/transaction-history")}
             />
           </div>
         </div>
       </div>
 
-      <div className="mt-10">
-        <div className="flex justify-between">
-          <h2 className="text-primary font-bold text-xl mb-5">
+      <div className="mt-6 sm:mt-8">
+        <div className="flex items-center justify-between mb-2.5 sm:mb-3">
+          <h2 className="text-primary font-bold text-sm sm:text-base">
             Recent Transactions
           </h2>
 
           <button
-            className="cursor-pointer flex items-center gap-1"
+            type="button"
+            className="cursor-pointer flex items-center gap-1 text-[11px] sm:text-xs text-primary font-semibold hover:underline"
             onClick={() => navigate("/dashboard/transaction-history")}
           >
-            View all <IoMdArrowForward size={14} />
+            View all <IoMdArrowForward size={13} />
           </button>
         </div>
 
@@ -338,6 +429,13 @@ export default function Overview() {
         <TransferModal
           isOpen={showTransferModal}
           onClose={() => setShowTransferModal(false)}
+        />
+      )}
+
+      {showAccountDetails && (
+        <AccountDetailsModal
+          isOpen={showAccountDetails}
+          onClose={() => setShowAccountDetails(false)}
         />
       )}
     </>

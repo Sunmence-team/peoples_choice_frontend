@@ -170,29 +170,29 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
   return (
     <Modal onClose={onClose}>
-      <div className="p-4">
-        <h3 className="text-[18px] font-bold text-[#0B2D5B]">
+      <div className="p-1 sm:p-2">
+        <h3 className="text-base sm:text-[18px] font-bold text-[#0B2D5B] leading-tight">
           Transfer Money
         </h3>
-        <p className="mt-1 text-[12px] text-[#8190a3]">
+        <p className="mt-0.5 text-[11px] sm:text-[12px] text-[#8190a3]">
           Transfer funds within People's Choice Bank or wire to an outside account.
         </p>
 
         {/* Tab Selection */}
-        <div className="flex gap-2 border-b border-gray-200 pb-3 mt-4 mb-4">
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 border-b border-gray-200 pb-3 mt-3 mb-3">
           <button
             type="button"
             onClick={() => {
               setActiveTab("internal");
               setExternalStep(1);
             }}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition cursor-pointer ${
+            className={`rounded-lg py-2 px-2 text-[11px] sm:text-xs font-semibold text-center transition cursor-pointer ${
               activeTab === "internal"
                 ? "bg-primary text-white shadow-sm"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            Within App (PC Bank)
+            Within PC Bank
           </button>
           <button
             type="button"
@@ -200,20 +200,20 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               setActiveTab("external");
               setExternalStep(1);
             }}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition cursor-pointer ${
+            className={`rounded-lg py-2 px-2 text-[11px] sm:text-xs font-semibold text-center transition cursor-pointer ${
               activeTab === "external"
                 ? "bg-primary text-white shadow-sm"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            Outside App (Bank Wire / Payout)
+            Outside App (Wire)
           </button>
         </div>
 
         {/* Available Balance */}
-        <div className="mb-4 flex items-center justify-between rounded-lg bg-gray-50 p-3 border border-gray-200 text-xs">
+        <div className="mb-3 sm:mb-4 flex items-center justify-between rounded-lg bg-gray-50 p-2.5 sm:p-3 border border-gray-200 text-xs">
           <span className="text-gray-500 font-medium">Available Account Balance</span>
-          <span className="font-bold text-primary">${availableBalance.toLocaleString()}.00 USD</span>
+          <span className="font-bold text-primary">${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD</span>
         </div>
 
         {/* INTERNAL TRANSFER */}

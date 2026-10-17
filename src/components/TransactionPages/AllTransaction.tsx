@@ -23,40 +23,78 @@ export default function AllTransactionsTab({ type }: AllTransactionsTabProps = {
 
     const columns: TableColumnProps<Transaction>[] = [
         {
-            label: 'TRANSACTION ID',
+            label: 'DESCRIPTION / BENEFICIARY',
             key: 'transaction_id',
-            render: (item) => <span className='font-semibold text-gray-700'>{item.transaction_id}</span>,
+            render: (item) => {
+                const title =
+                    item.type === 'transfer'
+                        ? item.recipient_name
+                            ? `Transfer to ${item.recipient_name}`
+                            : 'Internal Transfer'
+                        : item.type === 'deposit'
+                        ? 'Direct Deposit / Inflow'
+                        : item.recipient_name
+                        ? `Wire to ${item.recipient_name}`
+                        : `External Wire (${item.network || 'Payout'})`;
+
+                return (
+                    <div className="flex flex-col">
+                        <span className="font-semibold text-[#172b4d] text-[11px]">
+                            {title}
+                        </span>
+                        <span className="text-[9px] text-gray-400 font-mono">
+                            Ref: {item.transaction_id || '-'}
+                        </span>
+                    </div>
+                );
+            },
         },
         {
             label: 'TYPE',
             key: 'type',
             render: (item) => (
-                <span className={`rounded px-3 py-1 text-xs font-semibold ${item.type === 'deposit' ? 'bg-green-50 text-green-600' : item.type === 'transfer' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                <span className={`rounded-md px-2 py-0.5 text-[9.5px] font-semibold capitalize ${item.type === 'deposit' ? 'bg-green-100 text-green-600' : item.type === 'transfer' ? 'bg-blue-100 text-blue-600' : 'bg-primary/10 text-primary'}`}>
                     {item.type}
                 </span>
             ),
         },
         {
-            label: 'AMOUNT',
+            label: 'AMOUNT (USD)',
             key: 'amount',
-            render: (item) => <span className='font-medium text-gray-700'>{item.amount}</span>,
+            render: (item) => {
+                const raw = typeof item.amount === 'number' ? item.amount : parseFloat(String(item.amount).replace(/[^0-9.-]/g, '')) || 0;
+                const formatted = raw.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const isPositive = item.type === 'deposit';
+                return (
+                    <span className={`font-semibold text-[11px] ${isPositive ? 'text-green-600' : 'text-[#172b4d]'}`}>
+                        {isPositive ? `+$${formatted}` : `-$${formatted}`}
+                    </span>
+                );
+            },
         },
         {
-            label: 'NETWORK',
+            label: 'CHANNEL',
             key: 'network',
-            render: (item) => <span className='text-gray-600'>{item.network}</span>,
+            render: (item) => {
+                const net = item.network || '-';
+                if (net === 'Internal Transfer' || net === 'internal') return <span className="text-[11px]">PC Bank Instant</span>;
+                if (net === 'Wire Transfer' || net === 'external') return <span className="text-[11px]">Federal Wire Clearing</span>;
+                if (net === 'TRC20') return <span className="text-[11px]">TRC-20 Clearing Rail</span>;
+                if (net === 'ERC20') return <span className="text-[11px]">ERC-20 Clearing Rail</span>;
+                return <span className="text-[11px]">{net}</span>;
+            },
         },
         {
             label: 'DATE',
             key: 'date',
-            render: (item) => <span className='text-gray-600'>{formatISODateToCustom(item.date) || '-'}</span>,
+            render: (item) => <span className='text-gray-600 text-[11px]'>{formatISODateToCustom(item.date) || '-'}</span>,
         },
         {
             label: 'STATUS',
             key: 'status',
             render: (item) => (
-                <span className={`rounded px-3 py-1 text-xs font-semibold ${item.status === 'completed' || item.status === 'approved' ? 'bg-green-50 text-green-600' : item.status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-700'}`}>
-                    {item.status}
+                <span className={`rounded-md px-2 py-0.5 text-[9.5px] font-semibold capitalize ${item.status === 'completed' || item.status === 'approved' ? 'bg-green-100 text-green-600' : item.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
+                    {item.status === 'completed' || item.status === 'approved' ? 'Completed' : item.status === 'pending' ? 'Pending' : item.status}
                 </span>
             ),
         },

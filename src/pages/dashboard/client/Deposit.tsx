@@ -138,26 +138,26 @@ const DepositRequest = () => {
   return (
     <div className="w-full">
 
-        <h2 className='text-2xl text-primary font-bold'>Deposit Funds & Account Inflow</h2>
-        <p className='text-[13px] font-medium max-w-2xl text-gray-500'>
+        <h2 className='text-base sm:text-lg text-primary font-bold'>Deposit Funds & Account Inflow</h2>
+        <p className='text-[11px] sm:text-xs font-medium max-w-2xl text-gray-500 mt-0.5'>
             Fund your People's Choice Bank account balance securely via our automated clearing network or cryptocurrency deposit gateway. All confirmed deposits are instantly credited to your available USD account balance.
         </p>
 
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 mt-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 mt-4 sm:mt-6">
 
-            <div className="rounded-xl border border-[#e5edf5] bg-white p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]">
+            <div className="rounded-xl border border-[#e5edf5] bg-white p-3.5 sm:p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]">
                 {/* Heading */}
-                <div className="mb-4">
-                    <h2 className="text-[14px] font-bold text-primary">
-                        Step 1: Send USDT
+                <div className="mb-3 sm:mb-4">
+                    <h2 className="text-xs sm:text-[14px] font-bold text-primary">
+                        Step 1: Automated Settlement Coordinates
                     </h2>
                 </div>
 
                 {/* Network */}
-                <div className="mb-5">
+                <div className="mb-4 sm:mb-5">
                     <label className="mb-2 block text-[11px] font-semibold text-primary">
-                        Select Network
+                        Select Clearing Rail
                     </label>
 
                     {walletsLoading ? (
@@ -170,11 +170,7 @@ const DepositRequest = () => {
                             No deposit addresses available yet. Please check back later.
                         </p>
                     ) : (
-                        <div
-                            className={`grid gap-3 ${
-                                wallets.length > 3 ? "grid-cols-3" : "grid-cols-3"
-                            }`}
-                        >
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {wallets.map((wallet) => {
                                 const isSelected =
                                     String(formik.values.wallet_address_id) ===
@@ -190,7 +186,7 @@ const DepositRequest = () => {
                                                 wallet.id
                                             )
                                         }
-                                        className={`h-10 rounded-lg border text-xs font-semibold transition ${isSelected
+                                        className={`h-9 sm:h-10 rounded-lg border text-[11px] sm:text-xs font-semibold transition cursor-pointer truncate px-2 ${isSelected
                                             ? "border-primary bg-primary text-white shadow-sm"
                                             : "border-[#e0e8f0] bg-[#f8fafc] text-[#718096] hover:border-primary hover:text-primary"
                                             }`}
@@ -211,9 +207,9 @@ const DepositRequest = () => {
                 </div>
 
                 {/* Wallet Address */}
-                <div className="mb-5">
+                <div className="mb-4 sm:mb-5">
                     <label className="mb-2 block text-[11px] font-semibold text-primary">
-                        Company USDT Wallet Address
+                        Bank Deposit Settlement Address (USD Credited)
                     </label>
 
                     <div className="flex gap-2">
@@ -226,7 +222,7 @@ const DepositRequest = () => {
                         <button
                             type="button"
                             onClick={handleCopy}
-                            className="h-10 rounded-lg bg-primary px-5 text-[11px] font-semibold text-white transition hover:bg-[#09264d]"
+                            className="h-10 rounded-lg bg-primary px-4 sm:px-5 text-[11px] font-semibold text-white transition hover:bg-[#09264d] cursor-pointer shrink-0"
                         >
                             {copied ? "Copied" : "Copy"}
                         </button>
@@ -234,12 +230,12 @@ const DepositRequest = () => {
                 </div>
 
                 {/* QR + Instructions */}
-                <div className="flex items-center gap-5 pt-2">
-                    <div className="flex h-[105px] w-[105px] shrink-0 items-center justify-center rounded-lg border border-[#edf2f7] bg-white p-2">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-5 pt-2">
+                    <div className="flex h-[100px] w-[100px] sm:h-[105px] sm:w-[105px] shrink-0 items-center justify-center rounded-lg border border-[#edf2f7] bg-white p-2 shadow-xs">
                         {walletAddress ? (
                             <QRCodeSVG
                                 value={walletAddress}
-                                size={88}
+                                size={84}
                                 level="M"
                                 includeMargin={false}
                             />
@@ -248,14 +244,13 @@ const DepositRequest = () => {
                         )}
                     </div>
 
-                    <div>
-                        <h3 className="mb-1 text-[12px] font-bold text-primary">
-                            Scan to send USDT
+                    <div className="min-w-0">
+                        <h3 className="mb-1 text-xs sm:text-[12px] font-bold text-primary">
+                            Scan QR to Transfer Funds
                         </h3>
 
-                        <p className="max-w-[210px] text-[11px] leading-5 text-[#718096]">
-                            Use the QR code or copy the address above to
-                            send your USDT.
+                        <p className="max-w-full sm:max-w-[220px] text-[10px] sm:text-[11px] leading-relaxed text-[#718096]">
+                            Transfer to the settlement address above using your payment app. Inflows are credited 1:1 to your USD checking balance.
                         </p>
                     </div>
                 </div>
@@ -264,11 +259,11 @@ const DepositRequest = () => {
             <form
                 onSubmit={formik.handleSubmit}
                 noValidate
-                className="rounded-xl border border-[#e5edf5] bg-white p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]"
+                className="rounded-xl border border-[#e5edf5] bg-white p-3.5 sm:p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]"
             >
-                <div className="mb-4">
-                    <h2 className="text-[14px] font-bold text-primary">
-                        Step 2: Submit Request
+                <div className="mb-3 sm:mb-4">
+                    <h2 className="text-xs sm:text-[14px] font-bold text-primary">
+                        Step 2: Confirm Inflow Request
                     </h2>
                 </div>
 
@@ -278,7 +273,7 @@ const DepositRequest = () => {
                         htmlFor="amount"
                         className="mb-2 block text-[11px] font-semibold text-primary"
                     >
-                        Deposit Amount (USDT)
+                        Deposit Amount (USD / USDT Pegged)
                     </label>
 
                     <FormattedInput
@@ -305,7 +300,7 @@ const DepositRequest = () => {
                 {/* Payment Proof */}
                 <div className="mb-4">
                     <label className="mb-2 block text-[11px] font-semibold text-primary">
-                        Upload Payment Proof
+                        Upload Payment Proof / Transfer Voucher
                     </label>
 
                     <label
@@ -402,7 +397,7 @@ const DepositRequest = () => {
                             Submitting...
                         </>
                     ) : (
-                        "Submit Deposit Request"
+                        "Submit Inflow Request"
                     )}
                 </button>
             </form>

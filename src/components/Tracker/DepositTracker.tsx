@@ -69,7 +69,7 @@ const steps = [
   },
   {
     id: "wallet_credited",
-    label: "Wallet Credited",
+    label: "Account Credited",
     icon: WalletCards,
   },
 ] as const;
@@ -195,7 +195,7 @@ const DepositStatusTracker = ({
           {resolvedStatus === "wallet_credited" && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700 border border-green-200">
               <CheckCircle2 className="h-3 w-3" />
-              Wallet Credited
+              Account Credited
             </span>
           )}
           {resolvedStatus === "rejected" && (
@@ -227,13 +227,13 @@ const DepositStatusTracker = ({
                 Amount
               </p>
               <p className="text-[13px] font-bold text-primary">
-                {formattedAmount} USDT
+                ${formattedAmount} USD
               </p>
             </div>
 
             <div>
               <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                Network
+                Clearing Rail
               </p>
               <p className="text-[12px] font-semibold text-primary">
                 {walletType}
@@ -299,7 +299,7 @@ const DepositStatusTracker = ({
             <Clock3 className="h-4 w-4 text-amber-700" />
           </div>
           <p className="text-[11px] font-medium text-amber-800">
-            Your deposit request is under manual review. Once confirmed, your wallet balance will be credited automatically.
+            Your deposit request is being verified by clearing operations. Once cleared, your account balance will be credited automatically.
           </p>
         </div>
       )}
@@ -310,7 +310,7 @@ const DepositStatusTracker = ({
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
           </div>
           <p className="text-[11px] font-medium text-blue-700">
-            Your deposit has been approved by admin! Wallet balance crediting is now in progress.
+            Your deposit has been approved! Account balance crediting is now in progress.
           </p>
         </div>
       )}
@@ -321,7 +321,7 @@ const DepositStatusTracker = ({
             <CheckCircle2 className="h-4 w-4 text-green-600" />
           </div>
           <p className="text-[11px] font-medium text-green-700">
-            Deposit completed! Your wallet has been successfully credited with the funds.
+            Deposit completed! Your account has been successfully credited with the funds.
           </p>
         </div>
       )}

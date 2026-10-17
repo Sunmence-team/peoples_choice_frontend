@@ -98,7 +98,7 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
 
   return (
     <div className="flex flex-col w-full relative! bg-secondary/80 h-dvh overflow-hidden">
-      <div className="md:px-6 py-2 px-4 flex md:flex gap-4 sticky top-0 z-10 items-center bg-white">
+      <div className="hidden md:flex md:px-6 py-2 gap-4 sticky top-0 z-10 items-center bg-white border-b border-gray-100">
         <TopNav />
       </div>
       <div className="flex flex-1 min-h-0">
@@ -127,7 +127,7 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
                   display: "flex",
                   flexDirection: "column",
                 }}
-                className="px-4 pt-2 h-full overflow-y-scroll no-scrollbar pb-4"
+                className="px-3 sm:px-4 pt-3 sm:pt-4 md:pt-2 h-full overflow-y-scroll no-scrollbar pb-6"
               >
                 {children}
               </motion.div>

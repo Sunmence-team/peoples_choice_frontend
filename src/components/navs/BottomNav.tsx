@@ -1,97 +1,102 @@
-import React, { useState } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
-import { FiLogOut } from "react-icons/fi";
-import { navItems, adminNavItems } from "../../lib/navItems";
+import { RxDashboard } from "react-icons/rx";
+import {
+  IoArrowDown,
+  IoReceipt,
+  IoSwapHorizontal,
+  IoWalletOutline,
+} from "react-icons/io5";
+import { LuUsersRound } from "react-icons/lu";
+import { User } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
-import { useLogout } from "../../hooks/useAuth";
 import { isAdminRole } from "../../helpers/role";
-import Modal from "../modal/Modal";
 
-const shortLabel = (name: string) => name.split(" ")[0];
+const clientBottomNavItems = [
+  {
+    name: "Home",
+    icon: RxDashboard,
+    path: "/dashboard/overview",
+  },
+  {
+    name: "Transfer",
+    icon: IoSwapHorizontal,
+    path: "/dashboard/transfer",
+  },
+  {
+    name: "Deposit",
+    icon: IoArrowDown,
+    path: "/dashboard/deposit",
+  },
+  {
+    name: "History",
+    icon: IoReceipt,
+    path: "/dashboard/transaction-history",
+  },
+  {
+    name: "Profile",
+    icon: User,
+    path: "/dashboard/profile",
+  },
+];
+
+const adminBottomNavItems = [
+  {
+    name: "Home",
+    icon: RxDashboard,
+    path: "/dashboard/admin/overview",
+  },
+  {
+    name: "Users",
+    icon: LuUsersRound,
+    path: "/dashboard/admin/users",
+  },
+  {
+    name: "Wallets",
+    icon: IoWalletOutline,
+    path: "/dashboard/admin/balances",
+  },
+  {
+    name: "Deposits",
+    icon: IoArrowDown,
+    path: "/dashboard/admin/deposits",
+  },
+  {
+    name: "History",
+    icon: IoReceipt,
+    path: "/dashboard/admin/transactions",
+  },
+];
 
 const BottomNav: React.FC = () => {
-  const [showLogOutModal, setShowLogOutModal] = useState(false);
   const { role } = useUser();
-  const logoutMutation = useLogout();
-
   const isAdmin = isAdminRole(role);
-
-  const matchesRole = (allowed: string[]) =>
-    allowed.includes("*") ||
-    allowed.some((r) => r && r.toLowerCase() === (role?.toLowerCase() ?? ""));
-
-  const items = (isAdmin ? adminNavItems : navItems).filter((navItem) =>
-    matchesRole(navItem.role),
-  );
-
-  if (items.length === 0) return null;
+  const items = isAdmin ? adminBottomNavItems : clientBottomNavItems;
 
   return (
-    <>
-      <nav className="lg:hidden shrink-0 bg-white border-t border-primary/10 shadow-[0_-6px_20px_rgba(11,45,91,0.06)] pb-[env(safe-area-inset-bottom)]">
-        <ul className="flex items-stretch justify-between gap-1 px-2 py-2">
-          {items.map((item, index) => (
-            <li key={`${item.path}-${index}`} className="min-w-0 flex-1">
-              <NavLink
-                to={item.path!}
-                className={({ isActive }) =>
-                  `flex flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 transition ${
-                    isActive
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-[#66809c]"
-                  }`
-                }
-              >
-                <item.icon size={18} />
-                <span className="w-full truncate text-center text-[9px] leading-none">
-                  {shortLabel(item.name)}
-                </span>
-              </NavLink>
-            </li>
-          ))}
-
-          <li className="min-w-0 flex-1">
-            <button
-              type="button"
-              onClick={() => setShowLogOutModal(true)}
-              className="flex w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[#66809c] transition"
+    <nav className="lg:hidden shrink-0 bg-white border-t border-primary/10 shadow-[0_-4px_16px_rgba(11,45,91,0.05)] pb-[env(safe-area-inset-bottom)]">
+      <ul className="flex items-center justify-around px-2 py-1.5">
+        {items.map((item) => (
+          <li key={item.path} className="flex-1 max-w-[80px]">
+            <NavLink
+              to={item.path}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center py-1 px-1 rounded-lg transition-all ${
+                  isActive
+                    ? "text-primary font-bold bg-primary/10"
+                    : "text-[#66809c] hover:text-primary font-medium"
+                }`
+              }
             >
-              <FiLogOut size={18} />
-              <span className="w-full truncate text-center text-[9px] leading-none">
-                Logout
+              <item.icon size={19} />
+              <span className="text-[10px] mt-0.5 tracking-tight truncate max-w-full">
+                {item.name}
               </span>
-            </button>
+            </NavLink>
           </li>
-        </ul>
-      </nav>
-
-      {showLogOutModal && (
-        <Modal onClose={() => setShowLogOutModal(false)} customMode>
-          <div className="flex items-center flex-col bg-white rounded-xl py-6 px-8">
-            <h3 className="font-medium text-lg text-red-700">
-              Are you sure you want to logout?
-            </h3>
-            <div className="flex w-full mt-8 items-center gap-6">
-              <button
-                type="button"
-                onClick={() => setShowLogOutModal(false)}
-                className="bg-secondary text-xs rounded-md font-medium border border-primary/10 w-1/2 h-10 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={logoutMutation.isPending}
-                onClick={() => logoutMutation.mutate()}
-                className="bg-red-500 text-xs rounded-md font-medium text-white w-1/2 h-10 cursor-pointer disabled:opacity-60"
-              >
-                {logoutMutation.isPending ? "Logging out..." : "Yes, Logout"}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </>
+        ))}
+      </ul>
+    </nav>
   );
 };
 

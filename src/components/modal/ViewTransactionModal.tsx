@@ -59,8 +59,8 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
           {
             label:
               transaction.type === "deposit"
-                ? "Wallet Address"
-                : "Destination Address",
+                ? "Deposit Settlement Address"
+                : "Destination Wire Address",
             value: address,
           },
         ]
@@ -78,22 +78,24 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
 
   return (
     <Modal onClose={onClose}>
-      <div className="p-4">
-        <h3 className="text-[18px] font-bold text-[#0B2D5B]">
-          Transaction Details
+      <div className="p-1 sm:p-2">
+        <h3 className="text-base sm:text-[18px] font-bold text-[#0B2D5B] leading-tight">
+          Bank Transaction Receipt
         </h3>
-        <p className="mt-1 text-[12px] text-[#8190a3]">
-          Full record of the selected transaction.
+        <p className="mt-0.5 text-[11px] sm:text-[12px] text-[#8190a3]">
+          Official record from People's Choice Bank, N.A.
         </p>
 
-        <div className="mt-6 grid gap-3">
+        <div className="mt-4 sm:mt-6 grid gap-2.5 sm:gap-3">
           {rows.map((row) => (
             <div
               key={row.label}
-              className="flex items-center justify-between gap-4 border-b border-[#e3eaf2] pb-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 border-b border-[#e3eaf2] pb-2 sm:pb-3"
             >
-              <span className="text-[11px] text-[#8190a3]">{row.label}</span>
-              <span className="text-[12px] font-semibold text-[#172b4d] capitalize text-right">
+              <span className="text-[10px] sm:text-[11px] text-[#8190a3] uppercase tracking-wider shrink-0 font-medium">
+                {row.label}
+              </span>
+              <span className="text-[11px] sm:text-[12px] font-semibold text-[#172b4d] capitalize text-left sm:text-right break-all">
                 {row.value}
               </span>
             </div>

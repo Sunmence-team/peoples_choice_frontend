@@ -165,28 +165,28 @@ export default function Transfer() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h2 className="text-2xl text-primary font-bold">Transfer Money</h2>
-        <p className="text-[13px] font-medium text-gray-500">
+      <div className="mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg text-primary font-bold">Transfer Money</h2>
+        <p className="text-[11px] sm:text-xs font-medium text-gray-500">
           Transfer funds within People's Choice Bank or wire to external accounts.
         </p>
       </div>
 
-      <div className="rounded-xl border border-secondary bg-white p-5">
-        <div className="flex gap-2 border-b border-gray-200 pb-3 mb-5 overflow-x-auto no-scrollbar">
+      <div className="rounded-xl border border-secondary bg-white p-3.5 sm:p-5">
+        <div className="grid grid-cols-2 gap-1.5 sm:flex sm:gap-2 border-b border-gray-200 pb-3 mb-4 max-w-xl">
           <button
             type="button"
             onClick={() => {
               setActive("internal");
               setExternalStep(1);
             }}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition cursor-pointer ${
+            className={`rounded-lg py-2 px-2 text-[11px] sm:text-xs font-semibold text-center transition cursor-pointer ${
               active === "internal"
                 ? "bg-primary text-white shadow-sm"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            Transfer Within App (PC Bank)
+            Within PC Bank
           </button>
           <button
             type="button"
@@ -194,20 +194,20 @@ export default function Transfer() {
               setActive("external");
               setExternalStep(1);
             }}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition cursor-pointer ${
+            className={`rounded-lg py-2 px-2 text-[11px] sm:text-xs font-semibold text-center transition cursor-pointer ${
               active === "external"
                 ? "bg-primary text-white shadow-sm"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            Transfer Outside App (Bank Wire / Payout)
+            Outside App (Wire)
           </button>
         </div>
 
         {/* Available Balance banner */}
-        <div className="mb-5 flex items-center justify-between rounded-lg bg-gray-50 p-3 border border-gray-200 text-xs max-w-xl">
+        <div className="mb-4 flex items-center justify-between rounded-lg bg-gray-50 p-2.5 sm:p-3 border border-gray-200 text-xs max-w-xl">
           <span className="text-gray-500 font-medium">Available Account Balance:</span>
-          <span className="font-bold text-primary">${availableBalance.toLocaleString()}.00 USD</span>
+          <span className="font-bold text-primary">${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD</span>
         </div>
 
         {/* Tab 1: Within PC Bank */}
