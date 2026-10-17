@@ -222,6 +222,9 @@ export default function Withdrawal() {
       <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
         <div>
           <h1 className="text-base sm:text-lg font-bold text-primary">Payout & External Withdrawal</h1>
+          <p className="hidden md:block mt-0.5 text-xs font-medium text-gray-500">
+            Request an external funds payout to your designated bank account or wire clearing destination.
+          </p>
         </div>
       </div>
 

@@ -19,6 +19,9 @@ export default function Transaction() {
         <div>
             <div className='mb-3 sm:mb-4'>
                 <h2 className='text-base sm:text-lg text-primary font-bold'>Transaction History & Statements</h2>
+                <p className='hidden md:block text-xs font-medium text-gray-500 mt-0.5'>
+                    View all your transfers, deposits, withdrawals and bank account activity
+                </p>
             </div>
 
             <div className='rounded-xl border border-secondary bg-white p-3 sm:p-4'>

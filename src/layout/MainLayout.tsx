@@ -104,11 +104,13 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
 
   return (
     <div className="flex flex-col w-full relative! bg-secondary/80 h-dvh overflow-hidden">
-      {isDashboard && (
-        <div className="flex px-3 sm:px-4 md:px-6 py-2 gap-4 sticky top-0 z-10 items-center bg-white border-b border-gray-100">
-          <TopNav />
-        </div>
-      )}
+      <div
+        className={`${
+          isDashboard ? "flex" : "hidden md:flex"
+        } px-3 sm:px-4 md:px-6 py-2 gap-4 sticky top-0 z-10 items-center bg-white border-b border-gray-100`}
+      >
+        <TopNav />
+      </div>
       <div className="flex flex-1 min-h-0">
         <div className="hidden lg:block lg:w-[20%] h-full shrink-0 overflow-hidden">
           <Sidebar />
@@ -136,7 +138,7 @@ const MainLayout = ({ children, pageName }: LayoutProps) => {
                   flexDirection: "column",
                 }}
                 className={`px-3 sm:px-4 ${
-                  isDashboard ? "pt-2.5 sm:pt-3 md:pt-2" : "pt-4 sm:pt-5"
+                  isDashboard ? "pt-2.5 sm:pt-3 md:pt-2" : "pt-3.5 sm:pt-4 md:pt-2"
                 } h-full overflow-y-scroll no-scrollbar pb-6`}
               >
                 {children}

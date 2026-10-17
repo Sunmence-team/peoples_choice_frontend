@@ -105,6 +105,9 @@ export default function Loans() {
         <h1 className="text-base sm:text-lg font-bold text-primary">
           Loans & Credit Facilities
         </h1>
+        <p className="hidden md:block mt-0.5 text-xs font-medium text-gray-500">
+          Apply for prime rate credit facilities, calculate amortized monthly repayments, and review active financing.
+        </p>
       </div>
 
       {/* Top Banking Summary Cards */}

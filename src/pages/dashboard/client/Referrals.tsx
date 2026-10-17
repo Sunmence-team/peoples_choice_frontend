@@ -54,11 +54,13 @@ export default function Referrals() {
 
   return (
     <div className="w-full">
-      {/* Title only (No description paragraph as instructed) */}
       <div className="mb-3 sm:mb-4">
         <h1 className="text-base sm:text-lg font-bold text-primary">
           Referral Program & History
         </h1>
+        <p className="hidden md:block mt-0.5 text-xs font-medium text-gray-500">
+          Earn a $50.00 cash award for every verified friend who registers and funds their People's Choice Bank account.
+        </p>
       </div>
 
       {/* Top Stat Cards */}
