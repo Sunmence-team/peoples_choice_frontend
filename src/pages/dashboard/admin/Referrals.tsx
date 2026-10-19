@@ -27,11 +27,11 @@ const Referrals: React.FC = () => {
       render: (item: AdminReferralItem) => (
         <div className="flex flex-col">
           <span className="font-semibold text-[11px] text-[#0B2D5B]">
-            {item.referrer_name || `User #${item.referrer_id}`}
+            {`${item.referrer.first_name} ${item.referrer.last_name}`}
           </span>
-          {item.referrer_email && (
+          {item.referrer.email && (
             <span className="text-[9.5px] text-gray-400">
-              {item.referrer_email}
+              {item.referrer.email}
             </span>
           )}
         </div>
@@ -43,11 +43,11 @@ const Referrals: React.FC = () => {
       render: (item: AdminReferralItem) => (
         <div className="flex flex-col">
           <span className="font-semibold text-[11px] text-gray-800">
-            {item.referred_user_name || `User #${item.referred_user_id}`}
+            {`${item.referred.first_name} ${item.referred.last_name}`}
           </span>
-          {item.referred_user_email && (
+          {item.referred.email && (
             <span className="text-[9.5px] text-gray-400">
-              {item.referred_user_email}
+              {item.referred.email}
             </span>
           )}
         </div>

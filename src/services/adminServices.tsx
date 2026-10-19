@@ -1,5 +1,6 @@
 import api from "../helpers/api";
 import { unwrap } from "../helpers/response";
+import type { UserProps } from "../lib/interfaces";
 
 export const getAdminDashboardService = async (): Promise<unknown> => {
   const res = await api.get("/admin/dashboard");
@@ -347,12 +348,8 @@ export const rejectAdminLoanService = async (
 
 export interface AdminReferralItem {
   id: number | string;
-  referrer_id: number | string;
-  referrer_name?: string;
-  referrer_email?: string;
-  referred_user_id: number | string;
-  referred_user_name?: string;
-  referred_user_email?: string;
+  referred: UserProps;
+  referrer: UserProps;
   status: "registered" | "verified" | "rewarded";
   reward_amount: number | string;
   reward_status?: "pending" | "paid";

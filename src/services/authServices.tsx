@@ -18,6 +18,7 @@ export interface RegisterPayload {
   country: string;
   password: string;
   password_confirmation: string;
+  referral_code: string;
 }
 
 const looksLikeUser = (value: unknown): value is UserProps => {
@@ -34,7 +35,12 @@ export const extractToken = (payload: unknown): string => {
   const root = asDict(payload);
   if (!root) return "";
   const nested = asDict(root.data);
-  return pickString(root.token, root.access_token, nested?.token, nested?.access_token);
+  return pickString(
+    root.token,
+    root.access_token,
+    nested?.token,
+    nested?.access_token,
+  );
 };
 
 const extractUser = (payload: unknown): UserProps | null => {
@@ -48,10 +54,19 @@ const extractUser = (payload: unknown): UserProps | null => {
   return null;
 };
 
-const extractRole = (payload: unknown, user: UserProps | null, fallback: string): string => {
+const extractRole = (
+  payload: unknown,
+  user: UserProps | null,
+  fallback: string,
+): string => {
   const root = asDict(payload) ?? {};
   const nested = asDict(root.data) ?? {};
-  const explicit = pickString(root.role, nested.role, user?.role, user?.crm_role);
+  const explicit = pickString(
+    root.role,
+    nested.role,
+    user?.role,
+    user?.crm_role,
+  );
   if (explicit) return explicit;
   if (user?.is_admin === 1) {
     return "admin";
@@ -59,7 +74,10 @@ const extractRole = (payload: unknown, user: UserProps | null, fallback: string)
   return fallback;
 };
 
-const buildAuthResult = (payload: unknown, fallbackRole: string): AuthResult => {
+const buildAuthResult = (
+  payload: unknown,
+  fallbackRole: string,
+): AuthResult => {
   const token = extractToken(payload);
   const user = extractUser(payload);
   const role = extractRole(payload, user, fallbackRole);
@@ -68,14 +86,14 @@ const buildAuthResult = (payload: unknown, fallbackRole: string): AuthResult => 
 
 export const loginService = async (
   email: string,
-  password: string
+  password: string,
 ): Promise<AuthResult> => {
   const res = await api.post("/login", { email, password });
   return buildAuthResult(unwrap(res.data), "client");
 };
 
 export const registerService = async (
-  payload: RegisterPayload
+  payload: RegisterPayload,
 ): Promise<AuthResult | null> => {
   const res = await api.post("/register", payload);
   const result = buildAuthResult(res.data, "client");

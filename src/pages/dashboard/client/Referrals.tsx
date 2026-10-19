@@ -4,7 +4,6 @@ import {
   Users,
   Copy,
   Check,
-
   CheckCircle2,
   DollarSign,
   Clock,
@@ -289,7 +288,7 @@ export default function Referrals() {
               <thead>
                 <tr className="border-b border-gray-200 text-[10px] font-semibold text-gray-400 uppercase">
                   <th className="py-2 px-2">Invitee Name</th>
-                  <th className="py-2 px-2">Contact / Email</th>
+                  {/* <th className="py-2 px-2">Contact / Email</th> */}
                   <th className="py-2 px-2">Date Joined</th>
                   <th className="py-2 px-2">Account Status</th>
                   <th className="py-2 px-2">Reward Bonus</th>
@@ -307,9 +306,9 @@ export default function Referrals() {
                       <td className="py-2.5 px-2 font-semibold text-[#172b4d] text-[11px]">
                         {item.name}
                       </td>
-                      <td className="py-2.5 px-2 font-mono text-[10.5px] text-gray-500">
+                      {/* <td className="py-2.5 px-2 font-mono text-[10.5px] text-gray-500">
                         {item.email || "—"}
-                      </td>
+                      </td> */}
                       <td className="py-2.5 px-2 text-gray-500 text-[10.5px]">
                         {item.date_joined
                           ? formatISODateToCustom(item.date_joined) ||

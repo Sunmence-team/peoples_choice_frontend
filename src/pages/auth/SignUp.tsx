@@ -8,7 +8,7 @@ import {
   FiUser,
   FiGlobe,
 } from "react-icons/fi";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { assets } from "../../assets/assets";
 import { useRegister } from "../../hooks/useAuth";
 import { useUser } from "../../hooks/useUser";
 import { getErrorMessage } from "../../helpers/api";
+import { AiOutlineUserSwitch } from "react-icons/ai";
 
 const SignUp: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +25,8 @@ const SignUp: React.FC = () => {
   const registerMutation = useRegister();
   const { login, refreshUser } = useUser();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const ref_code = searchParams.get("ref");
 
   const formik = useFormik({
     initialValues: {
@@ -35,13 +38,16 @@ const SignUp: React.FC = () => {
       country: "",
       password: "",
       password_confirmation: "",
+      referral_code: ref_code || "",
     },
     validationSchema: Yup.object({
       first_name: Yup.string().required("First name is required"),
       last_name: Yup.string().required("Last name is required"),
       username: Yup.string().required("Username is required"),
       phone: Yup.string().required("Phone number is required"),
-      email: Yup.string().required("Email is required").email("Enter a valid email"),
+      email: Yup.string()
+        .required("Email is required")
+        .email("Enter a valid email"),
       country: Yup.string().required("Country is required"),
       password: Yup.string()
         .required("Password is required")
@@ -49,6 +55,7 @@ const SignUp: React.FC = () => {
       password_confirmation: Yup.string()
         .required("Confirm your password")
         .oneOf([Yup.ref("password")], "Passwords do not match"),
+      referral_code: Yup.string().optional(),
     }),
     onSubmit: async (values) => {
       try {
@@ -231,6 +238,31 @@ const SignUp: React.FC = () => {
               {errorText("email")}
             </div>
 
+            {/* Email */}
+            <div>
+              <label className="mb-2 block text-xs font-semibold tracking-wide text-black">
+                Referral Code (Optional)
+              </label>
+
+              <div className="relative">
+                <AiOutlineUserSwitch
+                  size={20}
+                  className="absolute left-4 top-1/2 hidden -translate-y-1/2 text-black sm:block"
+                />
+
+                <input
+                  type="referral_code"
+                  name="referral_code"
+                  placeholder="Enter your referral code"
+                  value={formik.values.referral_code}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={fieldClass}
+                />
+              </div>
+              {errorText("referral_code")}
+            </div>
+
             {/* Country */}
             <div>
               <label className="mb-2 block text-xs font-semibold tracking-wide text-black">
@@ -343,7 +375,9 @@ const SignUp: React.FC = () => {
               className="mt-2 flex h-[55px] w-full items-center justify-center gap-2 rounded-md bg-[#0d3566] text-sm font-semibold text-white transition hover:bg-[#092545] disabled:opacity-60"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isSubmitting ? "Creating your account..." : "Create Your Account"}
+              {isSubmitting
+                ? "Creating your account..."
+                : "Create Your Account"}
             </button>
           </form>
 
