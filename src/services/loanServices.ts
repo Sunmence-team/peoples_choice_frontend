@@ -3,71 +3,36 @@ import { unwrap } from "../helpers/response";
 
 export interface LoanApplication {
   id: string | number;
-  loan_type: string;
   amount: number;
   tenure_months: number;
   monthly_payment: number;
   interest_rate: number;
-  total_repayment: number;
+  total_payable: number;
+  remaining_balance: number;
   total_paid?: number;
   purpose: string;
+  admin_remarks: string;
   monthly_income?: number;
   employment_status?: string;
-  status: "pending" | "approved" | "under_review" | "active" | "completed" | "repaid" | "rejected";
+  status:
+    | "pending"
+    | "approved"
+    | "under_review"
+    | "active"
+    | "completed"
+    | "repaid"
+    | "rejected";
   created_at: string;
 }
 
-export interface LoanTypeOption {
-  id: string;
-  label: string;
-  rate: number;
-  min: number;
-  max: number;
-  description: string;
+export interface LoanCalculationResult {
+  total_interest: number;
+  total_payable: number;
+  monthly_payment: number;
+  amount?: number;
+  tenure_months?: number;
+  interest_rate?: number;
 }
-
-export const LOAN_TYPES: LoanTypeOption[] = [
-  {
-    id: "personal",
-    label: "Personal Term Loan",
-    rate: 4.5,
-    min: 1000,
-    max: 35000,
-    description: "Unsecured personal loan for medical, travel or personal expenses with fixed monthly payments.",
-  },
-  {
-    id: "business",
-    label: "Business & SME Capital",
-    rate: 5.2,
-    min: 5000,
-    max: 100000,
-    description: "Commercial capital injection and inventory financing for registered businesses.",
-  },
-  {
-    id: "emergency",
-    label: "Emergency Liquidity Facility",
-    rate: 3.5,
-    min: 500,
-    max: 15000,
-    description: "Rapid disbursement credit line for urgent cash obligations with flexible tenures.",
-  },
-  {
-    id: "auto",
-    label: "Auto / Vehicle Financing",
-    rate: 3.9,
-    min: 3000,
-    max: 60000,
-    description: "Competitive vehicle acquisition facility with streamlined title verification.",
-  },
-  {
-    id: "home",
-    label: "Home Improvement Facility",
-    rate: 4.2,
-    min: 5000,
-    max: 120000,
-    description: "Financing for property upgrades, green energy installation or renovations.",
-  },
-];
 
 /**
  * 6.3 List User Loans (GET /api/loans)
@@ -84,25 +49,22 @@ export const getLoansService = async (): Promise<LoanApplication[]> => {
 export const calculateLoanService = async (payload: {
   amount: number;
   tenure_months: number;
-  interest_rate: number;
-}): Promise<{
-  total_interest: number;
-  total_payable: number;
-  monthly_payment: number;
-}> => {
-  const res = await api.post("/loans/calculate", payload);
-  const data = unwrap<{
-    total_interest: number;
-    total_payable: number;
-    monthly_payment: number;
-  }>(res.data);
+  interest_rate?: number;
+}): Promise<LoanCalculationResult> => {
+  const interest_rate = payload.interest_rate ?? 5.0;
+  const res = await api.post("/loans/calculate", {
+    amount: payload.amount,
+    tenure_months: payload.tenure_months,
+    interest_rate,
+  });
+  const data = unwrap<LoanCalculationResult>(res.data);
 
   if (data && typeof data.monthly_payment === "number") {
     return data;
   }
 
-  // Exact fallback mathematical standard formula if response is raw
-  const monthlyRate = payload.interest_rate / 100 / 12;
+  // Exact mathematical standard formula fallback
+  const monthlyRate = interest_rate / 100 / 12;
   const n = payload.tenure_months;
   const monthly_payment =
     monthlyRate === 0
@@ -123,13 +85,11 @@ export const calculateLoanService = async (payload: {
  * 6.2 Submit Loan Application (POST /api/loans/apply)
  */
 export const submitLoanApplicationService = async (payload: {
-  loan_type: string;
   amount: number;
   tenure_months: number;
   purpose: string;
   monthly_income: number;
   employment_status: string;
-  collateral_accepted: boolean;
 }): Promise<{ success: boolean; loan?: LoanApplication; message: string }> => {
   const res = await api.post("/loans/apply", {
     amount: payload.amount,
@@ -143,7 +103,9 @@ export const submitLoanApplicationService = async (payload: {
   return {
     success: true,
     loan: body.data,
-    message: body.message || "Your loan application has been submitted for underwriting review.",
+    message:
+      body.message ||
+      "Your loan application has been submitted for underwriting review.",
   };
 };
 
@@ -152,12 +114,14 @@ export const submitLoanApplicationService = async (payload: {
  */
 export const repayLoanService = async (
   loanId: string | number,
-  amount: number
+  amount: number,
 ): Promise<{ success: boolean; message: string }> => {
   const res = await api.post(`/loans/${loanId}/repay`, { amount });
   const body = res.data as { message?: string };
   return {
     success: true,
-    message: body.message || `Repayment of $${amount.toFixed(2)} recorded successfully`,
+    message:
+      body.message ||
+      `Repayment of $${amount.toFixed(2)} recorded successfully`,
   };
 };

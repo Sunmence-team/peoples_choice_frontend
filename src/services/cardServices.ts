@@ -8,8 +8,8 @@ export interface BankCard {
   card_number: string;
   masked_card_number: string;
   card_holder_name: string;
-  expiration_month: string;
-  expiration_year: string;
+  expiry_month: string;
+  expiry_year: string;
   cvv: string;
   status: "active" | "frozen" | "pending";
   currency: string;

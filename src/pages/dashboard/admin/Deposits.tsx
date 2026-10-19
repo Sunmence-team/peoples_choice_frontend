@@ -4,23 +4,24 @@ import { FaCheck, FaXmark } from "react-icons/fa6";
 import ReusableTable from "../../../utility/ReusableTable";
 import ActionCell from "../../../components/ui/ActionCell";
 import StatusBadge from "../../../components/ui/StatusBadge";
-import Modal from "../../../components/modal/Modal";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
-import { useAdminDeposits, useApproveDeposit, useRejectDeposit } from "../../../hooks/useAdminData";
+import DepositActionModal from "../../../components/modal/DepositActionModal";
+import {
+  useAdminDeposits,
+  useApproveDeposit,
+  useRejectDeposit,
+} from "../../../hooks/useAdminData";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
 import { getErrorMessage } from "../../../helpers/api";
 import type { TransactionItem } from "../../../lib/interfaces";
-
-type Target = TransactionItem | null;
 
 const Deposits: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selected, setSelected] = useState<TransactionItem | null>(null);
   const [viewModal, setViewModal] = useState(false);
-  const [actionTarget, setActionTarget] = useState<Target>(null);
+  const [actionTarget, setActionTarget] = useState<TransactionItem | null>(null);
   const [actionType, setActionType] = useState<"approve" | "reject">("approve");
-  const [remarks, setRemarks] = useState("");
 
   const { data, isLoading, error } = useAdminDeposits(currentPage, itemsPerPage);
   const deposits = data?.items ?? [];
@@ -32,18 +33,13 @@ const Deposits: React.FC = () => {
   const openAction = (item: TransactionItem, type: "approve" | "reject") => {
     setActionTarget(item);
     setActionType(type);
-    setRemarks("");
   };
 
-  const runAction = async () => {
+  const handleActionConfirm = async (id: number | string, remarks: string) => {
     if (!actionTarget) return;
-    if (actionType === "reject" && !remarks.trim()) {
-      toast.error("Remarks are required");
-      return;
-    }
 
     try {
-      const vars = { depositId: actionTarget.id, remarks: remarks.trim() };
+      const vars = { depositId: Number(id), remarks };
       if (actionType === "approve") {
         await approveMutation.mutateAsync(vars);
         toast.success(
@@ -56,7 +52,6 @@ const Deposits: React.FC = () => {
         );
       }
       setActionTarget(null);
-      setRemarks("");
     } catch (err) {
       toast.error(getErrorMessage(err, "Action failed"));
     }
@@ -170,70 +165,26 @@ const Deposits: React.FC = () => {
         hasSerialNo={true}
       />
 
-      <ViewTransactionModal
-        transaction={selected}
-        isOpen={viewModal}
-        onClose={() => setViewModal(false)}
-      />
-
-      {actionTarget && (
-        <Modal onClose={() => setActionTarget(null)}>
-          <div className="p-5">
-            <h3 className="text-[18px] font-bold text-[#0B2D5B]">
-              {actionType === "approve" ? "Approve this deposit?" : "Reject this deposit?"}
-            </h3>
-            <p className="mt-1 text-[13px] text-[#8190a3]">
-              {actionType === "approve"
-                ? `Credit ${actionTarget.amount}.00 USDT to ${actionTarget.user_name || "the user"}'s wallet?`
-                : `Decline the ${actionTarget.amount}.00 USDT deposit from ${actionTarget.user_name || "the user"}?`}
-            </p>
-
-            <div className="mt-5">
-              <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
-                Remarks {actionType === "approve" && <p>Optional</p>}
-              </label>
-              <textarea
-                rows={3}
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder={
-                  actionType === "approve"
-                    ? "e.g. Transaction confirmed on blockchain explorer"
-                    : "e.g. No matching blockchain transfer found"
-                }
-                className="w-full resize-none rounded-lg border border-[#dfe8f1] px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setActionTarget(null)}
-                disabled={mutation.isPending}
-                className="rounded-lg border border-[#dfe8f1] py-3 text-sm font-semibold text-[#52677c] transition hover:bg-[#f8fafc] disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={runAction}
-                disabled={mutation.isPending}
-                className={`rounded-lg py-3 text-sm font-semibold text-white transition disabled:opacity-60 ${
-                  actionType === "approve"
-                    ? "bg-[#05a957] hover:bg-[#04984e]"
-                    : "bg-red-500 hover:bg-red-600"
-                }`}
-              >
-                {mutation.isPending
-                  ? "Please wait..."
-                  : actionType === "approve"
-                    ? "Yes, Approve"
-                    : "Yes, Reject"}
-              </button>
-            </div>
-          </div>
-        </Modal>
+      {viewModal && selected && (
+        <ViewTransactionModal
+          transaction={selected}
+          isOpen={viewModal}
+          onClose={() => {
+            setViewModal(false);
+            setSelected(null);
+          }}
+        />
       )}
+
+      {/* Extracted Deposit Action Modal */}
+      <DepositActionModal
+        isOpen={!!actionTarget}
+        onClose={() => setActionTarget(null)}
+        deposit={actionTarget}
+        actionType={actionType}
+        onConfirm={handleActionConfirm}
+        isSubmitting={mutation.isPending}
+      />
     </>
   );
 };

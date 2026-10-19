@@ -19,13 +19,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { TableColumnProps, Transaction } from "../../../lib/interfaces";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
-import TransferModal from "../../../components/modal/TransferModal";
-import AccountDetailsModal from "../../../components/modal/AccountDetailsModal";
-import {
-  BANK_METADATA,
-  getBankAccountNumber,
-} from "../../../services/transferServices";
-import { GoArrowUpRight } from "react-icons/go";
+import { getBankAccountNumber } from "../../../services/transferServices";
 import { Eye, EyeOff } from "lucide-react";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
 import { useKYCStatus } from "../../../hooks/useClientData";
@@ -46,8 +40,6 @@ export default function Overview() {
     React.useState<Transaction | null>(null);
   const [viewModal, setViewModal] = React.useState(false);
   const [showBalance, setShowBalance] = React.useState(false);
-  const [showTransferModal, setShowTransferModal] = React.useState(false);
-  const [showAccountDetails, setShowAccountDetails] = React.useState(false);
 
   const balance = stats?.balance ?? 0;
   const totlaDeposit = stats?.totalDeposited ?? 0;
@@ -217,7 +209,7 @@ export default function Overview() {
                     Available Account Balance
                   </p>
                   <p className="text-[9px] sm:text-[10px] text-[#a5c0dc] truncate">
-                    Premier Checking • Acct: •••• {accountNumber.slice(-4)}
+                    Acct: {accountNumber}
                   </p>
                 </div>
 
@@ -255,20 +247,9 @@ export default function Overview() {
 
               {/* Routing & Account Coordinates */}
               <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
-                <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-tertiary font-semibold shrink-0">
-                  <GoArrowUpRight size={13} />
-                  <span>FDIC Insured</span>
-                </div>
-
-                <p className="text-[9.5px] sm:text-[10.5px] text-[#b9cadc] font-mono break-all">
-                  Routing: {BANK_METADATA.routingNumber} • Acct: ••••
-                  {accountNumber.slice(-4)}
-                </p>
-
-                {(kycStatus?.is_verified || kycStatus?.kyc_status === "verified") ? (
-                  <span className="rounded-sm bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-300 border border-emerald-500/30">
-                    Tier 3 Verified
-                  </span>
+                {kycStatus?.is_verified ||
+                kycStatus?.kyc_status === "verified" ? (
+                  ""
                 ) : (
                   <button
                     type="button"
@@ -281,10 +262,10 @@ export default function Overview() {
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 pt-1 w-full sm:w-auto">
+              <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 pt-1 w-full sm:w-auto">
                 <button
                   type="button"
-                  onClick={() => setShowTransferModal(true)}
+                  onClick={() => navigate("/dashboard/transfer")}
                   className="w-full sm:w-auto text-center justify-center cursor-pointer rounded-md bg-tertiary px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:opacity-90"
                 >
                   Transfer Money
@@ -304,14 +285,6 @@ export default function Overview() {
                   className="w-full sm:w-auto text-center justify-center cursor-pointer rounded-md border border-white/30 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-white/10"
                 >
                   Withdraw
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowAccountDetails(true)}
-                  className="w-full sm:w-auto text-center justify-center cursor-pointer rounded-md border border-white/20 bg-white/10 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-white/20"
-                >
-                  Account Info
                 </button>
               </div>
             </div>
@@ -443,20 +416,6 @@ export default function Overview() {
             setViewModal(false);
             setSelectedTransaction(null);
           }}
-        />
-      )}
-
-      {showTransferModal && (
-        <TransferModal
-          isOpen={showTransferModal}
-          onClose={() => setShowTransferModal(false)}
-        />
-      )}
-
-      {showAccountDetails && (
-        <AccountDetailsModal
-          isOpen={showAccountDetails}
-          onClose={() => setShowAccountDetails(false)}
         />
       )}
     </>

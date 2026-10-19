@@ -5,8 +5,8 @@ import { FaWallet } from "react-icons/fa6";
 import { FaLock, FaLockOpen, FaRotateLeft } from "react-icons/fa6";
 import ReusableTable from "../../../utility/ReusableTable";
 import ActionCell from "../../../components/ui/ActionCell";
-import Modal from "../../../components/modal/Modal";
 import ConfirmDialog from "../../../components/modal/ConfirmDialog";
+import AdminWalletModal from "../../../components/modal/AdminWalletModal";
 import {
   useAdminWallets,
   useCreateAdminWallet,
@@ -18,17 +18,12 @@ import {
 } from "../../../hooks/useAdminData";
 import { getErrorMessage } from "../../../helpers/api";
 import type { CompanyWallet } from "../../../helpers/mappers";
-import FormattedInput from "../../../components/ui/FormattedInput";
 
 type WalletAction = "disable" | "enable" | "delete" | "restore" | null;
-
-const emptyForm = { address: "", type: "TRC20", balance: "" };
 
 const Balances: React.FC = () => {
   const [selected, setSelected] = useState<CompanyWallet | null>(null);
   const [viewModal, setViewModal] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState(emptyForm);
   const [pendingAction, setPendingAction] = useState<WalletAction>(null);
 
   const { data, isLoading, error } = useAdminWallets();
@@ -54,8 +49,6 @@ const Balances: React.FC = () => {
 
   const openCreate = () => {
     setSelected(null);
-    setForm(emptyForm);
-    setCreating(true);
     setViewModal(true);
   };
 
@@ -63,46 +56,30 @@ const Balances: React.FC = () => {
     const found = wallets.find((item) => item.id === id);
     if (found) {
       setSelected(found);
-      setForm({
-        address: found.address,
-        type: found.type,
-        balance: String(found.balance),
-      });
-      setCreating(false);
       setViewModal(true);
     }
   };
 
-  const handleSave = async () => {
-    if (!form.address.trim()) {
-      toast.error("Wallet address is required");
-      return;
-    }
-    if (!form.type.trim()) {
-      toast.error("Wallet type is required");
-      return;
-    }
-    const balance = Number(form.balance || 0);
-    if (Number.isNaN(balance)) {
-      toast.error("Enter a valid balance");
-      return;
-    }
-
+  const handleSaveWallet = async (values: {
+    address: string;
+    type: string;
+    balance: number;
+  }) => {
     try {
-      if (creating) {
+      if (!selected) {
         await createMutation.mutateAsync({
-          address: form.address.trim(),
-          type: form.type.trim(),
-          balance,
+          address: values.address,
+          type: values.type,
+          balance: values.balance,
         });
         toast.success("Company wallet created");
-      } else if (selected) {
+      } else {
         await updateMutation.mutateAsync({
           walletId: selected.id,
           payload: {
-            address: form.address.trim(),
-            type: form.type.trim(),
-            balance,
+            address: values.address,
+            type: values.type,
+            balance: values.balance,
           },
         });
         toast.success("Company wallet updated");
@@ -314,109 +291,16 @@ const Balances: React.FC = () => {
         />
       </div>
 
-      {viewModal && !pendingAction && (
-        <Modal
-          onClose={() => {
-            setViewModal(false);
-            setSelected(null);
-          }}
-        >
-          <div className="p-5">
-            <h3 className="text-[18px] font-bold text-[#0B2D5B]">
-              {creating ? "Create Company Wallet" : "Company Wallet Details"}
-            </h3>
-            <p className="mt-1 text-[12px] text-[#8190a3]">
-              {creating
-                ? "Add a new deposit or payout wallet."
-                : "View and update the selected wallet."}
-            </p>
-
-            {!creating && selected && (
-              <div className="mt-4 flex items-center justify-between rounded-lg border border-[#e3eaf2] px-3 py-2">
-                <span className="text-[11px] text-[#8190a3]">Status</span>
-                {statusBadge(selected.status)}
-              </div>
-            )}
-
-            <div className="mt-5 grid gap-4">
-              <div>
-                <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  value={form.address}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, address: e.target.value }))
-                  }
-                  placeholder="Wallet address"
-                  className="w-full rounded-lg border border-[#dfe8f1] px-3 py-2.5 font-mono text-sm outline-none focus:border-primary"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
-                  Type
-                </label>
-                <select
-                  value={form.type}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, type: e.target.value }))
-                  }
-                  className="w-full rounded-lg border border-[#dfe8f1] px-3 py-2.5 text-sm outline-none focus:border-primary"
-                >
-                  <option value="TRC20">TRC20</option>
-                  <option value="ERC20">ERC20</option>
-                  <option value="BEP20">BEP20</option>
-                  <option value="ETH">ETH</option>
-                  <option value="USDT">USDT</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
-                  Balance
-                </label>
-                <FormattedInput
-                  name="balance"
-                  value={form.balance}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, balance: String(e.target.value) }))
-                  }
-                  placeholder="0.00"
-                  className="w-full rounded-lg border border-[#dfe8f1] px-3 py-2.5 text-sm outline-none focus:border-primary"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setViewModal(false);
-                  setSelected(null);
-                }}
-                disabled={createMutation.isPending || updateMutation.isPending}
-                className="rounded-lg border border-[#dfe8f1] py-3 text-sm font-semibold text-[#52677c] transition hover:bg-[#f8fafc] disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={createMutation.isPending || updateMutation.isPending}
-                className="rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary/80 disabled:opacity-60"
-              >
-                {createMutation.isPending || updateMutation.isPending
-                  ? "Saving..."
-                  : creating
-                    ? "Create Wallet"
-                    : "Save Changes"}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <AdminWalletModal
+        isOpen={viewModal && !pendingAction}
+        onClose={() => {
+          setViewModal(false);
+          setSelected(null);
+        }}
+        wallet={selected}
+        onSubmit={handleSaveWallet}
+        isLoading={createMutation.isPending || updateMutation.isPending}
+      />
 
       <ConfirmDialog
         isOpen={!!pendingAction && !!selected}

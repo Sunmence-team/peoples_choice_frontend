@@ -9,6 +9,8 @@ import {
   ArrowLeft,
   RotateCw,
   ShieldCheck,
+  CheckCircle2,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { WithdrawalStatusFlow } from "../../../components/Tracker/WithdrawlTracker";
@@ -16,6 +18,8 @@ import {
   useDashboard,
   useMyWithdrawals,
   useRequestWithdrawalOtp,
+  useVerifyWithdrawalOtp,
+  useRequestWithdrawalOtc,
   useSubmitWithdrawal,
   useWallets,
 } from "../../../hooks/useClientData";
@@ -27,11 +31,11 @@ interface WithdrawalFormValues {
   network: string;
   destination_address: string;
   otp_code: string;
-  cto_code: string;
+  otc_code: string;
 }
 
 export default function Withdrawal() {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
@@ -40,11 +44,13 @@ export default function Withdrawal() {
   const { data: withdrawals } = useMyWithdrawals(1, 5);
 
   const requestOtpMutation = useRequestWithdrawalOtp();
+  const verifyOtpMutation = useVerifyWithdrawalOtp();
+  const requestOtcMutation = useRequestWithdrawalOtc();
   const submitMutation = useSubmitWithdrawal();
 
   const availableBalance = stats?.balance ?? 0;
   const networks = Array.from(
-    new Set((wallets ?? []).map((wallet) => wallet.type))
+    new Set((wallets ?? []).map((wallet) => wallet.type)),
   );
 
   const formik = useFormik<WithdrawalFormValues>({
@@ -53,7 +59,7 @@ export default function Withdrawal() {
       network: "",
       destination_address: "",
       otp_code: "",
-      cto_code: "",
+      otc_code: "",
     },
 
     validationSchema: Yup.object({
@@ -63,25 +69,30 @@ export default function Withdrawal() {
         .positive("Amount must be greater than 0")
         .max(
           availableBalance,
-          `Amount cannot exceed your available balance of ${availableBalance.toLocaleString()} USDT`
+          `Amount cannot exceed your available balance of $${availableBalance.toLocaleString()}`,
         ),
 
-      network: Yup.string().required("Please select a network"),
+      network: Yup.string().required("Please select a clearing rail / network"),
 
       destination_address: Yup.string()
         .trim()
-        .required("Wallet address is required")
-        .min(10, "Please enter a valid wallet address"),
+        .required("Wallet or settlement destination address is required")
+        .min(10, "Please enter a valid destination address"),
 
-      ...(step === 2
+      ...(step >= 2
         ? {
             otp_code: Yup.string()
               .trim()
               .required("Email OTP code is required")
-              .length(6, "OTP code must be 6 digits"),
-            cto_code: Yup.string()
+              .length(6, "OTP code must be exactly 6 digits"),
+          }
+        : {}),
+
+      ...(step === 3
+        ? {
+            otc_code: Yup.string()
               .trim()
-              .required("CTO clearance code is required"),
+              .required("OTC clearance code is required"),
           }
         : {}),
     }),
@@ -102,15 +113,17 @@ export default function Withdrawal() {
           wallet_address_id: wallet.id,
           crypto_type: values.network,
           otp_code: values.otp_code.trim(),
-          cto_code: values.cto_code.trim(),
+          otc_code: values.otc_code.trim(),
         });
-        toast.success(res.message || "Withdrawal request submitted successfully");
+        toast.success(
+          res.message || "Withdrawal request submitted successfully",
+        );
         helpers.resetForm();
         setStep(1);
         setExpiresAt(null);
       } catch (error) {
         toast.error(
-          getErrorMessage(error, "Failed to submit withdrawal request")
+          getErrorMessage(error, "Failed to submit withdrawal request"),
         );
       }
     },
@@ -162,7 +175,7 @@ export default function Withdrawal() {
         setExpiresAt(res.data.expires_at);
       } else {
         const fallbackTarget = new Date(
-          Date.now() + (res.data?.expires_in_minutes ?? 15) * 60 * 1000
+          Date.now() + (res.data?.expires_in_minutes ?? 15) * 60 * 1000,
         ).toISOString();
         setExpiresAt(fallbackTarget);
       }
@@ -170,10 +183,39 @@ export default function Withdrawal() {
       setStep(2);
       toast.success(
         res.message ||
-          "Withdrawal OTP sent to your email. Please contact admin/support for your CTO authorization code."
+          "Withdrawal OTP requested. Please obtain your OTP and verify it.",
       );
     } catch (error) {
       toast.error(getErrorMessage(error, "Failed to request withdrawal OTP"));
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    formik.setFieldTouched("otp_code", true, true);
+    const errors = await formik.validateForm();
+    if (errors.otp_code) {
+      return;
+    }
+
+    try {
+      const res = await verifyOtpMutation.mutateAsync(formik.values.otp_code.trim());
+      toast.success(
+        res.message || "OTP verified successfully. Requesting OTC clearance code...",
+      );
+
+      // Now automatically request OTC code
+      try {
+        const otcRes = await requestOtcMutation.mutateAsync();
+        toast.info(
+          otcRes.message || "OTC clearance code requested. Contact administrator/support to obtain your authorization code.",
+        );
+      } catch (otcErr) {
+        toast.info(getErrorMessage(otcErr, "Please contact administrator for your OTC clearance code."));
+      }
+
+      setStep(3);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to verify OTP code"));
     }
   };
 
@@ -187,12 +229,14 @@ export default function Withdrawal() {
         setExpiresAt(res.data.expires_at);
       } else {
         const fallbackTarget = new Date(
-          Date.now() + (res.data?.expires_in_minutes ?? 15) * 60 * 1000
+          Date.now() + (res.data?.expires_in_minutes ?? 15) * 60 * 1000,
         ).toISOString();
         setExpiresAt(fallbackTarget);
       }
 
-      toast.success(res.message || "A new OTP code has been sent to your email.");
+      toast.success(
+        res.message || "A new OTP code has been generated.",
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, "Failed to resend OTP code"));
     }
@@ -203,7 +247,7 @@ export default function Withdrawal() {
   const walletError =
     formik.touched.destination_address && formik.errors.destination_address;
   const otpError = formik.touched.otp_code && formik.errors.otp_code;
-  const ctoError = formik.touched.cto_code && formik.errors.cto_code;
+  const otcError = formik.touched.otc_code && formik.errors.otc_code;
 
   const latestWithdrawal = withdrawals?.items?.[0];
   const statusMap: Record<
@@ -221,9 +265,12 @@ export default function Withdrawal() {
       {/* Page heading */}
       <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
         <div>
-          <h1 className="text-base sm:text-lg font-bold text-primary">Payout & External Withdrawal</h1>
+          <h1 className="text-base sm:text-lg font-bold text-primary">
+            Payout & External Withdrawal
+          </h1>
           <p className="hidden md:block mt-0.5 text-xs font-medium text-gray-500">
-            Request an external funds payout to your designated bank account or wire clearing destination.
+            Request an external funds payout to your designated bank account or
+            wire clearing destination.
           </p>
         </div>
       </div>
@@ -231,7 +278,7 @@ export default function Withdrawal() {
       {/* Main content */}
       <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="overflow-hidden rounded-xl border border-secondary bg-white">
-          {/* Balance */}
+          {/* Balance header */}
           <div className="border-b border-gray-200 px-3.5 py-3 sm:px-4 sm:py-3.5">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -260,27 +307,29 @@ export default function Withdrawal() {
                       USD
                     </span>
                   </div>
-
-                  <p className="text-[10px] font-medium text-gray-400">
-                    Primary Checking • FDIC Insured
-                  </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold text-primary shrink-0">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>{step === 1 ? "Step 1 of 2" : "Step 2 of 2"}</span>
+                <span>
+                  {step === 1
+                    ? "Step 1 of 3: Details"
+                    : step === 2
+                    ? "Step 2 of 3: Verify OTP"
+                    : "Step 3 of 3: OTC Clearance"}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Form */}
+          {/* Form container */}
           <form
             onSubmit={formik.handleSubmit}
             noValidate
             className="space-y-4 p-3.5 sm:p-5"
           >
-            {step === 1 ? (
+            {step === 1 && (
               <>
                 {/* Withdrawal Amount */}
                 <div>
@@ -412,16 +461,18 @@ export default function Withdrawal() {
                           strokeWidth="3"
                         />
                       </svg>
-                      Sending OTP to Email...
+                      Requesting OTP Code...
                     </>
                   ) : (
                     "Request 2FA OTP & Continue"
                   )}
                 </button>
               </>
-            ) : (
+            )}
+
+            {step === 2 && (
               <>
-                {/* Step 2 Summary */}
+                {/* Step Summary */}
                 <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 space-y-1.5 text-xs">
                   <div className="flex justify-between text-gray-600">
                     <span>Amount:</span>
@@ -477,13 +528,13 @@ export default function Withdrawal() {
                   )}
                 </div>
 
-                {/* Field 1: Email OTP */}
+                {/* Field: OTP Code */}
                 <div>
                   <label
                     htmlFor="otp_code"
                     className="mb-2 block text-[11px] font-bold text-primary"
                   >
-                    Email OTP Code (6 Digits)
+                    Enter 6-Digit OTP Code
                   </label>
 
                   <input
@@ -491,7 +542,7 @@ export default function Withdrawal() {
                     name="otp_code"
                     type="text"
                     maxLength={6}
-                    placeholder="Enter 6-digit OTP from email"
+                    placeholder="Enter 6-digit verification code"
                     value={formik.values.otp_code}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -509,33 +560,131 @@ export default function Withdrawal() {
                   )}
                 </div>
 
-                {/* Field 2: Admin CTO Code */}
-                <div>
-                  <label
-                    htmlFor="cto_code"
-                    className="mb-2 block text-[11px] font-bold text-primary"
+                {/* Actions for Step 2 */}
+                <div className="space-y-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleVerifyOtp}
+                    disabled={verifyOtpMutation.isPending || requestOtcMutation.isPending}
+                    className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                   >
-                    CTO Clearance Code
-                  </label>
+                    {verifyOtpMutation.isPending || requestOtcMutation.isPending ? (
+                      <>
+                        <svg
+                          className="mr-2 h-4 w-4 animate-spin"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="9"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            className="opacity-30"
+                          />
+                          <path
+                            d="M21 12a9 9 0 0 0-9-9"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                          />
+                        </svg>
+                        Verifying OTP Code...
+                      </>
+                    ) : (
+                      "Verify OTP & Continue to OTC"
+                    )}
+                  </button>
 
-                  <input
-                    id="cto_code"
-                    name="cto_code"
-                    type="text"
-                    placeholder="e.g. CTO-AB12CD"
-                    value={formik.values.cto_code}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`h-10 w-full rounded-lg border bg-white px-3 text-xs text-primary font-mono uppercase outline-none transition placeholder:font-sans placeholder:text-gray-400 ${
-                      ctoError
-                        ? "border-red-400 focus:border-red-400 focus:ring-red-400"
-                        : "border-gray-200 focus:border-primary"
-                    }`}
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={requestOtpMutation.isPending}
+                      className="flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 bg-white text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-60 cursor-pointer"
+                    >
+                      <RotateCw className="h-3.5 w-3.5 text-gray-500" />
+                      <span>Resend OTP</span>
+                    </button>
 
-                  {ctoError && (
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 bg-white text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5 text-gray-500" />
+                      <span>Back</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                {/* Step Summary with OTP Verified Badge */}
+                <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 space-y-1.5 text-xs">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Amount:</span>
+                    <span className="font-bold text-primary">
+                      ${formik.values.amount} USD
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Network:</span>
+                    <span className="font-bold text-primary">
+                      {formik.values.network}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Destination:</span>
+                    <span className="font-mono text-[11px] text-gray-700 truncate max-w-[200px]">
+                      {formik.values.destination_address}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 border-t border-gray-200">
+                    <span className="text-gray-600">2FA Verification:</span>
+                    <span className="flex items-center gap-1 text-[10px] font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                      <CheckCircle2 className="h-3 w-3" /> OTP Verified
+                    </span>
+                  </div>
+                </div>
+
+                {/* Field: OTC Clearance Code */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label
+                      htmlFor="otc_code"
+                      className="block text-[11px] font-bold text-primary"
+                    >
+                      OTC Clearance Code
+                    </label>
+                    <span className="text-[10px] text-gray-400">
+                      e.g. OTC-B0ZFJJ
+                    </span>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      id="otc_code"
+                      name="otc_code"
+                      type="text"
+                      placeholder="Enter OTC clearance code"
+                      value={formik.values.otc_code}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`h-10 w-full rounded-lg border bg-white px-3 pr-10 text-xs text-primary font-mono uppercase outline-none transition placeholder:font-sans placeholder:text-gray-400 ${
+                        otcError
+                          ? "border-red-400 focus:border-red-400 focus:ring-red-400"
+                          : "border-gray-200 focus:border-primary"
+                      }`}
+                    />
+                    <KeyRound className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  </div>
+
+                  {otcError && (
                     <p className="mt-1 text-[10px] font-medium text-red-500">
-                      {formik.errors.cto_code}
+                      {formik.errors.otc_code}
                     </p>
                   )}
                 </div>
@@ -544,19 +693,16 @@ export default function Withdrawal() {
                 <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800">
                   <Info className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
                   <p>
-                    Please contact customer support or your assigned account
-                    manager to receive your CTO clearance code.
+                    Your OTC clearance code has been requested. Please contact administrator/support to obtain your authorization code to finalize this withdrawal.
                   </p>
                 </div>
 
-                {/* Actions */}
+                {/* Actions for Step 3 */}
                 <div className="space-y-2 pt-1">
                   <button
                     type="submit"
-                    disabled={
-                      formik.isSubmitting || submitMutation.isPending
-                    }
-                    className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={formik.isSubmitting || submitMutation.isPending}
+                    className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                   >
                     {formik.isSubmitting || submitMutation.isPending ? (
                       <>
@@ -579,33 +725,21 @@ export default function Withdrawal() {
                             strokeWidth="3"
                           />
                         </svg>
-                        Submitting Withdrawal...
+                        Finalizing Payout...
                       </>
                     ) : (
-                      "Confirm & Withdraw"
+                      "Confirm & Finalize Withdrawal"
                     )}
                   </button>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={handleResendOtp}
-                      disabled={requestOtpMutation.isPending}
-                      className="flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 bg-white text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-60 cursor-pointer"
-                    >
-                      <RotateCw className="h-3.5 w-3.5 text-gray-500" />
-                      <span>Resend OTP</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setStep(1)}
-                      className="flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 bg-white text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5 text-gray-500" />
-                      <span>Edit Details</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="flex items-center justify-center gap-1.5 h-9 w-full rounded-lg border border-gray-200 bg-white text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5 text-gray-500" />
+                    <span>Back to OTP</span>
+                  </button>
                 </div>
               </>
             )}
@@ -615,7 +749,7 @@ export default function Withdrawal() {
         <WithdrawalStatusFlow
           status={
             latestWithdrawal
-              ? statusMap[latestWithdrawal.status] ?? "pending_review"
+              ? (statusMap[latestWithdrawal.status] ?? "pending_review")
               : "submitted"
           }
         />
@@ -623,4 +757,3 @@ export default function Withdrawal() {
     </div>
   );
 }
-

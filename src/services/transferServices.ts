@@ -1,21 +1,12 @@
 import api from "../helpers/api";
 import { unwrap } from "../helpers/response";
 
-export const BANK_METADATA = {
-  bankName: "People's Choice Bank, N.A.",
-  shortName: "People's Choice Bank",
-  routingNumber: "021000021",
-  swiftBic: "PCBKUS33",
-  headquarters: "1 Wall St, Financial District, New York, NY 10005, United States",
-  currency: "USD ($) / USDT Pegged",
-  fdicStatus: "Member FDIC & FinCEN Registered MSB",
-  dailyTransferLimit: 100000,
-};
-
 /**
  * Returns user account number or derives bank account number from user ID
  */
-export const getBankAccountNumber = (user?: { id?: number | string; account_number?: string } | null): string => {
+export const getBankAccountNumber = (
+  user?: { id?: number | string; account_number?: string } | null,
+): string => {
   if (user?.account_number) return user.account_number;
   if (!user?.id) return "3081000001";
   const paddedId = String(user.id).padStart(4, "0");
@@ -95,7 +86,9 @@ export interface ExternalWireResponse {
 /**
  * 1.1 Live Online Country Lookup (GET /api/banks/countries)
  */
-export const getSupportedCountriesService = async (): Promise<BankCountry[]> => {
+export const getSupportedCountriesService = async (): Promise<
+  BankCountry[]
+> => {
   const res = await api.get("/banks/countries");
   const data = unwrap<BankCountry[]>(res.data);
   return Array.isArray(data) ? data : [];
@@ -106,7 +99,7 @@ export const getSupportedCountriesService = async (): Promise<BankCountry[]> => 
  */
 export const getBanksByCountryService = async (
   country: string,
-  search?: string
+  search?: string,
 ): Promise<BankItem[]> => {
   const params: Record<string, string> = { country: country.toLowerCase() };
   if (search && search.trim()) params.search = search.trim();
@@ -120,7 +113,7 @@ export const getBanksByCountryService = async (
  * Accepts 10-digit account number, username, or email
  */
 export const lookupRecipientService = async (
-  account: string
+  account: string,
 ): Promise<RecipientLookupResult> => {
   const clean = account.trim();
   if (!clean) {
@@ -162,7 +155,7 @@ export const lookupRecipientService = async (
  * 3.2 Execute an internal money transfer (POST /api/transfers/internal)
  */
 export const submitInternalTransferService = async (
-  payload: InternalTransferPayload
+  payload: InternalTransferPayload,
 ): Promise<InternalTransferResponse> => {
   const res = await api.post("/transfers/internal", payload);
   return res.data;
@@ -172,7 +165,7 @@ export const submitInternalTransferService = async (
  * 3.3 Outside Bank Transfer (Wire / ACH) (POST /api/transfers/external)
  */
 export const submitExternalWireTransferService = async (
-  payload: ExternalWirePayload
+  payload: ExternalWirePayload,
 ): Promise<ExternalWireResponse> => {
   const res = await api.post("/transfers/external", payload);
   return res.data;

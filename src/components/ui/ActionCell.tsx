@@ -19,6 +19,7 @@ interface ActionCellProps {
   toggleAction?: () => void;
   canView?: boolean;
   otherActions?: OtherActionProps[];
+  disabled?: boolean;
 }
 
 export interface OtherActionProps {
@@ -43,6 +44,7 @@ const ActionCell: React.FC<ActionCellProps> = ({
   canView = false,
   otherActions = [],
   toggleAction,
+  disabled = false,
 }) => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -89,10 +91,13 @@ const ActionCell: React.FC<ActionCellProps> = ({
   }, [open, refs.floating]);
 
   return (
-    <div ref={dropdownRef}>
+    <div
+      ref={dropdownRef}
+      className={`${disabled ? "pointer-events-none" : ""}`}
+    >
       <div
         ref={setReferenceRef}
-        className={`hover:bg-primary/10 w-8 h-8 flex items-center justify-center rounded-md cursor-pointer ${open ? "bg-primary/20" : ""}`}
+        className={`${disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-primary/10 "} w-8 h-8 flex items-center justify-center rounded-md cursor-pointer ${open ? "bg-primary/20" : ""}`}
         onClick={() => {
           setOpen(!open);
           if (toggleAction) {

@@ -19,6 +19,8 @@ import {
   getMyWithdrawalsService,
   requestWithdrawalService,
   requestWithdrawalOtpService,
+  verifyWithdrawalOtpService,
+  requestWithdrawalOtcService,
   submitWithdrawalService,
   type RequestWithdrawalPayload,
   type RequestOtpPayload,
@@ -194,6 +196,18 @@ export const useMyWithdrawals = (page = 1, perPage = 10) => {
 export const useRequestWithdrawalOtp = () => {
   return useMutation({
     mutationFn: (payload?: RequestOtpPayload) => requestWithdrawalOtpService(payload),
+  });
+};
+
+export const useVerifyWithdrawalOtp = () => {
+  return useMutation({
+    mutationFn: (otpCode: string) => verifyWithdrawalOtpService(otpCode),
+  });
+};
+
+export const useRequestWithdrawalOtc = () => {
+  return useMutation({
+    mutationFn: () => requestWithdrawalOtcService(),
   });
 };
 

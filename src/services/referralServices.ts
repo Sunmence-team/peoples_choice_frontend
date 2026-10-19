@@ -68,7 +68,7 @@ export const fetchReferralStatsService = async (
     reward_amount:
       typeof u.reward_amount === "number"
         ? u.reward_amount
-        : parseFloat(u.reward_amount) || 0,
+        : parseFloat(String(u.reward_amount)) || 0,
     reward_status: u.reward_status === "paid" ? "credited" : "pending",
   }));
 
@@ -88,26 +88,5 @@ export const fetchReferralStatsService = async (
     pendingBonus: pending,
     bonusPerReferral: 50.0,
     referrals: records,
-  };
-};
-
-export const getReferralSummary = (
-  username?: string,
-  userId?: string | number
-): ReferralSummary => {
-  const code = (username || (userId ? `PCB-${userId}` : "PCB-VIP100"))
-    .toUpperCase()
-    .replace(/[^A-Z0-9-]/g, "");
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://peopleschoicebk.com";
-
-  return {
-    referralCode: code,
-    referralLink: `${origin}/register?ref=${code}`,
-    totalReferrals: 0,
-    verifiedReferrals: 0,
-    totalBonusEarned: 0,
-    pendingBonus: 0,
-    bonusPerReferral: 50.0,
-    referrals: [],
   };
 };

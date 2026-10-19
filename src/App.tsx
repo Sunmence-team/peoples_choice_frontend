@@ -32,6 +32,11 @@ import KYC from "./pages/dashboard/client/KYC";
 // Admin Dashboards
 import AdminOverview from "./pages/dashboard/admin/Overview";
 import AdminUsers from "./pages/dashboard/admin/Users";
+import AdminKYC from "./pages/dashboard/admin/KYC";
+import AdminTransfers from "./pages/dashboard/admin/Transfers";
+import AdminCards from "./pages/dashboard/admin/Cards";
+import AdminLoans from "./pages/dashboard/admin/Loans";
+import AdminReferrals from "./pages/dashboard/admin/Referrals";
 import AdminBalances from "./pages/dashboard/admin/Balances";
 import AdminDeposits from "./pages/dashboard/admin/Deposits";
 import AdminWithdrawals from "./pages/dashboard/admin/Withdrawals";
@@ -171,6 +176,56 @@ function App() {
             <ProtectedRoute requireAdmin>
               <MainLayout pageName="User Management">
                 <AdminUsers />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/kyc"
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Identity Verifications">
+                <AdminKYC />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/transfers"
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Wire Transfers">
+                <AdminTransfers />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/cards"
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Card Approvals">
+                <AdminCards />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/loans"
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Loan Facilities">
+                <AdminLoans />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/referrals"
+          element={
+            <ProtectedRoute requireAdmin>
+              <MainLayout pageName="Referral Program">
+                <AdminReferrals />
               </MainLayout>
             </ProtectedRoute>
           }

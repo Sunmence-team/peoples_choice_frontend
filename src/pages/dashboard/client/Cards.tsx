@@ -12,50 +12,41 @@ import {
   Plus,
   ShieldCheck,
   Wifi,
-  Sparkles,
-  Truck,
   Loader2,
 } from "lucide-react";
 import { useUser } from "../../../hooks/useUser";
 import {
   getCardsService,
-  requestCardService,
   freezeCardService,
-  setCardPinService,
   type BankCard,
-  type RequestCardPayload,
 } from "../../../services/cardServices";
 import { getErrorMessage } from "../../../helpers/api";
+import SetPinModal from "../../../components/modal/SetPinModal";
+import RequestCardModal from "../../../components/modal/RequestCardModal";
 
 export default function Cards() {
   const { user } = useUser();
   const [cards, setCards] = useState<BankCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCardId, setSelectedCardId] = useState<number | string | null>(null);
+  const [selectedCardId, setSelectedCardId] = useState<number | string | null>(
+    null,
+  );
 
   // Security toggles
-  const [revealedCardId, setRevealedCardId] = useState<number | string | null>(null);
+  const [revealedCardId, setRevealedCardId] = useState<number | string | null>(
+    null,
+  );
   const [copiedId, setCopiedId] = useState<number | string | null>(null);
 
   // Modals
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
-  const [pinValue, setPinValue] = useState("");
-  const [isSubmittingPin, setIsSubmittingPin] = useState(false);
-
-  // Request form state
-  const [cardType, setCardType] = useState<"virtual" | "physical">("virtual");
-  const [cardBrand, setCardBrand] = useState<"visa" | "mastercard">("visa");
-  const [cardHolder, setCardHolder] = useState(user?.full_name || user?.username || "ACCOUNT HOLDER");
-  const [billingAddress, setBillingAddress] = useState("1 Wall St, New York, NY 10005");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [isSubmittingCard, setIsSubmittingCard] = useState(false);
 
   useEffect(() => {
     loadCards();
   }, []);
 
-  const loadCards = async () => {
+  async function loadCards() {
     setLoading(true);
     try {
       const data = await getCardsService();
@@ -68,17 +59,24 @@ export default function Cards() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const activeCard = cards.find((c) => String(c.id) === String(selectedCardId)) || cards[0];
+  const activeCard =
+    cards.find((c) => String(c.id) === String(selectedCardId)) || cards[0];
 
   const handleToggleFreeze = async (card: BankCard) => {
     try {
       const res = await freezeCardService(card.id);
       toast.success(res.message);
-      const newStatus = (res.status || res.data?.status || (card.status === "frozen" ? "active" : "frozen")) as "active" | "frozen";
+      const newStatus = (res.status ||
+        res.data?.status ||
+        (card.status === "frozen" ? "active" : "frozen")) as
+        | "active"
+        | "frozen";
       setCards((prev) =>
-        prev.map((c) => (String(c.id) === String(card.id) ? { ...c, status: newStatus } : c))
+        prev.map((c) =>
+          String(c.id) === String(card.id) ? { ...c, status: newStatus } : c,
+        ),
       );
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to update card status"));
@@ -96,60 +94,6 @@ export default function Cards() {
     }
   };
 
-  const handleSavePin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!/^\d{4}$/.test(pinValue)) {
-      toast.error("PIN must be exactly 4 numerical digits");
-      return;
-    }
-    if (!activeCard) return;
-
-    setIsSubmittingPin(true);
-    try {
-      const res = await setCardPinService(activeCard.id, pinValue);
-      toast.success(res.message);
-      setShowPinModal(false);
-      setPinValue("");
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to update PIN"));
-    } finally {
-      setIsSubmittingPin(false);
-    }
-  };
-
-  const handleRequestCard = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (cardType === "physical" && !deliveryAddress.trim()) {
-      toast.error("Please enter a valid physical delivery address");
-      return;
-    }
-
-    setIsSubmittingCard(true);
-    try {
-      const payload: RequestCardPayload = {
-        card_type: cardType,
-        card_brand: cardBrand,
-        currency: "USD",
-        card_holder_name: cardHolder.trim(),
-        billing_address: billingAddress.trim(),
-        delivery_address: cardType === "physical" ? deliveryAddress.trim() : null,
-      };
-
-      const res = await requestCardService(payload);
-      toast.success(res.message);
-      setShowRequestModal(false);
-      await loadCards();
-      const newId = res.card?.id || res.data?.id;
-      if (newId) {
-        setSelectedCardId(newId);
-      }
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to submit card application"));
-    } finally {
-      setIsSubmittingCard(false);
-    }
-  };
-
   return (
     <div className="w-full">
       {/* Page Heading: title always visible, desc hidden on small screens */}
@@ -159,7 +103,8 @@ export default function Cards() {
             Cards & Digital Wallets
           </h1>
           <p className="hidden md:block mt-0.5 text-xs font-medium text-gray-500">
-            Manage your contactless virtual debit cards and physical bank cards with real-time controls.
+            Manage your contactless virtual debit cards and physical bank cards
+            with real-time controls.
           </p>
         </div>
 
@@ -180,9 +125,12 @@ export default function Cards() {
       ) : cards.length === 0 ? (
         <div className="rounded-xl border border-secondary bg-white p-8 text-center shadow-xs">
           <CreditCard className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-          <h3 className="text-sm font-bold text-primary">No Cards Issued Yet</h3>
+          <h3 className="text-sm font-bold text-primary">
+            No Cards Issued Yet
+          </h3>
           <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
-            Order a People's Choice Bank virtual debit card for instant online transactions or a physical card for ATM and in-store use.
+            Order a People's Choice Bank virtual debit card for instant online
+            transactions or a physical card for ATM and in-store use.
           </p>
           <button
             type="button"
@@ -216,7 +164,9 @@ export default function Cards() {
                       PEOPLE'S CHOICE BANK
                     </span>
                     <span className="text-[9px] text-[#93c5fd] font-medium tracking-tight">
-                      {activeCard.card_type === "virtual" ? "VIRTUAL DEBIT" : "PHYSICAL DEBIT"}
+                      {activeCard.card_type === "virtual"
+                        ? "VIRTUAL DEBIT"
+                        : "PHYSICAL DEBIT"}
                     </span>
                   </div>
 
@@ -227,8 +177,8 @@ export default function Cards() {
                         activeCard.status === "active"
                           ? "bg-green-500/20 text-green-300 border border-green-500/30"
                           : activeCard.status === "frozen"
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                          : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                            : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                       }`}
                     >
                       {activeCard.status}
@@ -245,10 +195,16 @@ export default function Cards() {
                   <button
                     type="button"
                     onClick={() =>
-                      setRevealedCardId((prev) => (prev === activeCard.id ? null : activeCard.id))
+                      setRevealedCardId((prev) =>
+                        prev === activeCard.id ? null : activeCard.id,
+                      )
                     }
                     className="flex items-center gap-1 text-[10px] text-white/80 hover:text-white transition cursor-pointer bg-white/10 px-2 py-1 rounded-md"
-                    title={revealedCardId === activeCard.id ? "Hide details" : "Show details"}
+                    title={
+                      revealedCardId === activeCard.id
+                        ? "Hide details"
+                        : "Show details"
+                    }
                   >
                     {revealedCardId === activeCard.id ? (
                       <>
@@ -272,14 +228,20 @@ export default function Cards() {
                         ? activeCard.card_number
                         : activeCard.masked_card_number}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyNumber(activeCard)}
-                      className="p-1 text-white/70 hover:text-white transition cursor-pointer"
-                      title="Copy Card Number"
-                    >
-                      {copiedId === activeCard.id ? <Check size={14} /> : <Copy size={14} />}
-                    </button>
+                    {activeCard.status !== "pending" && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopyNumber(activeCard)}
+                        className="p-1 text-white/70 hover:text-white transition cursor-pointer"
+                        title="Copy Card Number"
+                      >
+                        {copiedId === activeCard.id ? (
+                          <Check size={14} />
+                        ) : (
+                          <Copy size={14} />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -299,7 +261,7 @@ export default function Cards() {
                       Expires
                     </span>
                     <span className="font-mono text-[11px] sm:text-xs font-semibold text-white">
-                      {activeCard.expiration_month}/{activeCard.expiration_year}
+                      {activeCard.expiry_month}/{activeCard.expiry_year}
                     </span>
                   </div>
 
@@ -308,7 +270,9 @@ export default function Cards() {
                       CVV
                     </span>
                     <span className="font-mono text-[11px] sm:text-xs font-bold text-white">
-                      {revealedCardId === activeCard.id ? activeCard.cvv : "•••"}
+                      {revealedCardId === activeCard.id
+                        ? activeCard.cvv
+                        : "•••"}
                     </span>
                   </div>
 
@@ -323,7 +287,7 @@ export default function Cards() {
 
             {/* Card Switcher Selector (if user has multiple cards) */}
             {cards.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <div className="grid grid-cols-3 gap-2 overflow-x-auto no-scrollbar pb-1">
                 {cards.map((c) => {
                   const isSelected = String(c.id) === String(selectedCardId);
                   return (
@@ -340,9 +304,12 @@ export default function Cards() {
                       <CreditCard className="h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold truncate">
-                          {c.card_type === "virtual" ? "Virtual" : "Physical"} •••• {c.card_number.slice(-4)}
+                          {c.card_type === "virtual" ? "Virtual" : "Physical"}{" "}
+                          •••• {c.card_number?.slice(-4)}
                         </p>
-                        <p className="text-[9px] text-gray-400 capitalize">{c.card_brand} ({c.status})</p>
+                        <p className="text-[9px] text-gray-400 capitalize">
+                          {c.card_brand} ({c.status})
+                        </p>
                       </div>
                     </button>
                   );
@@ -361,7 +328,7 @@ export default function Cards() {
                       Card Security & Controls
                     </h3>
                     <p className="text-[10px] text-gray-400">
-                      Card ID: #{String(activeCard.id).slice(-6)} • Currency: {activeCard.currency}
+                      Currency: {activeCard.currency}
                     </p>
                   </div>
 
@@ -370,8 +337,8 @@ export default function Cards() {
                       activeCard.status === "active"
                         ? "bg-green-100 text-green-700"
                         : activeCard.status === "frozen"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-blue-100 text-blue-700"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-blue-100 text-blue-700"
                     }`}
                   >
                     {activeCard.status}
@@ -412,42 +379,37 @@ export default function Cards() {
                   </button>
                 </div>
 
-                {/* Spending Limit Meter */}
-                <div className="rounded-lg bg-gray-50 p-3 border border-secondary/70 mb-4">
-                  <div className="flex justify-between items-center text-xs mb-1.5">
-                    <span className="text-[10.5px] font-medium text-gray-500">Daily Spending Limit</span>
-                    <span className="font-bold text-primary">
-                      ${activeCard.spending_limit.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div className="bg-primary h-full w-[24%]" />
-                  </div>
-                  <div className="flex justify-between items-center text-[9px] text-gray-400 mt-1">
-                    <span>Used: $3,600.00</span>
-                    <span>Remaining: ${(activeCard.spending_limit - 3600).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-
                 {/* Card Specs */}
                 <div className="space-y-2 text-xs border-t border-gray-100 pt-3">
                   <div className="flex justify-between items-center py-0.5">
-                    <span className="text-[10.5px] text-gray-400">Card Form Factor</span>
-                    <span className="font-semibold text-primary capitalize">{activeCard.card_type} Debit</span>
+                    <span className="text-[10.5px] text-gray-400">
+                      Card Form Factor
+                    </span>
+                    <span className="font-semibold text-primary capitalize">
+                      {activeCard.card_type} Debit
+                    </span>
                   </div>
                   <div className="flex justify-between items-center py-0.5">
-                    <span className="text-[10.5px] text-gray-400">Payment Network</span>
-                    <span className="font-semibold text-primary capitalize">{activeCard.card_brand} Worldwide</span>
+                    <span className="text-[10.5px] text-gray-400">
+                      Payment Network
+                    </span>
+                    <span className="font-semibold text-primary capitalize">
+                      {activeCard.card_brand}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center py-0.5">
-                    <span className="text-[10.5px] text-gray-400">Billing Address</span>
+                    <span className="text-[10.5px] text-gray-400">
+                      Billing Address
+                    </span>
                     <span className="font-medium text-gray-700 truncate max-w-[200px] text-[10.5px]">
                       {activeCard.billing_address}
                     </span>
                   </div>
                   {activeCard.delivery_address && (
                     <div className="flex justify-between items-center py-0.5">
-                      <span className="text-[10.5px] text-gray-400">Delivery Address</span>
+                      <span className="text-[10.5px] text-gray-400">
+                        Delivery Address
+                      </span>
                       <span className="font-medium text-gray-700 truncate max-w-[200px] text-[10.5px]">
                         {activeCard.delivery_address}
                       </span>
@@ -458,7 +420,10 @@ export default function Cards() {
 
               <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5 text-[10px] text-gray-400">
                 <ShieldCheck className="h-3.5 w-3.5 text-tertiary" />
-                <span>Protected by Visa/Mastercard 3D Secure Zero-Liability Protection</span>
+                <span>
+                  Protected by Visa/Mastercard 3D Secure Zero-Liability
+                  Protection
+                </span>
               </div>
             </div>
           )}
@@ -466,232 +431,25 @@ export default function Cards() {
       )}
 
       {/* Set 4-Digit PIN Modal */}
-      {showPinModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-4 shadow-xl border border-secondary animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2.5 mb-3">
-              <div className="flex items-center gap-1.5">
-                <KeyRound className="h-4 w-4 text-primary" />
-                <h3 className="text-xs sm:text-[13px] font-bold text-primary">
-                  Set 4-Digit Security PIN
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowPinModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-sm font-bold cursor-pointer p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSavePin} className="space-y-3">
-              <p className="text-[10.5px] text-gray-500 leading-relaxed">
-                This 4-digit PIN is required for ATM cash withdrawals and chip-and-PIN terminal POS purchases.
-              </p>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-primary mb-1">
-                  Enter New PIN
-                </label>
-                <input
-                  type="password"
-                  maxLength={4}
-                  autoFocus
-                  placeholder="••••"
-                  value={pinValue}
-                  onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ""))}
-                  className="h-10 w-full rounded-lg border border-secondary bg-white text-center font-mono text-lg font-bold tracking-[0.5em] text-primary outline-none focus:border-primary transition"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPinModal(false)}
-                  className="flex-1 h-9 rounded-lg border border-secondary text-xs font-semibold text-gray-600 hover:bg-gray-50 transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingPin || pinValue.length !== 4}
-                  className="flex-1 h-9 rounded-lg bg-primary text-xs font-semibold text-white hover:bg-primary/90 transition disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  {isSubmittingPin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                  <span>Save PIN</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {activeCard && (
+        <SetPinModal
+          isOpen={showPinModal}
+          onClose={() => setShowPinModal(false)}
+          cardId={activeCard.id}
+          onSuccess={() => loadCards()}
+        />
       )}
 
       {/* Request New Card Modal */}
-      {showRequestModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-4 shadow-xl border border-secondary animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2.5 mb-3">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-tertiary" />
-                <h3 className="text-xs sm:text-[13px] font-bold text-primary">
-                  Request / Order New Card
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowRequestModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-sm font-bold cursor-pointer p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleRequestCard} className="space-y-3">
-              {/* Form Factor selection */}
-              <div>
-                <label className="block text-[11px] font-semibold text-primary mb-1">
-                  Select Card Form Factor
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCardType("virtual")}
-                    className={`p-2.5 rounded-lg border text-left transition cursor-pointer ${
-                      cardType === "virtual"
-                        ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                        : "border-secondary bg-white text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-primary mb-0.5">
-                      <CreditCard size={13} />
-                      <span>Virtual Card</span>
-                    </div>
-                    <p className="text-[9.5px] text-gray-500 leading-tight">
-                      Instant online activation for e-commerce and subscriptions.
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCardType("physical")}
-                    className={`p-2.5 rounded-lg border text-left transition cursor-pointer ${
-                      cardType === "physical"
-                        ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                        : "border-secondary bg-white text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-primary mb-0.5">
-                      <Truck size={13} />
-                      <span>Physical Card</span>
-                    </div>
-                    <p className="text-[9.5px] text-gray-500 leading-tight">
-                      Embossed debit card delivered to your residential address.
-                    </p>
-                  </button>
-                </div>
-              </div>
-
-              {/* Card Brand */}
-              <div>
-                <label className="block text-[11px] font-semibold text-primary mb-1">
-                  Card Payment Network
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCardBrand("visa")}
-                    className={`h-9 rounded-lg border text-xs font-bold transition cursor-pointer ${
-                      cardBrand === "visa"
-                        ? "border-primary bg-primary text-white"
-                        : "border-secondary bg-gray-50 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    VISA
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCardBrand("mastercard")}
-                    className={`h-9 rounded-lg border text-xs font-bold transition cursor-pointer ${
-                      cardBrand === "mastercard"
-                        ? "border-primary bg-primary text-white"
-                        : "border-secondary bg-gray-50 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    MASTERCARD
-                  </button>
-                </div>
-              </div>
-
-              {/* Cardholder Name */}
-              <div>
-                <label className="block text-[11px] font-semibold text-primary mb-1">
-                  Cardholder Name (Embossed on Card)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={cardHolder}
-                  onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
-                  className="h-9 w-full rounded-lg border border-secondary bg-white px-3 text-xs font-semibold uppercase text-primary outline-none focus:border-primary transition"
-                />
-              </div>
-
-              {/* Billing Address */}
-              <div>
-                <label className="block text-[11px] font-semibold text-primary mb-1">
-                  Billing Address
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={billingAddress}
-                  onChange={(e) => setBillingAddress(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-secondary bg-white px-3 text-xs text-primary outline-none focus:border-primary transition"
-                />
-              </div>
-
-              {/* Delivery Address (only if physical) */}
-              {cardType === "physical" && (
-                <div>
-                  <label className="block text-[11px] font-semibold text-primary mb-1">
-                    Courier Delivery Address
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Enter street address, city, state, zip"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    className="h-9 w-full rounded-lg border border-secondary bg-white px-3 text-xs text-primary outline-none focus:border-primary transition"
-                  />
-                  <span className="text-[9px] text-gray-400 mt-0.5 block">
-                    Dispatched within 3-5 business days via tracked courier delivery.
-                  </span>
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowRequestModal(false)}
-                  className="flex-1 h-9 rounded-lg border border-secondary text-xs font-semibold text-gray-600 hover:bg-gray-50 transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingCard}
-                  className="flex-1 h-9 rounded-lg bg-primary text-xs font-semibold text-white hover:bg-primary/90 transition disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  {isSubmittingCard ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                  <span>Confirm Issuance</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <RequestCardModal
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+        userFullName={user?.full_name || user?.username || "ACCOUNT HOLDER"}
+        onSuccess={(newId) => {
+          loadCards();
+          if (newId) setSelectedCardId(newId);
+        }}
+      />
     </div>
   );
 }

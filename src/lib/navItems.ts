@@ -86,6 +86,42 @@ export const adminNavItems = [
     role: ["*"],
   },
   {
+    name: "Identity (KYC)",
+    icon: ShieldCheck,
+    path: "/dashboard/admin/kyc",
+    role: ["*"],
+  },
+  {
+    name: "Wire Transfers",
+    icon: IoSwapHorizontal,
+    path: "/dashboard/admin/transfers",
+    role: ["*"],
+  },
+  {
+    name: "Withdrawals",
+    icon: IoArrowUp,
+    path: "/dashboard/admin/withdrawals",
+    role: ["*"],
+  },
+  {
+    name: "Card Approvals",
+    icon: CreditCard,
+    path: "/dashboard/admin/cards",
+    role: ["*"],
+  },
+  {
+    name: "Loan Disbursements",
+    icon: Landmark,
+    path: "/dashboard/admin/loans",
+    role: ["*"],
+  },
+  {
+    name: "Referral Oversight",
+    icon: Gift,
+    path: "/dashboard/admin/referrals",
+    role: ["*"],
+  },
+  {
     name: "Company Wallets",
     icon: IoWalletOutline,
     path: "/dashboard/admin/balances",
@@ -95,12 +131,6 @@ export const adminNavItems = [
     name: "Deposits",
     icon: IoArrowDown,
     path: "/dashboard/admin/deposits",
-    role: ["*"],
-  },
-  {
-    name: "Withdrawals",
-    icon: IoArrowUp,
-    path: "/dashboard/admin/withdrawals",
     role: ["*"],
   },
   {

@@ -21,13 +21,23 @@ import {
   rejectDepositService,
   getAdminWithdrawalsService,
   approveWithdrawalService,
-  completeWithdrawalService,
   rejectWithdrawalService,
   getAdminTransactionsService,
-  getAdminUserCtoCodeService,
-  generateAdminUserCtoCodeService,
-  getAdminWithdrawalCodesService,
-  type CtoProps,
+  getAdminVerificationsService,
+  approveVerificationService,
+  rejectVerificationService,
+  approveTransferService,
+  rejectTransferService,
+  getAdminCardsService,
+  approveAdminCardService,
+  getAdminLoansService,
+  disburseAdminLoanService,
+  rejectAdminLoanService,
+  getAdminReferralsService,
+  type AdminVerificationItem,
+  type AdminCardItem,
+  type AdminLoanItem,
+  type AdminReferralItem,
 } from "../services/adminServices";
 import { toPaged } from "../helpers/response";
 import {
@@ -302,41 +312,22 @@ export const useApproveWithdrawal = () =>
 export const useRejectWithdrawal = () =>
   useWithdrawalRemarksAction(rejectWithdrawalService);
 
-export const useCompleteWithdrawal = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      withdrawalId,
-      wallet_address_id,
-      remarks,
-    }: {
-      withdrawalId: number | string;
-      wallet_address_id: number | string;
-      remarks: string;
-    }) =>
-      completeWithdrawalService(withdrawalId, { wallet_address_id, remarks }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-withdrawals"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-transactions"] });
-    },
-  });
-};
-
 export const useAdminTransactions = (
   page = 1,
   perPage = 10,
   status?: string,
+  type?: string,
 ) => {
   const { token } = useUser();
   return useQuery<PagedResult<TransactionItem>>({
-    queryKey: ["admin-transactions", page, perPage, status ?? "all"],
+    queryKey: ["admin-transactions", page, perPage, status ?? "all", type ?? "all"],
     enabled: !!token,
     queryFn: async () => {
       const body = await getAdminTransactionsService({
         page,
         per_page: perPage,
-        status,
+        status: status && status !== "all" ? status : undefined,
+        type: type && type !== "all" ? type : undefined,
       });
       const paged = toPaged<unknown>(body, perPage);
       return {
@@ -356,56 +347,180 @@ export const useAdminTransactions = (
   });
 };
 
-export const useAdminUserCtoCode = (userId: number | string | null) => {
-  const { token } = useUser();
-  return useQuery<CtoProps>({
-    queryKey: ["admin-user-cto", userId],
-    enabled: !!token && userId !== null,
-    queryFn: () => getAdminUserCtoCodeService(userId as number | string),
-  });
-};
 
-export const useGenerateAdminUserCtoCode = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      userId,
-      payload,
-    }: {
-      userId: number | string;
-      payload?: {
-        cto_code?: string;
-        amount?: number | string;
-        send_email?: boolean;
-      };
-    }) => generateAdminUserCtoCodeService(userId, payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["admin-user-cto", variables.userId],
+export const useAdminVerifications = (
+  page = 1,
+  perPage = 10,
+  status?: string,
+) => {
+  const { token } = useUser();
+  return useQuery<PagedResult<AdminVerificationItem>>({
+    queryKey: ["admin-verifications", page, perPage, status ?? "all"],
+    enabled: !!token,
+    queryFn: async () => {
+      const body = await getAdminVerificationsService({
+        page,
+        per_page: perPage,
+        status: status && status !== "all" ? status : undefined,
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      return toPaged<AdminVerificationItem>(body, perPage);
     },
   });
 };
 
-export const useAdminWithdrawalCodes = (params?: {
+export const useApproveVerification = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => approveVerificationService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-verifications"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    },
+  });
+};
+
+export const useRejectVerification = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      rejection_reason,
+    }: {
+      id: number | string;
+      rejection_reason: string;
+    }) => rejectVerificationService(id, rejection_reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-verifications"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    },
+  });
+};
+
+
+export const useApproveTransfer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => approveTransferService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    },
+  });
+};
+
+export const useRejectTransfer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => rejectTransferService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    },
+  });
+};
+
+
+export const useAdminCards = (page = 1, perPage = 10, status?: string) => {
+  const { token } = useUser();
+  return useQuery<PagedResult<AdminCardItem>>({
+    queryKey: ["admin-cards", page, perPage, status ?? "all"],
+    enabled: !!token,
+    queryFn: async () => {
+      const body = await getAdminCardsService({
+        page,
+        per_page: perPage,
+        status: status && status !== "all" ? status : undefined,
+      });
+      return toPaged<AdminCardItem>(body, perPage);
+    },
+  });
+};
+
+export const useApproveAdminCard = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      spending_limit,
+    }: {
+      id: number | string;
+      spending_limit: number;
+    }) => approveAdminCardService(id, spending_limit),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-cards"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    },
+  });
+};
+
+
+export const useAdminLoans = (page = 1, perPage = 10, status?: string) => {
+  const { token } = useUser();
+  return useQuery<PagedResult<AdminLoanItem>>({
+    queryKey: ["admin-loans", page, perPage, status ?? "all"],
+    enabled: !!token,
+    queryFn: async () => {
+      const body = await getAdminLoansService({
+        page,
+        per_page: perPage,
+        status: status && status !== "all" ? status : undefined,
+      });
+      return toPaged<AdminLoanItem>(body, perPage);
+    },
+  });
+};
+
+export const useDisburseAdminLoan = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => disburseAdminLoanService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-loans"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    },
+  });
+};
+
+export const useRejectAdminLoan = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number | string; reason?: string }) =>
+      rejectAdminLoanService(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-loans"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    },
+  });
+};
+
+
+export const useAdminReferrals = (params?: {
   status?: string;
-  user_id?: number | string;
   search?: string;
   page?: number;
   per_page?: number;
 }) => {
   const { token } = useUser();
-  return useQuery({
+  return useQuery<PagedResult<AdminReferralItem>>({
     queryKey: [
-      "admin-withdrawal-codes",
+      "admin-referrals",
       params?.page ?? 1,
-      params?.per_page ?? 20,
+      params?.per_page ?? 10,
       params?.status ?? "all",
       params?.search ?? "",
-      params?.user_id ?? "all",
     ],
     enabled: !!token,
-    queryFn: () => getAdminWithdrawalCodesService(params),
+    queryFn: async () => {
+      const body = await getAdminReferralsService({
+        ...params,
+        status:
+          params?.status && params?.status !== "all"
+            ? params.status
+            : undefined,
+      });
+      return toPaged<AdminReferralItem>(body, params?.per_page ?? 10);
+    },
   });
 };

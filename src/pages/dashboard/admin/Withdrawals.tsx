@@ -1,97 +1,62 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { FaCheck, FaXmark, FaCircleCheck } from "react-icons/fa6";
+import { FaCheck, FaXmark } from "react-icons/fa6";
 import ReusableTable from "../../../utility/ReusableTable";
 import ActionCell from "../../../components/ui/ActionCell";
 import StatusBadge from "../../../components/ui/StatusBadge";
-import Modal from "../../../components/modal/Modal";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
+import WithdrawalActionModal from "../../../components/modal/WithdrawalActionModal";
 import {
   useAdminWithdrawals,
   useApproveWithdrawal,
   useRejectWithdrawal,
-  useCompleteWithdrawal,
-  useAdminWallets,
 } from "../../../hooks/useAdminData";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
 import { getErrorMessage } from "../../../helpers/api";
 import type { TransactionItem } from "../../../lib/interfaces";
 
-type Target = TransactionItem | null;
-type ActionType = "approve" | "reject" | "complete";
+type ActionType = "approve" | "reject";
 
 const Withdrawals: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selected, setSelected] = useState<TransactionItem | null>(null);
   const [viewModal, setViewModal] = useState(false);
-  const [actionTarget, setActionTarget] = useState<Target>(null);
+  const [actionTarget, setActionTarget] = useState<TransactionItem | null>(null);
   const [actionType, setActionType] = useState<ActionType>("approve");
-  const [remarks, setRemarks] = useState("");
-  const [payoutWalletId, setPayoutWalletId] = useState<string>("");
 
   const { data, isLoading, error } = useAdminWithdrawals(currentPage, itemsPerPage);
   const withdrawals = data?.items ?? [];
-  const { data: walletsData } = useAdminWallets();
-  const companyWallets = walletsData?.items ?? [];
 
   const approveMutation = useApproveWithdrawal();
   const rejectMutation = useRejectWithdrawal();
-  const completeMutation = useCompleteWithdrawal();
-  const mutation =
-    actionType === "approve"
-      ? approveMutation
-      : actionType === "reject"
-        ? rejectMutation
-        : completeMutation;
+  const mutation = actionType === "approve" ? approveMutation : rejectMutation;
 
   const openAction = (item: TransactionItem, type: ActionType) => {
     setActionTarget(item);
     setActionType(type);
-    setRemarks("");
-    setPayoutWalletId("");
   };
 
-  const runAction = async () => {
-    if (!actionTarget) return;
-    if (!remarks.trim()) {
-      toast.error("Remarks are required");
-      return;
-    }
-
+  const handleActionSubmit = async (id: number | string, remarks: string) => {
     try {
       if (actionType === "approve") {
         await approveMutation.mutateAsync({
-          withdrawalId: actionTarget.id,
+          withdrawalId: Number(id),
           remarks: remarks.trim(),
         });
         toast.success(
-          `${actionTarget.user_name || "User"}'s withdrawal approved`
+          `${actionTarget?.user_name || "User"}'s withdrawal approved`
         );
-      } else if (actionType === "reject") {
+      } else {
         await rejectMutation.mutateAsync({
-          withdrawalId: actionTarget.id,
+          withdrawalId: Number(id),
           remarks: remarks.trim(),
         });
         toast.error(
-          `${actionTarget.user_name || "User"}'s withdrawal rejected`
-        );
-      } else {
-        if (!payoutWalletId) {
-          toast.error("Select a payout wallet");
-          return;
-        }
-        await completeMutation.mutateAsync({
-          withdrawalId: actionTarget.id,
-          wallet_address_id: Number(payoutWalletId),
-          remarks: remarks.trim(),
-        });
-        toast.success(
-          `${actionTarget.user_name || "User"}'s withdrawal completed`
+          `${actionTarget?.user_name || "User"}'s withdrawal rejected`
         );
       }
       setActionTarget(null);
-      setRemarks("");
     } catch (err) {
       toast.error(getErrorMessage(err, "Action failed"));
     }
@@ -105,25 +70,29 @@ const Withdrawals: React.FC = () => {
     }
   };
 
-  const columns = [
+  const requestColumns = [
     {
       label: "TRANSACTION ID",
       key: "transaction_id",
       render: (item: TransactionItem) => (
-        <span className="font-semibold">{item.transaction_id}</span>
+        <span className="font-semibold text-[11px] text-[#0B2D5B]">
+          {item.transaction_id}
+        </span>
       ),
     },
     {
       label: "USER",
       key: "user_name",
-      render: (item: TransactionItem) => item.user_name || "-",
+      render: (item: TransactionItem) => (
+        <span className="text-[11px] font-medium">{item.user_name || "-"}</span>
+      ),
     },
     {
-      label: "NETWORK",
+      label: "NETWORK / CRYPTO",
       key: "network",
       render: (item: TransactionItem) => (
-        <span className="px-3 py-1 rounded-xl font-medium bg-primary/10 text-primary">
-          {item.network}
+        <span className="px-2 py-0.5 rounded font-semibold text-[10px] bg-primary/10 text-primary uppercase">
+          {item.network || "USDT"}
         </span>
       ),
     },
@@ -131,25 +100,28 @@ const Withdrawals: React.FC = () => {
       label: "AMOUNT",
       key: "amount",
       render: (item: TransactionItem) => (
-        <span className="font-semibold">{item.amount}.00 USDT</span>
+        <span className="font-semibold text-[11px] text-[#0B2D5B]">
+          {item.amount}.00 USDT
+        </span>
       ),
     },
     {
       label: "DESTINATION ADDRESS",
       key: "destination_address",
-      render: (item: TransactionItem) => item.destination_address || "-",
+      render: (item: TransactionItem) => (
+        <span className="font-mono text-[10.5px] text-gray-600 break-all">
+          {item.destination_address || "-"}
+        </span>
+      ),
     },
     {
-      label: "CTO CODE",
+      label: "CLEARANCE OTC",
       key: "cto_code",
-      render: (item: TransactionItem) =>
-        item.cto_code ? (
-          <span className="font-mono font-semibold text-[11px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[#172b4d]">
-            {item.cto_code}
-          </span>
-        ) : (
-          <span className="text-gray-400">-</span>
-        ),
+      render: (item: TransactionItem) => (
+        <span className="font-mono text-[10.5px] text-primary font-semibold">
+          {item.cto_code || item.otp_code || "—"}
+        </span>
+      ),
     },
     {
       label: "STATUS",
@@ -157,9 +129,13 @@ const Withdrawals: React.FC = () => {
       render: (item: TransactionItem) => <StatusBadge status={item.status} />,
     },
     {
-      label: "DATE & TIME",
+      label: "DATE",
       key: "date",
-      render: (item: TransactionItem) => formatISODateToCustom(item.date),
+      render: (item: TransactionItem) => (
+        <span className="text-[11px] text-[#8190a3]">
+          {formatISODateToCustom(item.date)}
+        </span>
+      ),
     },
     {
       label: "ACTION",
@@ -167,168 +143,77 @@ const Withdrawals: React.FC = () => {
       render: (item: TransactionItem) => (
         <ActionCell
           canView={true}
-          rowId={Number(item.id)}
+          rowId={item.id}
           onView={() => openView(item.id)}
-          otherActions={
-            item.status === "pending"
+          otherActions={[
+            ...(item.status === "pending"
               ? [
                   {
                     name: "Approve",
                     icon: <FaCheck />,
-                    tone: "success",
+                    tone: "success" as const,
                     action: () => openAction(item, "approve"),
                   },
                   {
                     name: "Reject",
                     icon: <FaXmark />,
-                    tone: "danger",
+                    tone: "danger" as const,
                     action: () => openAction(item, "reject"),
                   },
                 ]
-              : item.status === "approved"
-                ? [
-                    {
-                      name: "Complete",
-                      icon: <FaCircleCheck />,
-                      tone: "default",
-                      action: () => openAction(item, "complete"),
-                    },
-                    {
-                      name: "Reject",
-                      icon: <FaXmark />,
-                      tone: "danger",
-                      action: () => openAction(item, "reject"),
-                    },
-                  ]
-                : []
-          }
+              : []),
+          ]}
         />
       ),
     },
   ];
 
-  const actionCopy = {
-    approve: {
-      title: "Approve this withdrawal?",
-      body: `Release ${actionTarget?.amount}.00 USDT to ${actionTarget?.user_name || "the user"}'s destination address?`,
-      confirm: "Yes, Approve",
-      className: "bg-[#05a957] hover:bg-[#04984e]",
-      placeholder: "e.g. Queued for payout",
-    },
-    reject: {
-      title: "Reject this withdrawal?",
-      body: `Decline the ${actionTarget?.amount}.00 USDT withdrawal request from ${actionTarget?.user_name || "the user"}?`,
-      confirm: "Yes, Reject",
-      className: "bg-red-500 hover:bg-red-600",
-      placeholder: "e.g. Invalid recipient wallet address",
-    },
-    complete: {
-      title: "Complete this withdrawal?",
-      body: `Deduct ${actionTarget?.amount}.00 USDT from a company payout wallet and mark as paid.`,
-      confirm: "Yes, Complete",
-      className: "bg-primary hover:bg-primary/80",
-      placeholder: "e.g. Payout broadcasted and confirmed",
-    },
-  } as const;
-
   return (
     <>
-      <div>
+      <div className="mb-4">
         <h1 className="text-[20px] font-bold tracking-[-0.4px] text-[#0B2D5B]">
-          Withdrawal Requests
+          Withdrawals Management
         </h1>
         <p className="mt-0.5 text-[15px] text-[#8190a3]">
-          Review and approve or reject withdrawal requests.
+          Review, approve, or reject user funds withdrawal requests.
         </p>
       </div>
 
-      <ReusableTable
-        isLoading={isLoading}
-        error={error}
-        data={withdrawals}
-        columns={columns}
-        currentPage={currentPage}
-        totalPages={data?.totalPages ?? 1}
-        totalItems={data?.total ?? withdrawals.length}
-        setCurrentPage={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        setItemsPerPage={setItemsPerPage}
-        hasSerialNo={true}
-      />
+      <div className="mt-6">
+        <ReusableTable
+          isLoading={isLoading}
+          error={error}
+          data={withdrawals}
+          columns={requestColumns}
+          currentPage={currentPage}
+          totalPages={data?.totalPages ?? 1}
+          totalItems={data?.total ?? withdrawals.length}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          setItemsPerPage={setItemsPerPage}
+          hasSerialNo={true}
+        />
+      </div>
 
-      <ViewTransactionModal
-        transaction={selected}
-        isOpen={viewModal}
-        onClose={() => setViewModal(false)}
-      />
-
-      {actionTarget && (
-        <Modal onClose={() => setActionTarget(null)}>
-          <div className="p-5">
-            <h3 className="text-[18px] font-bold text-[#0B2D5B]">
-              {actionCopy[actionType].title}
-            </h3>
-            <p className="mt-1 text-[13px] text-[#8190a3]">
-              {actionCopy[actionType].body}
-            </p>
-
-            {actionType === "complete" && (
-              <div className="mt-5">
-                <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
-                  Payout Wallet
-                </label>
-                <select
-                  value={payoutWalletId}
-                  onChange={(e) => setPayoutWalletId(e.target.value)}
-                  className="w-full rounded-lg border border-[#dfe8f1] px-3 py-2.5 text-sm outline-none focus:border-primary"
-                >
-                  <option value="">Select company wallet</option>
-                  {companyWallets.map((wallet) => (
-                    <option key={wallet.id} value={wallet.id}>
-                      {wallet.type} — {wallet.address.slice(0, 12)}… (
-                      {wallet.balance} USDT)
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div className="mt-5">
-              <label className="mb-2 block text-[12px] font-semibold text-[#172b4d]">
-                Remarks
-              </label>
-              <textarea
-                rows={3}
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder={actionCopy[actionType].placeholder}
-                className="w-full resize-none rounded-lg border border-[#dfe8f1] px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setActionTarget(null)}
-                disabled={mutation.isPending}
-                className="rounded-lg border border-[#dfe8f1] py-3 text-sm font-semibold text-[#52677c] transition hover:bg-[#f8fafc] disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={runAction}
-                disabled={mutation.isPending}
-                className={`rounded-lg py-3 text-sm font-semibold text-white transition disabled:opacity-60 ${actionCopy[actionType].className}`}
-              >
-                {mutation.isPending
-                  ? "Please wait..."
-                  : actionCopy[actionType].confirm}
-              </button>
-            </div>
-          </div>
-        </Modal>
+      {viewModal && selected && (
+        <ViewTransactionModal
+          transaction={selected}
+          isOpen={viewModal}
+          onClose={() => {
+            setViewModal(false);
+            setSelected(null);
+          }}
+        />
       )}
+
+      <WithdrawalActionModal
+        isOpen={!!actionTarget}
+        onClose={() => setActionTarget(null)}
+        withdrawal={actionTarget}
+        actionType={actionType}
+        onConfirm={handleActionSubmit}
+        isSubmitting={mutation.isPending}
+      />
     </>
   );
 };

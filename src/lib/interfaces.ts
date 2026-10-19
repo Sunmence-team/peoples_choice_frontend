@@ -4,8 +4,8 @@ import type { IconType } from "react-icons/lib";
 export type OverviewCardsProps = {
   title: string;
   value: string | number;
-  icon?: IconType;
-  icon2: IconType;
+  icon?: any;
+  icon2?: any;
   className?: string;
 };
 
@@ -164,6 +164,9 @@ export interface UserProps {
   is_disabled?: boolean;
   is_deleted?: boolean;
   disable_reason?: string | null;
+  account_number?: string;
+  kyc_status?: string;
+  is_verified?: boolean;
   email_verified_at?: string | null;
   created_at: string;
   updated_at: string;
@@ -199,6 +202,9 @@ export interface AdminUser extends Partial<UserProps> {
   role: string;
   status?: "active" | "disabled" | "deleted";
   wallet_balance?: number;
+  account_number?: string;
+  kyc_status?: string;
+  is_verified?: boolean;
   created_at: string;
 }
 

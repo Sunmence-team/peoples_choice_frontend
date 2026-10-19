@@ -8,7 +8,7 @@ import {
   IoWalletOutline,
 } from "react-icons/io5";
 import { LuUsersRound } from "react-icons/lu";
-import { User } from "lucide-react";
+import { CreditCard, Landmark, User } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
 import { isAdminRole } from "../../helpers/role";
 
@@ -24,14 +24,14 @@ const clientBottomNavItems = [
     path: "/dashboard/transfer",
   },
   {
-    name: "Deposit",
-    icon: IoArrowDown,
-    path: "/dashboard/deposit",
+    name: "Loans",
+    icon: Landmark,
+    path: "/dashboard/loans",
   },
   {
-    name: "History",
-    icon: IoReceipt,
-    path: "/dashboard/transaction-history",
+    name: "Cards",
+    icon: CreditCard,
+    path: "/dashboard/cards",
   },
   {
     name: "Profile",
