@@ -16,7 +16,14 @@ import {
   type RecipientLookupResult,
 } from "../../../services/transferServices";
 import { getErrorMessage } from "../../../helpers/api";
-import { CheckCircle2, Search, Building2, Globe2, AlertCircle, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Search,
+  Building2,
+  Globe2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 
 type TransferTab = "internal" | "external";
 
@@ -29,11 +36,12 @@ export default function Transfer() {
 
   // Recipient live lookup verification
   const [recipientInput, setRecipientInput] = useState("");
-  const [recipientVerification, setRecipientVerification] = useState<RecipientLookupResult>({
-    valid: false,
-    name: "",
-    accountNumber: "",
-  });
+  const [recipientVerification, setRecipientVerification] =
+    useState<RecipientLookupResult>({
+      valid: false,
+      name: "",
+      accountNumber: "",
+    });
   const [isVerifyingRecipient, setIsVerifyingRecipient] = useState(false);
 
   // External wire directory data
@@ -45,30 +53,32 @@ export default function Transfer() {
 
   // 1. Debounced recipient lookup via backend API
   useEffect(() => {
-    if (!recipientInput.trim()) {
-      setRecipientVerification({ valid: false, name: "", accountNumber: "" });
-      setIsVerifyingRecipient(false);
-      return;
-    }
-
-    setIsVerifyingRecipient(true);
-    const handler = setTimeout(async () => {
-      try {
-        const res = await lookupRecipientService(recipientInput);
-        setRecipientVerification(res);
-      } catch (err) {
-        setRecipientVerification({
-          valid: false,
-          name: "",
-          accountNumber: "",
-          message: getErrorMessage(err, "Recipient account not found"),
-        });
-      } finally {
+    queueMicrotask(() => {
+      if (!recipientInput.trim()) {
+        setRecipientVerification({ valid: false, name: "", accountNumber: "" });
         setIsVerifyingRecipient(false);
+        return;
       }
-    }, 450);
 
-    return () => clearTimeout(handler);
+      setIsVerifyingRecipient(true);
+      const handler = setTimeout(async () => {
+        try {
+          const res = await lookupRecipientService(recipientInput);
+          setRecipientVerification(res);
+        } catch (err) {
+          setRecipientVerification({
+            valid: false,
+            name: "",
+            accountNumber: "",
+            message: getErrorMessage(err, "Recipient account not found"),
+          });
+        } finally {
+          setIsVerifyingRecipient(false);
+        }
+      }, 450);
+
+      return () => clearTimeout(handler);
+    });
   }, [recipientInput]);
 
   // 2. Load countries on mount dynamically from GET /api/banks/countries
@@ -93,7 +103,10 @@ export default function Transfer() {
     const fetchBanks = async () => {
       setIsBanksLoading(true);
       try {
-        const banks = await getBanksByCountryService(selectedCountry, bankSearch);
+        const banks = await getBanksByCountryService(
+          selectedCountry,
+          bankSearch,
+        );
         setAvailableBanks(banks);
       } catch (err) {
         console.error("Failed to load banks for country", err);
@@ -110,27 +123,33 @@ export default function Transfer() {
       .positive("Amount must be greater than zero")
       .max(
         availableBalance,
-        `Amount cannot exceed available balance of $${availableBalance.toLocaleString()}`
+        `Amount cannot exceed available balance of $${availableBalance.toLocaleString()}`,
       )
       .required("Transfer amount is required"),
     notes: Yup.string().trim().max(255),
   });
 
   const wireSchema = Yup.object().shape({
-    recipient_name: Yup.string().trim().required("Beneficiary name is required"),
+    recipient_name: Yup.string()
+      .trim()
+      .required("Beneficiary name is required"),
     bank_name: Yup.string().trim().required("Destination bank is required"),
-    bank_country: Yup.string().trim().required("Destination country is required"),
+    bank_country: Yup.string()
+      .trim()
+      .required("Destination country is required"),
     recipient_account_number: Yup.string()
       .trim()
       .required("Destination account number or IBAN is required"),
-    routing_number: Yup.string().trim().required("Routing / ABA code is required"),
+    routing_number: Yup.string()
+      .trim()
+      .required("Routing / ABA code is required"),
     swift_bic: Yup.string().trim().required("SWIFT / BIC code is required"),
     amount: Yup.number()
       .typeError("Please enter a valid amount")
       .positive("Amount must be greater than zero")
       .max(
         availableBalance,
-        `Amount cannot exceed available balance of $${availableBalance.toLocaleString()}`
+        `Amount cannot exceed available balance of $${availableBalance.toLocaleString()}`,
       )
       .required("Wire amount is required"),
     notes: Yup.string().trim().max(255),
@@ -139,9 +158,12 @@ export default function Transfer() {
   return (
     <div>
       <div className="mb-3 sm:mb-4">
-        <h2 className="text-base sm:text-lg text-primary font-bold">Transfer Money</h2>
+        <h2 className="text-base sm:text-lg text-primary font-bold">
+          Transfer Money
+        </h2>
         <p className="hidden md:block mt-0.5 text-xs font-medium text-gray-500">
-          Transfer funds within People's Choice Bank or wire to external accounts globally.
+          Transfer funds within People's Choice Bank or wire to external
+          accounts globally.
         </p>
       </div>
 
@@ -173,9 +195,15 @@ export default function Transfer() {
 
         {/* Available Balance banner */}
         <div className="mb-4 flex items-center justify-between rounded-lg bg-gray-50 p-2.5 sm:p-3 border border-gray-200 text-xs max-w-xl">
-          <span className="text-gray-500 font-medium">Available Account Balance:</span>
+          <span className="text-gray-500 font-medium">
+            Available Account Balance:
+          </span>
           <span className="font-bold text-primary">
-            ${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD
+            $
+            {availableBalance.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}{" "}
+            USD
           </span>
         </div>
 
@@ -191,7 +219,7 @@ export default function Transfer() {
               if (!recipientVerification.valid) {
                 toast.error(
                   recipientVerification.message ||
-                    "Please enter a valid recipient account or username"
+                    "Please enter a valid recipient account or username",
                 );
                 return;
               }
@@ -199,7 +227,8 @@ export default function Transfer() {
               try {
                 const res = await internalTransferMutation.mutateAsync({
                   recipient_account:
-                    recipientVerification.accountNumber || recipientInput.trim(),
+                    recipientVerification.accountNumber ||
+                    recipientInput.trim(),
                   amount: Number(values.amount),
                   notes: values.notes.trim() || undefined,
                 });
@@ -207,9 +236,15 @@ export default function Transfer() {
                 toast.success(res.message || "Transfer completed successfully");
                 resetForm();
                 setRecipientInput("");
-                setRecipientVerification({ valid: false, name: "", accountNumber: "" });
+                setRecipientVerification({
+                  valid: false,
+                  name: "",
+                  accountNumber: "",
+                });
               } catch (err) {
-                toast.error(getErrorMessage(err, "Failed to complete transfer"));
+                toast.error(
+                  getErrorMessage(err, "Failed to complete transfer"),
+                );
               } finally {
                 setSubmitting(false);
               }
@@ -308,7 +343,9 @@ export default function Transfer() {
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   ) : null}
-                  <span>{isSubmitting ? "Processing..." : "Transfer Funds"}</span>
+                  <span>
+                    {isSubmitting ? "Processing..." : "Transfer Funds"}
+                  </span>
                 </button>
               </Form>
             )}
@@ -324,7 +361,9 @@ export default function Transfer() {
               bank_name: availableBanks[0]?.name || "",
               recipient_account_number: "",
               routing_number: "",
-              swift_bic: availableBanks[0]?.code ? `${availableBanks[0].code}XXX` : "",
+              swift_bic: availableBanks[0]?.code
+                ? `${availableBanks[0].code}XXX`
+                : "",
               amount: "",
               notes: "",
             }}
@@ -337,7 +376,8 @@ export default function Transfer() {
                   bank_name: values.bank_name.trim(),
                   bank_code: values.swift_bic.trim() || "PCBKUS33",
                   bank_country: values.bank_country,
-                  recipient_account_number: values.recipient_account_number.trim(),
+                  recipient_account_number:
+                    values.recipient_account_number.trim(),
                   routing_number: values.routing_number.trim() || undefined,
                   swift_bic: values.swift_bic.trim() || undefined,
                   amount: Number(values.amount),
@@ -346,11 +386,13 @@ export default function Transfer() {
 
                 toast.success(
                   res.message ||
-                    "External wire transfer submitted successfully and pending clearance"
+                    "External wire transfer submitted successfully and pending clearance",
                 );
                 resetForm();
               } catch (err) {
-                toast.error(getErrorMessage(err, "Failed to submit wire transfer"));
+                toast.error(
+                  getErrorMessage(err, "Failed to submit wire transfer"),
+                );
               } finally {
                 setSubmitting(false);
               }
@@ -396,7 +438,9 @@ export default function Transfer() {
                       onChange={(e) => {
                         const bName = e.target.value;
                         setFieldValue("bank_name", bName);
-                        const found = availableBanks.find((b) => b.name === bName);
+                        const found = availableBanks.find(
+                          (b) => b.name === bName,
+                        );
                         if (found?.code) {
                           setFieldValue("swift_bic", `${found.code}XXX`);
                         }
@@ -407,7 +451,9 @@ export default function Transfer() {
                       {isBanksLoading ? (
                         <option value="">Querying live banks...</option>
                       ) : availableBanks.length === 0 ? (
-                        <option value="">No institutions found for country</option>
+                        <option value="">
+                          No institutions found for country
+                        </option>
                       ) : (
                         availableBanks.map((b) => (
                           <option key={b.name} value={b.name}>
@@ -551,7 +597,11 @@ export default function Transfer() {
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   ) : null}
-                  <span>{isSubmitting ? "Submitting Wire..." : "Submit Wire Transfer"}</span>
+                  <span>
+                    {isSubmitting
+                      ? "Submitting Wire..."
+                      : "Submit Wire Transfer"}
+                  </span>
                 </button>
               </Form>
             )}

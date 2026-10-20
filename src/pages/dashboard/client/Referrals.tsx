@@ -29,18 +29,20 @@ export default function Referrals() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
-    setIsLoading(true);
-    fetchReferralStatsService(user?.username, user?.id)
-      .then((res) => {
-        setSummary(res);
-        setReferrals(res.referrals || []);
-      })
-      .catch((err) => {
-        console.error("Failed to load referrals", err);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    queueMicrotask(() => {
+      setIsLoading(true);
+      fetchReferralStatsService(user?.username, user?.id)
+        .then((res) => {
+          setSummary(res);
+          setReferrals(res.referrals || []);
+        })
+        .catch((err) => {
+          console.error("Failed to load referrals", err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    });
   }, [user?.username, user?.id]);
 
   const handleCopyCode = async () => {
