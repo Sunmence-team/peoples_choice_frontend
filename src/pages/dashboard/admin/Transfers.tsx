@@ -26,7 +26,7 @@ const Transfers: React.FC = () => {
     currentPage,
     10,
     statusFilter,
-    "transfer",
+    "external",
   );
   const transfers = data?.items ?? [];
 
