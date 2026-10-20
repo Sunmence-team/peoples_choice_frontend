@@ -1,7 +1,6 @@
 import React from "react";
 import { LuUsersRound, LuWallet } from "react-icons/lu";
 import { HiOutlineArrowTrendingUp } from "react-icons/hi2";
-import { TbReceiptDollar } from "react-icons/tb";
 import { IoArrowDown, IoArrowUp } from "react-icons/io5";
 import OverviewCards from "../../../components/cards/OverviewCards";
 import ReusableTable from "../../../utility/ReusableTable";
@@ -15,6 +14,8 @@ import {
   formatISODateToCustom,
   formatterUtility,
 } from "../../../helpers/formatterUtility";
+import { Link } from "react-router-dom";
+import { MdArrowOutward } from "react-icons/md";
 
 const Overview: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useAdminDashboard();
@@ -128,10 +129,13 @@ const Overview: React.FC = () => {
           <h2 className="text-primary font-bold text-xl mb-5">
             Recent Transactions
           </h2>
-          <span className="flex items-center gap-1 text-[12px] text-[#8190a3]">
-            <TbReceiptDollar size={14} />{" "}
-            {transactionsPage?.total ?? adminTransactions.length} records
-          </span>
+          <Link
+            to={""}
+            className="flex items-center gap-1 text-[12px] text-[#8190a3]"
+          >
+            View all
+            <MdArrowOutward />
+          </Link>
         </div>
 
         <ReusableTable
@@ -146,6 +150,7 @@ const Overview: React.FC = () => {
           itemsPerPage={5}
           setItemsPerPage={() => {}}
           hasSerialNo={true}
+          showPagination={false}
         />
       </div>
     </>

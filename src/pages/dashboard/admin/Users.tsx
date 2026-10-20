@@ -17,11 +17,14 @@ import {
   useUpdateAdminUserBalance,
 } from "../../../hooks/useAdminData";
 import {
+  formatCompactAmount,
   formatShortDate,
   getInitials,
 } from "../../../helpers/formatterUtility";
 import { getErrorMessage } from "../../../helpers/api";
 import type { AdminUser } from "../../../lib/interfaces";
+import AdminUserCodesModal from "../../../components/modal/AdminUserCodesModal";
+import { KeyRound } from "lucide-react";
 
 const Users: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,6 +36,7 @@ const Users: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<
     "enable" | "delete" | "restore" | null
   >(null);
+  const [viewCtoCodes, setViewCtoCodes] = useState(false);
 
   const { data, isLoading, error } = useAdminUsers(currentPage, itemsPerPage);
   const users: AdminUser[] = data?.data ?? [];
@@ -62,7 +66,10 @@ const Users: React.FC = () => {
     }
   };
 
-  const handleDisableConfirm = async (userId: number | string, reasonText: string) => {
+  const handleDisableConfirm = async (
+    userId: number | string,
+    reasonText: string,
+  ) => {
     try {
       await disableMutation.mutateAsync({
         userId: Number(userId),
@@ -80,7 +87,7 @@ const Users: React.FC = () => {
   const handleBalanceConfirm = async (
     userId: number | string,
     amount: number,
-    description: string
+    description: string,
   ) => {
     try {
       await balanceMutation.mutateAsync({
@@ -120,23 +127,23 @@ const Users: React.FC = () => {
     }
   };
 
-  const statusBadge = (status: AdminUser["status"]) => {
-    const isSuccess = status === "active";
-    const isDestructive = status === "disabled" || status === "deleted";
-    return (
-      <span
-        className={`px-3 py-1 rounded-xl font-medium capitalize ${
-          isSuccess
-            ? "bg-green-100 text-green-600"
-            : isDestructive
-              ? "bg-red-100 text-red-600"
-              : "bg-gray-100 text-gray-600"
-        }`}
-      >
-        {status}
-      </span>
-    );
-  };
+  // const statusBadge = (status: AdminUser["status"]) => {
+  //   const isSuccess = status === "active";
+  //   const isDestructive = status === "disabled" || status === "deleted";
+  //   return (
+  //     <span
+  //       className={`px-3 py-1 rounded-xl font-medium capitalize ${
+  //         isSuccess
+  //           ? "bg-green-100 text-green-600"
+  //           : isDestructive
+  //             ? "bg-red-100 text-red-600"
+  //             : "bg-gray-100 text-gray-600"
+  //       }`}
+  //     >
+  //       {status}
+  //     </span>
+  //   );
+  // };
 
   const columns = [
     {
@@ -177,7 +184,7 @@ const Users: React.FC = () => {
       key: "balance",
       render: (item: AdminUser) => (
         <span className="font-semibold text-[12px] text-[#0B2D5B]">
-          ${item.balance || 0} USD
+          {formatCompactAmount(Number(item.balance)) || 0} USD
         </span>
       ),
     },
@@ -194,7 +201,8 @@ const Users: React.FC = () => {
       label: "KYC STATUS",
       key: "kyc_status",
       render: (item: AdminUser) => {
-        const kyc = item.kyc_status || (item.is_verified ? "verified" : "unverified");
+        const kyc =
+          item.kyc_status || (item.is_verified ? "verified" : "unverified");
         return (
           <span
             className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
@@ -210,11 +218,11 @@ const Users: React.FC = () => {
         );
       },
     },
-    {
-      label: "STATUS",
-      key: "status",
-      render: (item: AdminUser) => statusBadge(item.status),
-    },
+    // {
+    //   label: "STATUS",
+    //   key: "status",
+    //   render: (item: AdminUser) => statusBadge(item.status),
+    // },
     {
       label: "JOINED",
       key: "created_at",
@@ -236,7 +244,17 @@ const Users: React.FC = () => {
             setSelectedUser(item);
             setConfirmAction("delete");
           }}
+          toggleAction={() => setSelectedUser(item)}
           otherActions={[
+            {
+              name: "View CTO & Clearance Codes",
+              icon: <KeyRound size={11} className="text-[11px]!" />,
+              tone: "default",
+              action: () => {
+                // setSelectedUser(item);
+                setViewCtoCodes(true);
+              },
+            },
             {
               name: "Update Balance",
               icon: <LuWallet />,
@@ -283,7 +301,8 @@ const Users: React.FC = () => {
   const actionCopy = {
     enable: {
       title: "Enable this user account?",
-      message: "The user will regain full access to their dashboard and facilities.",
+      message:
+        "The user will regain full access to their dashboard and facilities.",
       text: "Yes, Enable",
     },
     delete: {
@@ -347,6 +366,14 @@ const Users: React.FC = () => {
           }
         }}
       />
+
+      {selectedUser && (
+        <AdminUserCodesModal
+          isOpen={viewCtoCodes}
+          onClose={() => setViewCtoCodes(false)}
+          user={selectedUser}
+        />
+      )}
 
       <AdminUserBalanceModal
         isOpen={balanceModal}

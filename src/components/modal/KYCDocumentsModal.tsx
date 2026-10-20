@@ -31,7 +31,8 @@ export const KYCDocumentsModal: React.FC<KYCDocumentsModalProps> = ({
               Identity Documents Inspection
             </h3>
             <p className="text-[11px] text-[#8190a3]">
-              {verification.user?.name} • Ref: {verification.document_number}
+              {verification.user?.first_name} {verification.user?.last_name} (
+              {verification.user?.email} )
             </p>
           </div>
           <span className="px-2.5 py-0.5 rounded text-[10px] font-semibold uppercase bg-primary/10 text-primary">

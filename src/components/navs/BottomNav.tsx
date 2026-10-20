@@ -74,7 +74,7 @@ const BottomNav: React.FC = () => {
   const items = isAdmin ? adminBottomNavItems : clientBottomNavItems;
 
   return (
-    <nav className="lg:hidden shrink-0 bg-white border-t border-primary/10 shadow-[0_-4px_16px_rgba(11,45,91,0.05)] pb-[env(safe-area-inset-bottom)]">
+    <nav className="lg:hidden shrink-0 bg-primary border-t border-primary/10 shadow-[0_-4px_16px_rgba(11,45,91,0.05)] pb-[env(safe-area-inset-bottom)]">
       <ul className="flex items-center justify-around px-2 py-1.5">
         {items.map((item) => (
           <li key={item.path} className="flex-1 max-w-[80px]">
@@ -83,8 +83,8 @@ const BottomNav: React.FC = () => {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center py-1 px-1 rounded-lg transition-all ${
                   isActive
-                    ? "text-primary font-bold bg-primary/10"
-                    : "text-[#66809c] hover:text-primary font-medium"
+                    ? "text-white font-bold bg-white/10"
+                    : "text-[#66809c] hover:text-white font-medium"
                 }`
               }
             >

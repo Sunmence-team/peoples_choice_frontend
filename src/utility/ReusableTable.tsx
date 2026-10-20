@@ -21,6 +21,7 @@ const ReusableTable = <T extends { id?: number | string }>({
   onToggleRowSelection,
   onToggleAllRows,
   getRowId,
+  showPagination = true,
 }: ReusableTableProps<T>) => {
   const selectedRowSet = new Set(selectedRowIds);
   const selectableRowIds = data
@@ -167,7 +168,7 @@ const ReusableTable = <T extends { id?: number | string }>({
           </tbody>
         </table>
 
-        {!isLoading && !error && data.length > 0 && (
+        {showPagination && !isLoading && !error && data.length > 0 && (
           <PaginationControls
             currentPage={currentPage}
             totalPages={totalPages}

@@ -66,7 +66,7 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
         ]
       : []),
     ...("otp_code" in transaction && transaction.otp_code
-      ? [{ label: "Email OTP", value: transaction.otp_code }]
+      ? [{ label: "OTP Code", value: transaction.otp_code }]
       : []),
     ...("cto_code" in transaction && transaction.cto_code
       ? [{ label: "CTO Code", value: transaction.cto_code }]

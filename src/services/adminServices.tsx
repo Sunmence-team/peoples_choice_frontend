@@ -1,6 +1,6 @@
 import api from "../helpers/api";
 import { unwrap } from "../helpers/response";
-import type { UserProps } from "../lib/interfaces";
+import type { AdminUserCtoResponse, UserProps } from "../lib/interfaces";
 
 export const getAdminDashboardService = async (): Promise<unknown> => {
   const res = await api.get("/admin/dashboard");
@@ -18,6 +18,13 @@ export const getAdminUsersService = async (params?: {
 
 export const getAdminUserService = async (userId: number | string) => {
   const res = await api.get(`/admin/user/${userId}`);
+  return res.data;
+};
+
+export const getAdminUserCtoCodeService = async (
+  userId: number | string,
+): Promise<AdminUserCtoResponse> => {
+  const res = await api.get(`/admin/user/${userId}/cto-code`);
   return res.data;
 };
 

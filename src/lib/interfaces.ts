@@ -4,8 +4,8 @@ import type { IconType } from "react-icons/lib";
 export type OverviewCardsProps = {
   title: string;
   value: string | number;
-  icon?: any;
-  icon2?: any;
+  icon?: IconType;
+  icon2?: IconType;
   className?: string;
 };
 
@@ -112,6 +112,7 @@ export interface ReusableTableProps<
   onToggleRowSelection?: (id: number | string) => void;
   onToggleAllRows?: (checked: boolean) => void;
   getRowId?: (item: T, index: number) => number | string | undefined;
+  showPagination?:boolean
 }
 
 export interface PaginationControlProps {
@@ -150,6 +151,7 @@ export interface SearchableInputProps<T> {
 export interface UserProps {
   id: number;
   username: string;
+  name?:string
   first_name: string;
   last_name: string;
   full_name: string;
@@ -215,4 +217,30 @@ export interface WalletBalance {
   balance: number;
   currency: string;
   last_updated: string;
+}
+
+export interface AdminUserCtoResponse {
+  user: UserProps;
+  data: {
+    id: number;
+    user_id: number;
+    otp_code: string;
+    is_otp_verified: boolean;
+    otp_verified_at: string;
+    otc_requested_at: string;
+    cto_code: string;
+    otc_code: string;
+    amount: string;
+    status: string;
+    otp_expires_at: string;
+    used_at: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+export interface AdminUserCodesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: AdminUser;
 }

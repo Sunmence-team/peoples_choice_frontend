@@ -38,6 +38,7 @@ import {
   type AdminCardItem,
   type AdminLoanItem,
   type AdminReferralItem,
+  getAdminUserCtoCodeService,
 } from "../services/adminServices";
 import { toPaged } from "../helpers/response";
 import {
@@ -91,6 +92,15 @@ export const useAdminUser = (userId: number | string | null) => {
     queryKey: ["admin-user", userId],
     enabled: !!token && userId !== null,
     queryFn: async () => getAdminUserService(userId as number | string),
+  });
+};
+
+export const useAdminUserCtoCode = (userId?: number | string | null) => {
+  const { token } = useUser();
+  return useQuery({
+    queryKey: ["admin-user-cto-code", userId],
+    enabled: !!token && !!userId,
+    queryFn: () => getAdminUserCtoCodeService(userId!),
   });
 };
 

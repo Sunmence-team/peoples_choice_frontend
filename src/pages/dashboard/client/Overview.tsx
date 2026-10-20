@@ -7,7 +7,6 @@ import {
   CreditCard,
   Gift,
 } from "lucide-react";
-import { IoMdArrowForward } from "react-icons/io";
 import { ActionCard } from "../../../components/cards/ActionCard";
 import ActionCell from "../../../components/ui/ActionCell";
 import ReusableTable from "../../../utility/ReusableTable";
@@ -23,6 +22,7 @@ import { getBankAccountNumber } from "../../../services/transferServices";
 import { Eye, EyeOff } from "lucide-react";
 import { formatISODateToCustom } from "../../../helpers/formatterUtility";
 import { useKYCStatus } from "../../../hooks/useClientData";
+import { MdArrowOutward } from "react-icons/md";
 
 export default function Overview() {
   const { user } = useUser();
@@ -245,21 +245,22 @@ export default function Overview() {
                 </span>
               </div>
 
-              {/* Routing & Account Coordinates */}
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
-                {kycStatus?.is_verified ||
-                kycStatus?.kyc_status === "verified" ? (
-                  ""
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => navigate("/dashboard/kyc")}
-                    className="rounded-sm bg-amber-400/20 px-1.5 py-0.2 text-[9px] font-bold text-amber-200 border border-amber-400/30 hover:bg-amber-400/30 transition cursor-pointer"
-                  >
-                    Complete KYC
-                  </button>
-                )}
-              </div>
+              {kycStatus && (
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+                  {kycStatus?.is_verified ||
+                  kycStatus?.kyc_status === "verified" ? (
+                    ""
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/dashboard/kyc")}
+                      className="rounded-sm bg-amber-400/20 px-1.5 py-0.2 text-[9px] font-bold text-amber-200 border border-amber-400/30 hover:bg-amber-400/30 transition cursor-pointer"
+                    >
+                      Complete KYC
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 pt-1 w-full sm:w-auto">
@@ -387,10 +388,10 @@ export default function Overview() {
 
           <button
             type="button"
-            className="cursor-pointer flex items-center gap-1 text-[11px] sm:text-xs text-primary font-semibold hover:underline"
+            className="cursor-pointer flex items-center hover:underline text-[11px] sm:text-xs text-primary font-semibold hover:underline"
             onClick={() => navigate("/dashboard/transaction-history")}
           >
-            View all <IoMdArrowForward size={13} />
+            View all <MdArrowOutward size={13} />
           </button>
         </div>
 
@@ -406,6 +407,7 @@ export default function Overview() {
           itemsPerPage={5}
           setItemsPerPage={() => {}}
           hasSerialNo={true}
+          showPagination={false}
         />
       </div>
 
