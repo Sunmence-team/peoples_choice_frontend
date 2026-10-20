@@ -186,39 +186,40 @@ export default function Cards() {
                   </div>
                 </div>
 
-                {/* EMV Chip & Reveal toggle */}
-                <div className="flex items-center justify-between mb-5">
-                  <div className="h-7 w-9 rounded-sm bg-gradient-to-br from-amber-200 via-amber-300 to-amber-500 border border-amber-400/40 shadow-inner flex items-center justify-center">
-                    <div className="w-full h-[1px] bg-amber-600/30" />
-                  </div>
+                {activeCard.status !== "pending" && (
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="h-7 w-9 rounded-sm bg-gradient-to-br from-amber-200 via-amber-300 to-amber-500 border border-amber-400/40 shadow-inner flex items-center justify-center">
+                      <div className="w-full h-[1px] bg-amber-600/30" />
+                    </div>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setRevealedCardId((prev) =>
-                        prev === activeCard.id ? null : activeCard.id,
-                      )
-                    }
-                    className="flex items-center gap-1 text-[10px] text-white/80 hover:text-white transition cursor-pointer bg-white/10 px-2 py-1 rounded-md"
-                    title={
-                      revealedCardId === activeCard.id
-                        ? "Hide details"
-                        : "Show details"
-                    }
-                  >
-                    {revealedCardId === activeCard.id ? (
-                      <>
-                        <EyeOff size={12} />
-                        <span>Hide</span>
-                      </>
-                    ) : (
-                      <>
-                        <Eye size={12} />
-                        <span>Reveal</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRevealedCardId((prev) =>
+                          prev === activeCard.id ? null : activeCard.id,
+                        )
+                      }
+                      className="flex items-center gap-1 text-[10px] text-white/80 hover:text-white transition cursor-pointer bg-white/10 px-2 py-1 rounded-md"
+                      title={
+                        revealedCardId === activeCard.id
+                          ? "Hide details"
+                          : "Show details"
+                      }
+                    >
+                      {revealedCardId === activeCard.id ? (
+                        <>
+                          <EyeOff size={12} />
+                          <span>Hide</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye size={12} />
+                          <span>Reveal</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
 
                 {/* 16-Digit Card Number */}
                 <div className="mb-4">
@@ -287,7 +288,7 @@ export default function Cards() {
 
             {/* Card Switcher Selector (if user has multiple cards) */}
             {cards.length > 1 && (
-              <div className="grid grid-cols-3 gap-2 overflow-x-auto no-scrollbar pb-1">
+              <div className="grid grid-cols-2 l:grid-cols-3 gap-4 lg:gap overflow-x-auto no-scrollbar p-1">
                 {cards.map((c) => {
                   const isSelected = String(c.id) === String(selectedCardId);
                   return (
