@@ -288,7 +288,7 @@ export default function Cards() {
 
             {/* Card Switcher Selector (if user has multiple cards) */}
             {cards.length > 1 && (
-              <div className="grid grid-cols-2 l:grid-cols-3 gap-4 lg:gap overflow-x-auto no-scrollbar p-1">
+              <div className="grid grid-cols-2 l:grid-cols-3 gap-4 lg:gap-2 overflow-x-auto no-scrollbar p-1">
                 {cards.map((c) => {
                   const isSelected = String(c.id) === String(selectedCardId);
                   return (
