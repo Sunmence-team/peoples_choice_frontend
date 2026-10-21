@@ -42,7 +42,9 @@ const SearchableInput = <T extends object>({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setQuery(initialValue || "");
+    queueMicrotask(() => {
+      setQuery(initialValue || "");
+    });
   }, [initialValue]);
 
   useEffect(() => {
@@ -117,7 +119,7 @@ const SearchableInput = <T extends object>({
                 currency?: string;
               };
               const codeVal = String(
-                itemObj.code || itemObj.iso_code || itemObj.currency || ""
+                itemObj.code || itemObj.iso_code || itemObj.currency || "",
               ).toLowerCase();
               return dVal.includes(q) || codeVal.includes(q);
             });
