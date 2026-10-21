@@ -146,6 +146,7 @@ export interface SearchableInputProps<T> {
   initialValue?: string;
   showIcon?: boolean;
   fetchOnEmpty?: boolean;
+  disabled?: boolean;
 }
 
 export interface UserProps {

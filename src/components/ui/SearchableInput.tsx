@@ -30,6 +30,7 @@ const SearchableInput = <T extends object>({
   initialValue = "",
   showIcon = true,
   fetchOnEmpty = false,
+  disabled = false,
 }: SearchableInputProps<T>) => {
   const [query, setQuery] = useState(initialValue);
   const [results, setResults] = useState<T[]>([]);
@@ -39,6 +40,10 @@ const SearchableInput = <T extends object>({
   const isSelecting = useRef(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setQuery(initialValue || "");
+  }, [initialValue]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -58,8 +63,14 @@ const SearchableInput = <T extends object>({
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
+      if (disabled || !endpoint) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+
       if (isSelecting.current) {
-        isSelecting.current = false; // Reset for next time
+        isSelecting.current = false;
         return;
       }
 
@@ -95,7 +106,26 @@ const SearchableInput = <T extends object>({
         }
 
         if (Array.isArray(data)) {
-          setResults(data);
+          let finalResults = data;
+          if (query && query.trim().length > 0) {
+            const q = query.trim().toLowerCase();
+            const clientFiltered = data.filter((item) => {
+              const dVal = String(item[displayKey] || "").toLowerCase();
+              const itemObj = item as {
+                code?: string;
+                iso_code?: string;
+                currency?: string;
+              };
+              const codeVal = String(
+                itemObj.code || itemObj.iso_code || itemObj.currency || ""
+              ).toLowerCase();
+              return dVal.includes(q) || codeVal.includes(q);
+            });
+            if (clientFiltered.length > 0) {
+              finalResults = clientFiltered;
+            }
+          }
+          setResults(finalResults);
           setShowDropdown(true);
         } else {
           setResults([]);
@@ -108,10 +138,10 @@ const SearchableInput = <T extends object>({
       } finally {
         setLoading(false);
       }
-    }, 500); // 500ms debounce
+    }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [query, fetchOnEmpty, endpoint, queryParam, dataKey]);
+  }, [query, fetchOnEmpty, endpoint, queryParam, dataKey, disabled]);
 
   const handleSelect = (item: T) => {
     isSelecting.current = true;
@@ -128,7 +158,11 @@ const SearchableInput = <T extends object>({
         </label>
       )}
 
-      <div className={`flex items-center h-12.5 px-2 ${inputContClassName}`}>
+      <div
+        className={`flex items-center ${
+          inputContClassName ? inputContClassName : "h-12.5 px-2"
+        }`}
+      >
         <div className="pointer-events-none">
           {loading ? (
             <FaSpinner className="animate-spin text-gray-400 ms-2" />
@@ -139,20 +173,25 @@ const SearchableInput = <T extends object>({
 
         <input
           type="text"
-          className="h-full indent-3 outline-0 w-full placeholder-gray-500 focus:outline-none text-sm transition duration-150 ease-in-out"
+          disabled={disabled}
+          className="h-full indent-2 outline-0 w-full placeholder-gray-400 focus:outline-none text-xs sm:text-xs text-primary transition duration-150 ease-in-out bg-transparent disabled:cursor-not-allowed disabled:text-gray-400"
           placeholder={placeholder}
           value={query}
           onChange={(e) => {
+            if (disabled) return;
             const value = e.target.value;
             setQuery(value);
             onInputChange?.(value);
             setShowDropdown(true);
           }}
-          onFocus={() => setShowDropdown(true)}
+          onFocus={() => {
+            if (!disabled) setShowDropdown(true);
+          }}
         />
       </div>
 
       {showDropdown &&
+        !disabled &&
         (results.length > 0 ||
           error ||
           (query && results.length === 0 && !loading)) && (
@@ -169,17 +208,36 @@ const SearchableInput = <T extends object>({
               </div>
             )}
 
-            {results.map((item, index) => (
-              <div
-                key={`result_${(item as { id?: string | number }).id ?? index}`}
-                className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-primary/5 group duration-500 transition-all"
-                onClick={() => handleSelect(item)}
-              >
-                <span className="block truncate font-normal group-hover:font-semibold duration-100 transition-all">
-                  {String(item[displayKey])}
-                </span>
-              </div>
-            ))}
+            {results.map((item, index) => {
+              const itemObj = item as {
+                id?: string | number;
+                code?: string;
+                iso_code?: string;
+                currency?: string;
+              };
+              const subLabel =
+                itemObj.code ||
+                (itemObj.iso_code && itemObj.currency
+                  ? `${itemObj.iso_code} • ${itemObj.currency}`
+                  : itemObj.currency || itemObj.iso_code);
+
+              return (
+                <div
+                  key={`result_${itemObj.id ?? itemObj.iso_code ?? itemObj.code ?? index}`}
+                  className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-primary/5 group duration-500 transition-all flex items-center justify-between"
+                  onClick={() => handleSelect(item)}
+                >
+                  <span className="block truncate font-normal group-hover:font-semibold duration-100 transition-all">
+                    {String(item[displayKey])}
+                  </span>
+                  {subLabel && (
+                    <span className="ml-2 text-[10px] text-gray-400 font-mono shrink-0">
+                      ({subLabel})
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
     </div>

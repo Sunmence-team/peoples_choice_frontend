@@ -8,17 +8,15 @@ import {
 } from "../../../hooks/useClientData";
 import {
   lookupRecipientService,
-  getSupportedCountriesService,
-  getBanksByCountryService,
   submitExternalWireTransferService,
   type BankCountry,
   type BankItem,
   type RecipientLookupResult,
 } from "../../../services/transferServices";
+import SearchableInput from "../../../components/ui/SearchableInput";
 import { getErrorMessage } from "../../../helpers/api";
 import {
   CheckCircle2,
-  Search,
   Building2,
   Globe2,
   AlertCircle,
@@ -46,11 +44,8 @@ export default function Transfer() {
   const [isVerifyingRecipient, setIsVerifyingRecipient] = useState(false);
 
   // External wire directory data
-  const [countries, setCountries] = useState<BankCountry[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [availableBanks, setAvailableBanks] = useState<BankItem[]>([]);
-  const [isBanksLoading, setIsBanksLoading] = useState(false);
-  const [bankSearch, setBankSearch] = useState("");
+  const [selectedCountryName, setSelectedCountryName] = useState<string>("");
 
   // 1. Debounced recipient lookup via backend API
   useEffect(() => {
@@ -81,42 +76,6 @@ export default function Transfer() {
       return () => clearTimeout(handler);
     });
   }, [recipientInput]);
-
-  // 2. Load countries on mount dynamically from GET /api/banks/countries
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const res = await getSupportedCountriesService();
-        if (Array.isArray(res) && res.length > 0) {
-          setCountries(res);
-          setSelectedCountry(res[0].iso_code);
-        }
-      } catch (err) {
-        console.error("Failed to load supported countries", err);
-      }
-    };
-    fetchCountries();
-  }, []);
-
-  // 3. Load banks when selected country changes or bankSearch updates dynamically
-  useEffect(() => {
-    if (!selectedCountry) return;
-    const fetchBanks = async () => {
-      setIsBanksLoading(true);
-      try {
-        const banks = await getBanksByCountryService(
-          selectedCountry,
-          bankSearch,
-        );
-        setAvailableBanks(banks);
-      } catch (err) {
-        console.error("Failed to load banks for country", err);
-      } finally {
-        setIsBanksLoading(false);
-      }
-    };
-    fetchBanks();
-  }, [selectedCountry, bankSearch]);
 
   const internalSchema = Yup.object().shape({
     amount: Yup.number()
@@ -354,13 +313,11 @@ export default function Transfer() {
           <Formik
             initialValues={{
               recipient_name: "",
-              bank_country: selectedCountry || "US",
-              bank_name: availableBanks[0]?.name || "",
+              bank_country: selectedCountry || "",
+              bank_name: "",
               recipient_account_number: "",
               routing_number: "",
-              swift_bic: availableBanks[0]?.code
-                ? `${availableBanks[0].code}XXX`
-                : "",
+              swift_bic: "",
               amount: "",
               notes: "",
             }}
@@ -386,6 +343,8 @@ export default function Transfer() {
                     "External wire transfer submitted successfully and pending clearance",
                 );
                 resetForm();
+                setSelectedCountry("");
+                setSelectedCountryName("");
               } catch (err) {
                 toast.error(
                   getErrorMessage(err, "Failed to submit wire transfer"),
@@ -397,32 +356,43 @@ export default function Transfer() {
           >
             {({ values, setFieldValue, isSubmitting }) => (
               <Form className="space-y-4 max-w-xl">
-                {/* Country and Bank Selection */}
+                {/* Country and Bank Selection with SearchableInput */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-primary">
                       <Globe2 className="h-3.5 w-3.5 text-gray-500" />
                       <span>Destination Country</span>
                     </label>
-                    <select
-                      value={values.bank_country}
-                      onChange={(e) => {
-                        const newC = e.target.value;
-                        setSelectedCountry(newC);
-                        setFieldValue("bank_country", newC);
+                    <SearchableInput<BankCountry>
+                      endpoint="/banks/countries"
+                      placeholder="Search destination country..."
+                      displayKey="name"
+                      dataKey="data"
+                      // fetchOnEmpty={true}
+                      initialValue={selectedCountryName}
+                      inputContClassName="h-10 w-full p-2 rounded-lg border border-gray-200 bg-white text-xs transition focus-within:border-primary"
+                      onSelect={(item: BankCountry) => {
+                        setSelectedCountry(item.iso_code);
+                        setSelectedCountryName(item.name);
+                        setFieldValue("bank_country", item.iso_code);
+                        setFieldValue("bank_name", "");
+                        setFieldValue("swift_bic", "");
                       }}
-                      className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary"
-                    >
-                      {countries.length === 0 ? (
-                        <option value="">Loading countries...</option>
-                      ) : (
-                        countries.map((c) => (
-                          <option key={c.iso_code} value={c.iso_code}>
-                            {c.name} ({c.currency})
-                          </option>
-                        ))
-                      )}
-                    </select>
+                      onInputChange={(val) => {
+                        if (!val) {
+                          setSelectedCountry("");
+                          setSelectedCountryName("");
+                          setFieldValue("bank_country", "");
+                          setFieldValue("bank_name", "");
+                          setFieldValue("swift_bic", "");
+                        }
+                      }}
+                    />
+                    <ErrorMessage
+                      name="bank_country"
+                      component="div"
+                      className="text-red-500 text-[10px] mt-1"
+                    />
                   </div>
 
                   <div>
@@ -430,53 +400,43 @@ export default function Transfer() {
                       <Building2 className="h-3.5 w-3.5 text-gray-500" />
                       <span>Destination Bank</span>
                     </label>
-                    <select
-                      value={values.bank_name}
-                      onChange={(e) => {
-                        const bName = e.target.value;
-                        setFieldValue("bank_name", bName);
-                        const found = availableBanks.find(
-                          (b) => b.name === bName,
-                        );
-                        if (found?.code) {
-                          setFieldValue("swift_bic", `${found.code}XXX`);
+                    <SearchableInput<BankItem>
+                      endpoint={
+                        values.bank_country
+                          ? `/banks?country=${encodeURIComponent(values.bank_country.toLowerCase())}`
+                          : ""
+                      }
+                      disabled={!values.bank_country}
+                      placeholder={
+                        !values.bank_country
+                          ? "Select a destination country first"
+                          : "Search destination bank..."
+                      }
+                      displayKey="name"
+                      dataKey="data"
+                      fetchOnEmpty={true}
+                      initialValue={values.bank_name}
+                      inputContClassName={`h-10 p-2 w-full rounded-lg border border-gray-200 text-xs! transition ${
+                        !values.bank_country
+                          ? "bg-gray-100 opacity-60 cursor-not-allowed"
+                          : "bg-white focus-within:border-primary"
+                      }`}
+                      onSelect={(item: BankItem) => {
+                        setFieldValue("bank_name", item.name);
+                        if (item.code) {
+                          setFieldValue("swift_bic", `${item.code}XXX`);
                         }
                       }}
-                      disabled={isBanksLoading}
-                      className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs text-primary outline-none transition focus:border-primary disabled:opacity-60"
-                    >
-                      {isBanksLoading ? (
-                        <option value="">Querying live banks...</option>
-                      ) : availableBanks.length === 0 ? (
-                        <option value="">
-                          No institutions found for country
-                        </option>
-                      ) : (
-                        availableBanks.map((b) => (
-                          <option key={b.name} value={b.name}>
-                            {b.name} {b.code ? `(${b.code})` : ""}
-                          </option>
-                        ))
-                      )}
-                    </select>
+                      onInputChange={(val) => {
+                        setFieldValue("bank_name", val);
+                      }}
+                    />
                     <ErrorMessage
                       name="bank_name"
                       component="div"
                       className="text-red-500 text-[10px] mt-1"
                     />
                   </div>
-                </div>
-
-                {/* Bank Search filter */}
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={bankSearch}
-                    onChange={(e) => setBankSearch(e.target.value)}
-                    placeholder="Search live SWIFT directory..."
-                    className="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pl-8 pr-3 text-[11px] text-primary outline-none transition focus:border-primary focus:bg-white"
-                  />
                 </div>
 
                 <div>

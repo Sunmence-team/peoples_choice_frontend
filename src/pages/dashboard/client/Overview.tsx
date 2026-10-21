@@ -26,7 +26,6 @@ import {
 } from "../../../helpers/formatterUtility";
 import { useKYCStatus } from "../../../hooks/useClientData";
 import { MdArrowOutward } from "react-icons/md";
-import { number } from "framer-motion";
 
 export default function Overview() {
   const { user } = useUser();
