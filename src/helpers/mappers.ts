@@ -1,9 +1,4 @@
-import {
-  asDict,
-  pickNumber,
-  pickString,
-  type Dict,
-} from "./response";
+import { asDict, pickNumber, pickString, type Dict } from "./response";
 import type {
   AdminUser,
   Transaction,
@@ -11,6 +6,7 @@ import type {
   TransactionStatus,
   UserProps,
 } from "../lib/interfaces";
+import type { DepositDetail } from "../services/depositServices";
 
 const isTruthyFlag = (value: unknown): boolean =>
   value === true || value === 1 || value === "1";
@@ -69,17 +65,37 @@ const VALID_STATUSES: string[] = [
 
 export const normalizeStatus = (
   value: unknown,
-  fallback: TransactionStatus = "pending"
+  fallback: TransactionStatus = "pending",
 ): TransactionStatus => {
   const status = pickString(value).toLowerCase();
   if (VALID_STATUSES.includes(status)) return status as TransactionStatus;
-  if (["success", "successful", "confirmed", "paid", "credited", "complete"].includes(status)) {
+  if (
+    [
+      "success",
+      "successful",
+      "confirmed",
+      "paid",
+      "credited",
+      "complete",
+    ].includes(status)
+  ) {
     return "completed";
   }
-  if (["processing", "in_review", "review", "awaiting", "submitted", "new"].includes(status)) {
+  if (
+    [
+      "processing",
+      "in_review",
+      "review",
+      "awaiting",
+      "submitted",
+      "new",
+    ].includes(status)
+  ) {
     return "pending";
   }
-  if (["declined", "failed", "cancelled", "canceled", "void"].includes(status)) {
+  if (
+    ["declined", "failed", "cancelled", "canceled", "void"].includes(status)
+  ) {
     return "rejected";
   }
   return fallback;
@@ -87,7 +103,7 @@ export const normalizeStatus = (
 
 const normalizeType = (
   value: unknown,
-  fallback: "deposit" | "withdrawal" | "transfer" = "deposit"
+  fallback: "deposit" | "withdrawal" | "transfer" = "deposit",
 ): "deposit" | "withdrawal" | "transfer" => {
   const type = pickString(value).toLowerCase();
   if (type.includes("transfer")) return "transfer";
@@ -96,7 +112,10 @@ const normalizeType = (
   return fallback;
 };
 
-const signedAmount = (raw: Dict, fallbackType: "deposit" | "withdrawal" | "transfer"): string => {
+const signedAmount = (
+  raw: Dict,
+  fallbackType: "deposit" | "withdrawal" | "transfer",
+): string => {
   const amount = pickNumber(raw.amount, raw.credit, raw.debit);
   const suffix = pickString(raw.currency, raw.symbol) || "USD";
   const prefix = amount < 0 ? "" : fallbackType === "deposit" ? "+" : "-";
@@ -106,7 +125,7 @@ const signedAmount = (raw: Dict, fallbackType: "deposit" | "withdrawal" | "trans
 
 export const toClientTransaction = (
   value: unknown,
-  fallbackType?: "deposit" | "withdrawal" | "transfer"
+  fallbackType?: "deposit" | "withdrawal" | "transfer",
 ): Transaction => {
   const raw = asDict(value) ?? {};
   const type = normalizeType(raw.type ?? raw.transaction_type, fallbackType);
@@ -114,8 +133,13 @@ export const toClientTransaction = (
   return {
     id: pickNumber(raw.id) || pickString(raw.id),
     transaction_id:
-      pickString(raw.transaction_id, raw.reference_id, raw.reference, raw.ref, raw.id) ||
-      `TXN-${pickNumber(raw.id)}`,
+      pickString(
+        raw.transaction_id,
+        raw.reference_id,
+        raw.reference,
+        raw.ref,
+        raw.id,
+      ) || `TXN-${pickNumber(raw.id)}`,
     type,
     network: pickString(
       raw.network,
@@ -123,29 +147,50 @@ export const toClientTransaction = (
       raw.chain,
       addressRel?.type,
       raw.currency,
-      type === "transfer" ? "Internal Wire" : "USD Clearing"
+      type === "transfer" ? "Internal Wire" : "USD Clearing",
     ),
     amount: signedAmount(raw, type),
-    status: normalizeStatus(raw.status, raw.status === null ? "pending" : undefined),
-    date: pickString(raw.date, raw.created_at, raw.updated_at, raw.submitted_at),
+    status: normalizeStatus(
+      raw.status,
+      raw.status === null ? "pending" : undefined,
+    ),
+    date: pickString(
+      raw.date,
+      raw.created_at,
+      raw.updated_at,
+      raw.submitted_at,
+    ),
     walletAddress:
-      pickString(raw.wallet_address, raw.address, raw.destination_address, addressRel?.address) ||
-      undefined,
+      pickString(
+        raw.wallet_address,
+        raw.address,
+        raw.destination_address,
+        addressRel?.address,
+      ) || undefined,
     transactionHash:
-      pickString(raw.transaction_hash, raw.transactionHash, raw.tx_hash, raw.hash) || undefined,
-    recipient_name: pickString(raw.recipient_name, raw.beneficiary_name) || undefined,
-    recipient_account: pickString(raw.recipient_account, raw.destination_account) || undefined,
+      pickString(
+        raw.transaction_hash,
+        raw.transactionHash,
+        raw.tx_hash,
+        raw.hash,
+      ) || undefined,
+    recipient_name:
+      pickString(raw.recipient_name, raw.beneficiary_name) || undefined,
+    recipient_account:
+      pickString(raw.recipient_account, raw.destination_account) || undefined,
     bank_name: pickString(raw.bank_name, raw.destination_bank) || undefined,
     sender_name: pickString(raw.sender_name, raw.user_name) || undefined,
-    note: pickString(raw.note, raw.memo, raw.description, raw.remarks) || undefined,
-    transfer_category: pickString(raw.transfer_category, raw.category) || undefined,
+    note:
+      pickString(raw.note, raw.memo, raw.description, raw.remarks) || undefined,
+    transfer_category:
+      pickString(raw.transfer_category, raw.category) || undefined,
     fee: pickString(raw.fee) || "$0.00",
   };
 };
 
 export const toAdminTransaction = (
   value: unknown,
-  fallbackType?: "deposit" | "withdrawal" | "transfer"
+  fallbackType?: "deposit" | "withdrawal" | "transfer",
 ): TransactionItem => {
   const raw = asDict(value) ?? {};
   const type = normalizeType(raw.type ?? raw.transaction_type, fallbackType);
@@ -159,8 +204,12 @@ export const toAdminTransaction = (
   return {
     id: pickNumber(raw.id),
     transaction_id:
-      pickString(raw.transaction_id, raw.reference_id, raw.reference, raw.ref) ||
-      `${type === "deposit" ? "DEP" : "WDR"}-${pickNumber(raw.id)}`,
+      pickString(
+        raw.transaction_id,
+        raw.reference_id,
+        raw.reference,
+        raw.ref,
+      ) || `${type === "deposit" ? "DEP" : "WDR"}-${pickNumber(raw.id)}`,
     user_name: userName,
     type,
     network: pickString(
@@ -169,20 +218,33 @@ export const toAdminTransaction = (
       raw.chain,
       addressRel?.type,
       raw.currency,
-      "USDT"
+      "USDT",
     ),
     amount,
     status: normalizeStatus(raw.status),
     date: pickString(raw.date, raw.created_at, raw.updated_at),
     wallet_address:
-      pickString(raw.wallet_address, raw.address, raw.source_address, addressRel?.address) ||
-      undefined,
+      pickString(
+        raw.wallet_address,
+        raw.address,
+        raw.source_address,
+        addressRel?.address,
+      ) || undefined,
     destination_address:
-      pickString(raw.destination_address, raw.to_address, raw.recipient_address, addressRel?.address) ||
-      undefined,
+      pickString(
+        raw.destination_address,
+        raw.to_address,
+        raw.recipient_address,
+        addressRel?.address,
+      ) || undefined,
     note:
-      pickString(raw.note, raw.remarks, raw.remark, raw.reason, raw.admin_remarks) ||
-      undefined,
+      pickString(
+        raw.note,
+        raw.remarks,
+        raw.remark,
+        raw.reason,
+        raw.admin_remarks,
+      ) || undefined,
     otp_code: pickString(raw.otp_code) || undefined,
     cto_code: pickString(raw.cto_code) || undefined,
   };
@@ -195,7 +257,10 @@ export const toAdminUser = (value: unknown): AdminUser => {
   const status: AdminUser["status"] =
     statusRaw === "deleted" || raw.deleted_at
       ? "deleted"
-      : statusRaw === "disabled" || statusRaw === "inactive" || enabled === 0 || enabled === false
+      : statusRaw === "disabled" ||
+          statusRaw === "inactive" ||
+          enabled === 0 ||
+          enabled === false
         ? "disabled"
         : "active";
   const firstName = pickString(raw.first_name);
@@ -203,11 +268,16 @@ export const toAdminUser = (value: unknown): AdminUser => {
   return {
     id: pickNumber(raw.id),
     username: pickString(raw.username, raw.email),
-    full_name: pickString(raw.full_name, `${firstName} ${lastName}`.trim(), raw.username),
+    full_name: pickString(
+      raw.full_name,
+      `${firstName} ${lastName}`.trim(),
+      raw.username,
+    ),
     email: pickString(raw.email),
     phone: pickString(raw.phone),
     country: pickString(raw.country),
-    role: pickString(raw.role, raw.is_admin === 1 ? "admin" : "client") || "client",
+    role:
+      pickString(raw.role, raw.is_admin === 1 ? "admin" : "client") || "client",
     status,
     wallet_balance: pickNumber(raw.wallet_balance, raw.balance),
     created_at: pickString(raw.created_at, raw.date),
@@ -218,7 +288,7 @@ export interface CompanyWallet {
   id: number;
   address: string;
   type: string;
-  balance: number |string;
+  balance: number | string;
   status: "active" | "disabled";
   created_at?: string;
 }
@@ -252,49 +322,62 @@ export const toWalletAddress = (value: unknown): WalletAddress => {
   return {
     id: pickNumber(raw.id),
     address: pickString(raw.address, raw.wallet_address),
-    type: pickString(raw.type, raw.network, raw.crypto_type, raw.currency, "USDT"),
+    type: pickString(
+      raw.type,
+      raw.network,
+      raw.crypto_type,
+      raw.currency,
+      "USDT",
+    ),
     label: pickString(raw.label, raw.name) || undefined,
   };
 };
 
 export interface DashboardStats {
-  balance: number;
+  total_company_wallets_balance: number;
   totalDeposited: number;
   totalWithdrawn: number;
-  pendingDeposits: number;
-  pendingWithdrawals: number;
-  totalUsers?: number;
+  pending_deposits_count: number;
+  pending_withdrawals_count: number;
+  total_users?: number;
   raw: Dict | null;
+  recent_deposits: DepositDetail[];
 }
 
-export const toDashboardStats = (value: unknown): DashboardStats => {
-  const raw = asDict(value) ?? {};
-  const wallet = asDict(raw.wallet) ?? asDict(raw.balance);
-  return {
-    balance: pickNumber(
-      raw.balance,
-      raw.wallet_balance,
-      raw.total_balance,
-      raw.available_balance,
-      wallet?.balance
-    ),
-    totalDeposited: pickNumber(
-      raw.total_deposits,
-      raw.total_deposit,
-      raw.deposits_total,
-      raw.total_deposited,
-      raw.deposit_total
-    ),
-    totalWithdrawn: pickNumber(
-      raw.total_withdrawals,
-      raw.total_withdrawal,
-      raw.withdrawals_total,
-      raw.total_withdrawn,
-      raw.withdrawal_total
-    ),
-    pendingDeposits: pickNumber(raw.pending_deposits, raw.deposits_pending),
-    pendingWithdrawals: pickNumber(raw.pending_withdrawals, raw.withdrawals_pending),
-    totalUsers: pickNumber(raw.total_users, raw.users_count) || undefined,
-    raw,
-  };
-};
+// export const toDashboardStats = (value: unknown): DashboardStats => {
+//   const raw = asDict(value) ?? {};
+//   const wallet = asDict(raw.wallet) ?? asDict(raw.balance);
+//   return {
+//     total_company_wallets_balance: pickNumber(
+//       raw.balance,
+//       raw.wallet_balance,
+//       raw.total_balance,
+//       raw.available_balance,
+//       wallet?.balance,
+//     ),
+//     totalDeposited: pickNumber(
+//       raw.total_deposits,
+//       raw.total_deposit,
+//       raw.deposits_total,
+//       raw.total_deposited,
+//       raw.deposit_total,
+//     ),
+//     totalWithdrawn: pickNumber(
+//       raw.total_withdrawals,
+//       raw.total_withdrawal,
+//       raw.withdrawals_total,
+//       raw.total_withdrawn,
+//       raw.withdrawal_total,
+//     ),
+//     total_company_wallets_balance: pickNumber(
+//       raw.pending_deposits,
+//       raw.deposits_pending,
+//     ),
+//     pendingWithdrawals: pickNumber(
+//       raw.pending_withdrawals,
+//       raw.withdrawals_pending,
+//     ),
+//     totalUsers: pickNumber(raw.total_users, raw.users_count) || undefined,
+//     raw,
+//   };
+// };

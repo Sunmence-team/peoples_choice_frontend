@@ -1,8 +1,9 @@
 import api from "../helpers/api";
+import type { DashboardStats } from "../helpers/mappers";
 import { unwrap } from "../helpers/response";
 import type { AdminUserCtoResponse, UserProps } from "../lib/interfaces";
 
-export const getAdminDashboardService = async (): Promise<unknown> => {
+export const getAdminDashboardService = async (): Promise<DashboardStats> => {
   const res = await api.get("/admin/dashboard");
   return unwrap(res.data);
 };

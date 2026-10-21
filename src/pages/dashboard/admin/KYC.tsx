@@ -167,7 +167,7 @@ const KYC: React.FC = () => {
 
         {/* Filter Tabs */}
         <div className="flex items-center gap-1 rounded-lg border border-[#dfe8f1] bg-[#f8fafc] p-1 text-xs font-semibold">
-          {["pending", "verified", "rejected", "all"].map((st) => (
+          {["pending", "approved", "rejected", "all"].map((st) => (
             <button
               key={st}
               type="button"

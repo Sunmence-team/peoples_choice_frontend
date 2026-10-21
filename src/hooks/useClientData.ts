@@ -29,9 +29,7 @@ import {
 import { toPaged, toArray } from "../helpers/response";
 import {
   toClientTransaction,
-  toDashboardStats,
   toWalletAddress,
-  type DashboardStats,
   type WalletAddress,
 } from "../helpers/mappers";
 import type { Transaction } from "../lib/interfaces";
@@ -41,7 +39,10 @@ import {
   submitInternalTransferService,
   type InternalTransferPayload,
 } from "../services/transferServices";
-import { getKYCStatusService, type KYCStatusResponse } from "../services/kycServices";
+import {
+  getKYCStatusService,
+  type KYCStatusResponse,
+} from "../services/kycServices";
 
 export const useKYCStatus = () => {
   const { token } = useUser();
@@ -55,11 +56,11 @@ export const useKYCStatus = () => {
 
 export const useDashboard = () => {
   const { token } = useUser();
-  return useQuery<DashboardStats>({
+  return useQuery({
     queryKey: ["dashboard"],
     enabled: !!token,
     queryFn: async () => {
-      return toDashboardStats(await getDashboardService());
+      return await getDashboardService();
     },
   });
 };
@@ -67,7 +68,7 @@ export const useDashboard = () => {
 export const useTransactionLedger = (
   page = 1,
   perPage = 10,
-  type?: "deposit" | "withdrawal" | "transfer"
+  type?: "deposit" | "withdrawal" | "transfer",
 ) => {
   const { token } = useUser();
   return useQuery({
@@ -124,7 +125,8 @@ export const useWallets = () => {
   return useQuery<WalletAddress[]>({
     queryKey: ["wallets"],
     enabled: !!token,
-    queryFn: async () => toArray(await getWalletsService()).map(toWalletAddress),
+    queryFn: async () =>
+      toArray(await getWalletsService()).map(toWalletAddress),
   });
 };
 
@@ -144,9 +146,7 @@ export const useMyDeposits = (page = 1, perPage = 10) => {
   });
 };
 
-export const useDeposit = (
-  depositId: number | string | null | undefined
-) => {
+export const useDeposit = (depositId: number | string | null | undefined) => {
   const { token } = useUser();
   return useQuery<DepositDetail>({
     queryKey: ["deposit", depositId ? String(depositId) : null],
@@ -164,7 +164,8 @@ export const useDeposit = (
 export const useSubmitDeposit = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: SubmitDepositPayload) => submitDepositService(payload),
+    mutationFn: (payload: SubmitDepositPayload) =>
+      submitDepositService(payload),
     onSuccess: (data) => {
       if (data?.id) {
         queryClient.setQueryData(["deposit", String(data.id)], data);
@@ -187,7 +188,9 @@ export const useMyWithdrawals = (page = 1, perPage = 10) => {
       const paged = toPaged<unknown>(body, perPage);
       return {
         ...paged,
-        items: paged.items.map((item) => toClientTransaction(item, "withdrawal")),
+        items: paged.items.map((item) =>
+          toClientTransaction(item, "withdrawal"),
+        ),
       };
     },
   });
@@ -195,7 +198,8 @@ export const useMyWithdrawals = (page = 1, perPage = 10) => {
 
 export const useRequestWithdrawalOtp = () => {
   return useMutation({
-    mutationFn: (payload?: RequestOtpPayload) => requestWithdrawalOtpService(payload),
+    mutationFn: (payload?: RequestOtpPayload) =>
+      requestWithdrawalOtpService(payload),
   });
 };
 
@@ -214,7 +218,8 @@ export const useRequestWithdrawalOtc = () => {
 export const useSubmitWithdrawal = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: SubmitWithdrawalPayload) => submitWithdrawalService(payload),
+    mutationFn: (payload: SubmitWithdrawalPayload) =>
+      submitWithdrawalService(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-withdrawals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -226,7 +231,8 @@ export const useSubmitWithdrawal = () => {
 export const useRequestWithdrawal = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: RequestWithdrawalPayload) => requestWithdrawalService(payload),
+    mutationFn: (payload: RequestWithdrawalPayload) =>
+      requestWithdrawalService(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-withdrawals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -239,7 +245,8 @@ export const useUpdateProfile = () => {
   const { token, refreshUser } = useUser();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: UpdateProfilePayload) => updateProfileService(payload),
+    mutationFn: (payload: UpdateProfilePayload) =>
+      updateProfileService(payload),
     onSuccess: async () => {
       if (token) await refreshUser(token);
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });

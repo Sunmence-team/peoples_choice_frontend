@@ -27,9 +27,9 @@ const Overview: React.FC = () => {
   } = useAdminTransactions(currentPage, 5);
 
   const adminTransactions = transactionsPage?.items ?? [];
-  const totalWalletValue = stats?.balance ?? 0;
-  const pendingDepositsCount = stats?.pendingDeposits ?? 0;
-  const pendingWithdrawalsCount = stats?.pendingWithdrawals ?? 0;
+  const totalWalletValue = stats?.total_company_wallets_balance ?? 0;
+  const pendingDepositsCount = stats?.pending_deposits_count ?? 0;
+  const pendingWithdrawalsCount = stats?.pending_withdrawals_count ?? 0;
 
   const columns = [
     {
@@ -98,14 +98,16 @@ const Overview: React.FC = () => {
         <OverviewCards
           icon={LuUsersRound}
           title="Total Users"
-          value={statsLoading ? "..." : (stats?.totalUsers ?? 0)}
+          value={statsLoading ? "..." : (stats?.total_users ?? 0)}
           icon2={HiOutlineArrowTrendingUp}
         />
 
         <OverviewCards
           icon={LuWallet}
           title="Total Wallet Value"
-          value={statsLoading ? "..." : formatterUtility(totalWalletValue)}
+          value={
+            statsLoading ? "..." : formatterUtility(Number(totalWalletValue))
+          }
           icon2={HiOutlineArrowTrendingUp}
         />
 
@@ -130,8 +132,8 @@ const Overview: React.FC = () => {
             Recent Transactions
           </h2>
           <Link
-            to={""}
-            className="flex items-center gap-1 text-[12px] text-[#8190a3]"
+            to={"/dashboard/admin/transactions"}
+            className="flex items-center hover:underline text-[12px] text-[#8190a3]"
           >
             View all
             <MdArrowOutward />

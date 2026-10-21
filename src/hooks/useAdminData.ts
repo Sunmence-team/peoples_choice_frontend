@@ -44,9 +44,7 @@ import { toPaged } from "../helpers/response";
 import {
   toAdminTransaction,
   toCompanyWallet,
-  toDashboardStats,
   type CompanyWallet,
-  type DashboardStats,
 } from "../helpers/mappers";
 import type { TransactionItem } from "../lib/interfaces";
 import { useUser } from "./useUser";
@@ -70,10 +68,10 @@ const mapPaged = <T>(
 
 export const useAdminDashboard = () => {
   const { token } = useUser();
-  return useQuery<DashboardStats>({
+  return useQuery({
     queryKey: ["admin-dashboard"],
     enabled: !!token,
-    queryFn: async () => toDashboardStats(await getAdminDashboardService()),
+    queryFn: async () => await getAdminDashboardService(),
   });
 };
 
@@ -330,7 +328,13 @@ export const useAdminTransactions = (
 ) => {
   const { token } = useUser();
   return useQuery<PagedResult<TransactionItem>>({
-    queryKey: ["admin-transactions", page, perPage, status ?? "all", type ?? "all"],
+    queryKey: [
+      "admin-transactions",
+      page,
+      perPage,
+      status ?? "all",
+      type ?? "all",
+    ],
     enabled: !!token,
     queryFn: async () => {
       const body = await getAdminTransactionsService({
@@ -356,7 +360,6 @@ export const useAdminTransactions = (
     },
   });
 };
-
 
 export const useAdminVerifications = (
   page = 1,
@@ -408,7 +411,6 @@ export const useRejectVerification = () => {
   });
 };
 
-
 export const useApproveTransfer = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -430,7 +432,6 @@ export const useRejectTransfer = () => {
     },
   });
 };
-
 
 export const useAdminCards = (page = 1, perPage = 10, status?: string) => {
   const { token } = useUser();
@@ -464,7 +465,6 @@ export const useApproveAdminCard = () => {
     },
   });
 };
-
 
 export const useAdminLoans = (page = 1, perPage = 10, status?: string) => {
   const { token } = useUser();
@@ -504,7 +504,6 @@ export const useRejectAdminLoan = () => {
     },
   });
 };
-
 
 export const useAdminReferrals = (params?: {
   status?: string;
