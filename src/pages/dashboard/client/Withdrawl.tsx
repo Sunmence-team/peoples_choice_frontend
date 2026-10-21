@@ -25,6 +25,7 @@ import {
 } from "../../../hooks/useClientData";
 import { getErrorMessage } from "../../../helpers/api";
 import FormattedInput from "../../../components/ui/FormattedInput";
+import { formatCompactAmount } from "../../../helpers/formatterUtility";
 
 interface WithdrawalFormValues {
   amount: string;
@@ -48,7 +49,7 @@ export default function Withdrawal() {
   const requestOtcMutation = useRequestWithdrawalOtc();
   const submitMutation = useSubmitWithdrawal();
 
-  const availableBalance = stats?.balance ?? 0;
+  const availableBalance = stats?.wallet_balance ?? 0;
   const networks = Array.from(
     new Set((wallets ?? []).map((wallet) => wallet.type)),
   );
@@ -198,19 +199,28 @@ export default function Withdrawal() {
     }
 
     try {
-      const res = await verifyOtpMutation.mutateAsync(formik.values.otp_code.trim());
+      const res = await verifyOtpMutation.mutateAsync(
+        formik.values.otp_code.trim(),
+      );
       toast.success(
-        res.message || "OTP verified successfully. Requesting OTC clearance code...",
+        res.message ||
+          "OTP verified successfully. Requesting OTC clearance code...",
       );
 
       // Now automatically request OTC code
       try {
         const otcRes = await requestOtcMutation.mutateAsync();
         toast.info(
-          otcRes.message || "OTC clearance code requested. Contact administrator/support to obtain your authorization code.",
+          otcRes.message ||
+            "OTC clearance code requested. Contact administrator/support to obtain your authorization code.",
         );
       } catch (otcErr) {
-        toast.info(getErrorMessage(otcErr, "Please contact administrator for your OTC clearance code."));
+        toast.info(
+          getErrorMessage(
+            otcErr,
+            "Please contact administrator for your OTC clearance code.",
+          ),
+        );
       }
 
       setStep(3);
@@ -234,9 +244,7 @@ export default function Withdrawal() {
         setExpiresAt(fallbackTarget);
       }
 
-      toast.success(
-        res.message || "A new OTP code has been generated.",
-      );
+      toast.success(res.message || "A new OTP code has been generated.");
     } catch (error) {
       toast.error(getErrorMessage(error, "Failed to resend OTP code"));
     }
@@ -298,9 +306,7 @@ export default function Withdrawal() {
                     <span className="text-base sm:text-lg font-bold text-primary">
                       {statsLoading
                         ? "..."
-                        : `$${availableBalance.toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                          })}`}
+                        : `${formatCompactAmount(Number(availableBalance))}`}
                     </span>
 
                     <span className="text-[11px] sm:text-[12px] font-bold text-primary">
@@ -316,8 +322,8 @@ export default function Withdrawal() {
                   {step === 1
                     ? "Step 1 of 3: Details"
                     : step === 2
-                    ? "Step 2 of 3: Verify OTP"
-                    : "Step 3 of 3: OTC Clearance"}
+                      ? "Step 2 of 3: Verify OTP"
+                      : "Step 3 of 3: OTC Clearance"}
                 </span>
               </div>
             </div>
@@ -565,10 +571,14 @@ export default function Withdrawal() {
                   <button
                     type="button"
                     onClick={handleVerifyOtp}
-                    disabled={verifyOtpMutation.isPending || requestOtcMutation.isPending}
+                    disabled={
+                      verifyOtpMutation.isPending ||
+                      requestOtcMutation.isPending
+                    }
                     className="flex h-10 w-full items-center justify-center rounded-lg bg-primary hover:bg-primary/80 text-[11px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                   >
-                    {verifyOtpMutation.isPending || requestOtcMutation.isPending ? (
+                    {verifyOtpMutation.isPending ||
+                    requestOtcMutation.isPending ? (
                       <>
                         <svg
                           className="mr-2 h-4 w-4 animate-spin"
@@ -693,7 +703,9 @@ export default function Withdrawal() {
                 <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800">
                   <Info className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
                   <p>
-                    Your OTC clearance code has been requested. Please contact administrator/support to obtain your authorization code to finalize this withdrawal.
+                    Your OTC clearance code has been requested. Please contact
+                    administrator/support to obtain your authorization code to
+                    finalize this withdrawal.
                   </p>
                 </div>
 

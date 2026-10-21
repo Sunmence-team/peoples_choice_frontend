@@ -1,4 +1,5 @@
 import api from "../helpers/api";
+import type { DashboardStats } from "../helpers/mappers";
 import { unwrap } from "../helpers/response";
 
 export interface UpdateProfilePayload {
@@ -10,7 +11,7 @@ export interface UpdateProfilePayload {
   email?: string;
 }
 
-export const getDashboardService = async (): Promise<unknown> => {
+export const getDashboardService = async (): Promise<DashboardStats> => {
   const res = await api.get("/user/dashboard");
   return unwrap(res.data);
 };

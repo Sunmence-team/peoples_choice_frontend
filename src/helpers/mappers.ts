@@ -335,11 +335,12 @@ export const toWalletAddress = (value: unknown): WalletAddress => {
 
 export interface DashboardStats {
   total_company_wallets_balance: number;
-  totalDeposited: number;
-  totalWithdrawn: number;
+  total_deposited: number;
+  total_withdrawn: number;
   pending_deposits_count: number;
   pending_withdrawals_count: number;
   total_users?: number;
+  wallet_balance?: number;
   raw: Dict | null;
   recent_deposits: DepositDetail[];
 }

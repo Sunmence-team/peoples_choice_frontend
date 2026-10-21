@@ -20,9 +20,13 @@ import type { TableColumnProps, Transaction } from "../../../lib/interfaces";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
 import { getBankAccountNumber } from "../../../services/transferServices";
 import { Eye, EyeOff } from "lucide-react";
-import { formatISODateToCustom } from "../../../helpers/formatterUtility";
+import {
+  formatCompactAmount,
+  formatISODateToCustom,
+} from "../../../helpers/formatterUtility";
 import { useKYCStatus } from "../../../hooks/useClientData";
 import { MdArrowOutward } from "react-icons/md";
+import { number } from "framer-motion";
 
 export default function Overview() {
   const { user } = useUser();
@@ -41,9 +45,9 @@ export default function Overview() {
   const [viewModal, setViewModal] = React.useState(false);
   const [showBalance, setShowBalance] = React.useState(false);
 
-  const balance = stats?.balance ?? 0;
-  const totlaDeposit = stats?.totalDeposited ?? 0;
-  const totalwithdrawl = stats?.totalWithdrawn ?? 0;
+  const balance = stats?.wallet_balance ?? 0;
+  const totlaDeposit = stats?.total_deposited ?? 0;
+  const totalwithdrawl = stats?.total_withdrawn ?? 0;
   const recentTransactions = ledger?.items ?? [];
   const accountNumber = getBankAccountNumber(user);
 
@@ -233,10 +237,7 @@ export default function Overview() {
                   {statsLoading
                     ? "..."
                     : showBalance
-                      ? `$${balance.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}`
+                      ? `${formatCompactAmount(Number(balance))}`
                       : "*******"}
                 </span>
 
@@ -307,12 +308,8 @@ export default function Overview() {
                   </p>
 
                   <p className="mt-0.5 break-words text-[13px] sm:text-[15px] font-bold text-white">
-                    $
-                    {totlaDeposit.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    USD
+                    {formatCompactAmount(Number(totlaDeposit))}
+                    <span></span> USD
                   </p>
                 </div>
               </div>
@@ -329,11 +326,8 @@ export default function Overview() {
                   </p>
 
                   <p className="mt-0.5 break-words text-[13px] sm:text-[15px] font-bold text-white">
-                    $
-                    {totalwithdrawl.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
+                    {formatCompactAmount(Number(totalwithdrawl))}
+                    <span></span>
                     USD
                   </p>
                 </div>

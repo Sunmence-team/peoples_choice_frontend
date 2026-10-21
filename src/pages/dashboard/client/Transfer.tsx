@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import { formatCompactAmount } from "../../../helpers/formatterUtility";
 
 type TransferTab = "internal" | "external";
 
@@ -31,7 +32,7 @@ export default function Transfer() {
   const { data: stats } = useDashboard();
   const internalTransferMutation = useInternalTransfer();
 
-  const availableBalance = stats?.balance ?? 0;
+  const availableBalance = stats?.wallet_balance ?? 0;
   const [active, setActive] = useState<TransferTab>("internal");
 
   // Recipient live lookup verification
@@ -199,11 +200,7 @@ export default function Transfer() {
             Available Account Balance:
           </span>
           <span className="font-bold text-primary">
-            $
-            {availableBalance.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-            })}{" "}
-            USD
+            {formatCompactAmount(Number(availableBalance))} USD
           </span>
         </div>
 
