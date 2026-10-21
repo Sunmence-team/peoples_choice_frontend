@@ -4,9 +4,11 @@ import React from "react";
 import { assets } from "../../assets/assets";
 import { useUser } from "../../hooks/useUser";
 import { isAdminRole } from "../../helpers/role";
+import { useNavigate } from "react-router-dom";
 
 const TopNav: React.FC = () => {
   const { user, role } = useUser();
+  const navigate = useNavigate();
   const displayName =
     user?.full_name || user?.first_name || user?.username || "Guest";
 
@@ -34,7 +36,12 @@ const TopNav: React.FC = () => {
               .join("")
               .toUpperCase() || "U"}
           </div>
-          <div className="leading-tight min-w-0">
+          <div
+            className="leading-tight min-w-0 cursor-pointer"
+            onClick={() =>
+              user?.role !== "admin" && navigate("/dashboard/profile")
+            }
+          >
             <h3 className="truncate m-0 font-medium text-xs sm:text-sm max-w-[90px] sm:max-w-[160px]">
               {displayName}
             </h3>
