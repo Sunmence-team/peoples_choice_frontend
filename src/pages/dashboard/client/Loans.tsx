@@ -53,7 +53,7 @@ const tenureOptions = [3, 6, 12, 24, 36];
 
 export default function Loans() {
   const { data: stats } = useDashboard();
-  const availableBalance = stats?.balance ?? 0;
+  const availableBalance = stats?.wallet_balance ?? 0;
 
   const [activeTab, setActiveTab] = useState<"apply" | "history">("apply");
   const [loans, setLoans] = useState<LoanApplication[]>([]);
