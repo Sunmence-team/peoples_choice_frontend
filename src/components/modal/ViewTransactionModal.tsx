@@ -44,13 +44,13 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
     },
     {
       label: "Recipient",
-      value: transaction.transactionable.recipient_name || "Not Provided",
+      value: transaction?.transactionable?.recipient_name || "Not Provided",
     },
 
     {
       label: "Recepient Account Number",
       value:
-        transaction.transactionable.recipient_account_number || "Not Provided",
+        transaction.transactionable?.recipient_account_number || "Not Provided",
     },
     {
       label: "Channel",
@@ -63,8 +63,8 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
     {
       label: "Date & Time",
       value:
-        formatISODateToCustom(transaction.transactionable.created_at) ||
-        transaction.transactionable.created_at,
+        formatISODateToCustom(transaction?.transactionable?.created_at || "") ||
+        transaction?.transactionable?.created_at,
     },
     ...(address
       ? [
@@ -85,7 +85,7 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
       : []),
     {
       label: "Note",
-      value: transaction.transactionable.notes || "Not Provided",
+      value: transaction.transactionable?.notes || "Not Provided",
     },
   ];
 
