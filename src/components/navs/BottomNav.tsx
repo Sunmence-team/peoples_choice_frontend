@@ -75,7 +75,7 @@ const BottomNav: React.FC = () => {
 
   return (
     <nav className="lg:hidden shrink-0 bg-primary border-t border-primary/10 shadow-[0_-4px_16px_rgba(11,45,91,0.05)] pb-[env(safe-area-inset-bottom)]">
-      <ul className="flex items-center justify-around px-2 py-1.5">
+      <ul className="flex items-center justify-around px-2 py-2.5">
         {items.map((item) => (
           <li key={item.path} className="flex-1 max-w-[80px]">
             <NavLink
@@ -89,7 +89,7 @@ const BottomNav: React.FC = () => {
               }
             >
               <item.icon size={19} />
-              <span className="text-[10px] mt-0.5 tracking-tight truncate max-w-full">
+              <span className="text-[12px] mt-0.5 tracking-tight truncate max-w-full">
                 {item.name}
               </span>
             </NavLink>
