@@ -343,6 +343,7 @@ export interface DashboardStats {
   pending_withdrawals_count: number;
   total_users?: number;
   wallet_balance?: number;
+  user: UserProps;
   raw: Dict | null;
   recent_deposits: DepositDetail[];
 }

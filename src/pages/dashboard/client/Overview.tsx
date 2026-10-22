@@ -18,7 +18,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { TableColumnProps, Transaction } from "../../../lib/interfaces";
 import ViewTransactionModal from "../../../components/modal/ViewTransactionModal";
-import { getBankAccountNumber } from "../../../services/transferServices";
 import { Eye, EyeOff } from "lucide-react";
 import {
   formatCompactAmount,
@@ -49,7 +48,7 @@ export default function Overview() {
   const totlaDeposit = stats?.total_deposited ?? 0;
   const totalwithdrawl = stats?.total_withdrawn ?? 0;
   const recentTransactions = ledger?.items ?? [];
-  const accountNumber = getBankAccountNumber(user);
+  const accountNumber = stats?.user.account_number;
 
   const columns: TableColumnProps<Transaction>[] = [
     {

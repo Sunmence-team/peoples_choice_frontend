@@ -4,14 +4,6 @@ import { unwrap } from "../helpers/response";
 /**
  * Returns user account number or derives bank account number from user ID
  */
-export const getBankAccountNumber = (
-  user?: { id?: number | string; account_number?: string } | null,
-): string => {
-  if (user?.account_number) return user.account_number;
-  if (!user?.id) return "3081000001";
-  const paddedId = String(user.id).padStart(4, "0");
-  return `308100${paddedId}`;
-};
 
 export interface BankCountry {
   name: string;
