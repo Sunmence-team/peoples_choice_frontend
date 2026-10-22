@@ -16,14 +16,17 @@ export const getDashboardService = async (): Promise<DashboardStats> => {
   return unwrap(res.data);
 };
 
-export const getTransactionLedgerService = async (
-  params?: { page?: number; per_page?: number; type?: string }
-): Promise<unknown> => {
+export const getTransactionLedgerService = async (params?: {
+  page?: number;
+  per_page?: number;
+  type?: string;
+}) => {
   const res = await api.get("/user/transactions", { params });
-  return unwrap(res.data);
+  return res.data;
 };
+
 export const updateProfileService = async (
-  payload: UpdateProfilePayload
+  payload: UpdateProfilePayload,
 ): Promise<unknown> => {
   const res = await api.put("/user", payload);
   return unwrap(res.data);
@@ -34,7 +37,9 @@ export const deleteAccountService = async (): Promise<unknown> => {
   return unwrap(res.data);
 };
 
-export const disableAccountService = async (reason: string): Promise<unknown> => {
+export const disableAccountService = async (
+  reason: string,
+): Promise<unknown> => {
   const res = await api.post("/user/disable", { reason });
   return unwrap(res.data);
 };

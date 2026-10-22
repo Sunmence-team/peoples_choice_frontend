@@ -1,7 +1,11 @@
 import React from "react";
 import Modal from "./Modal";
 import StatusBadge from "../ui/StatusBadge";
-import { formatISODateToCustom } from "../../helpers/formatterUtility";
+import {
+  formatISODateToCustom,
+  formatterUtility,
+  formatUnderScores,
+} from "../../helpers/formatterUtility";
 import type { Transaction, TransactionItem } from "../../lib/interfaces";
 
 type ModalTransaction = Transaction | TransactionItem | null;
@@ -31,28 +35,36 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
       : transaction.amount;
 
   const rows: { label: string; value: React.ReactNode }[] = [
-    { label: "Transaction ID", value: transaction.transaction_id },
-    ...(isItem
-      ? [
-          {
-            label: "User",
-            value: transaction.user_name || "-",
-          },
-        ]
-      : []),
-    { label: "Type", value: transaction.type },
-    ...("recipient_name" in transaction && transaction.recipient_name
-      ? [{ label: "Recipient", value: transaction.recipient_name }]
-      : []),
-    ...("recipient_account" in transaction && transaction.recipient_account
-      ? [{ label: "Destination Account", value: transaction.recipient_account }]
-      : []),
-    { label: "Channel", value: transaction.network },
-    { label: "Amount", value: amount },
+    { label: "Reference ID", value: transaction.reference_id },
+
+    { label: "Type", value: formatUnderScores(transaction.type) },
+    {
+      label: "Description",
+      value: transaction.description || "Not Provided",
+    },
+    {
+      label: "Recipient",
+      value: transaction.transactionable.recipient_name || "Not Provided",
+    },
+
+    {
+      label: "Recepient Account Number",
+      value:
+        transaction.transactionable.recipient_account_number || "Not Provided",
+    },
+    {
+      label: "Channel",
+      value:
+        transaction?.transactionable?.type ||
+        (transaction.type.includes("bonus") ? "Bonus" : "USD Clearing"),
+    },
+    { label: "Amount", value: formatterUtility(Number(amount)) },
     { label: "Status", value: <StatusBadge status={transaction.status} /> },
     {
       label: "Date & Time",
-      value: formatISODateToCustom(transaction.date) || transaction.date,
+      value:
+        formatISODateToCustom(transaction.transactionable.created_at) ||
+        transaction.transactionable.created_at,
     },
     ...(address
       ? [
@@ -71,9 +83,10 @@ const ViewTransactionModal: React.FC<ViewTransactionModalProps> = ({
     ...("cto_code" in transaction && transaction.cto_code
       ? [{ label: "CTO Code", value: transaction.cto_code }]
       : []),
-    ...("note" in transaction && transaction.note
-      ? [{ label: "Note", value: transaction.note }]
-      : []),
+    {
+      label: "Note",
+      value: transaction.transactionable.notes || "Not Provided",
+    },
   ];
 
   return (

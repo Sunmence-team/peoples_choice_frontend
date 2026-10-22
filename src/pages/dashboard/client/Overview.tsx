@@ -23,6 +23,7 @@ import {
   formatCompactAmount,
   formatISODateToCustom,
   formatterUtility,
+  formatUnderScores,
 } from "../../../helpers/formatterUtility";
 import { useKYCStatus } from "../../../hooks/useClientData";
 import { MdArrowOutward } from "react-icons/md";
@@ -47,7 +48,7 @@ export default function Overview() {
   const balance = stats?.wallet_balance ?? 0;
   const totlaDeposit = stats?.total_deposited ?? 0;
   const totalwithdrawl = stats?.total_withdrawn ?? 0;
-  const recentTransactions = ledger?.items ?? [];
+  const recentTransactions:Transaction[] = ledger?.data?.data ?? [];
   const accountNumber = stats?.user.account_number;
 
   const columns: TableColumnProps<Transaction>[] = [
@@ -55,24 +56,15 @@ export default function Overview() {
       label: "DESCRIPTION / BENEFICIARY",
       key: "transaction_id",
       render: (item) => {
-        const title =
-          item.type === "transfer"
-            ? item.recipient_name
-              ? `Transfer to ${item.recipient_name}`
-              : "Internal Transfer"
-            : item.type === "deposit"
-              ? "Direct Deposit / Inflow"
-              : item.recipient_name
-                ? `Wire to ${item.recipient_name}`
-                : `External Wire (${item.network || "Payout"})`;
-
         return (
           <div className="flex flex-col">
-            <span className="font-semibold text-[#172b4d] text-[11px] leading-tight">
-              {title}
+            <span className="font-semibold text-[#172b4d] text-[11px]">
+              {item.description.length > 25
+                ? `${item.description.slice(0, 25)}...`
+                : item.description}
             </span>
-            <span className="text-[9px] text-gray-400 font-mono mt-0.5">
-              Ref: {item.transaction_id || "-"}
+            <span className="text-[9px] text-gray-400 font-mono">
+              Ref: {item.reference_id || "-"}
             </span>
           </div>
         );
@@ -83,15 +75,9 @@ export default function Overview() {
       key: "type",
       render: (item) => (
         <span
-          className={`px-2 py-0.5 rounded-md font-medium capitalize text-[9.5px] ${
-            item.type === "deposit"
-              ? "bg-green-100 text-green-700"
-              : item.type === "transfer"
-                ? "bg-blue-100 text-blue-700"
-                : "bg-primary/10 text-primary"
-          }`}
+          className={`rounded-md px-2 py-0.5 text-[9.5px] font-semibold capitalize ${item.type === "deposit" ? "bg-green-100 text-green-600" : item.type.includes("transfer") ? "bg-blue-100 text-blue-600" : "bg-primary/10 text-primary"}`}
         >
-          {item.type}
+          {formatUnderScores(item.type)}
         </span>
       ),
     },
@@ -99,13 +85,17 @@ export default function Overview() {
       label: "AMOUNT (USD)",
       key: "amount",
       render: (item) => {
+        const isPositive =
+          item.type === "deposit" ||
+          item.type === "transfer_in" ||
+          item.type.includes("bonus");
         return (
           <span
-            className={`font-semibold text-[11px] ${
-              +item.amount > 0 ? "text-green-600" : "text-[#172b4d]"
-            }`}
+            className={`font-semibold text-[11px] ${isPositive ? "text-green-600" : "text-[#172b4d]"}`}
           >
-            {item.amount}
+            {isPositive
+              ? `+${formatterUtility(Number(`${item.amount}`))}`
+              : `-${formatterUtility(Number(`${item.amount}`))}`}
           </span>
         );
       },
@@ -114,33 +104,34 @@ export default function Overview() {
       label: "CHANNEL",
       key: "network",
       render: (item) => {
-        const net = item.network || "-";
-        if (net === "Internal Transfer" || net === "internal")
-          return "PC Bank Instant";
-        if (net === "Wire Transfer" || net === "external")
-          return "Federal Wire Clearing";
-        if (net === "TRC20") return "TRC-20 Clearing Rail";
-        if (net === "ERC20") return "ERC-20 Clearing Rail";
-        return net;
+        const type = item.type;
+        const tType = item.transactionable?.type;
+
+        if (type.includes("bonus"))
+          return (
+            <span className="text-[11px] capitalize">Bonus</span>
+          );
+        if (type === "withdrawal" || type === "deposit")
+          return <span className="text-[11px]">USD Clearing</span>;
+
+        return <span className="text-[11px] capitalize">{tType} Transfer</span>;
       },
     },
     {
       label: "DATE",
       key: "date",
-      render: (item) => formatISODateToCustom(item.date) || "-",
+      render: (item) => (
+        <span className="text-gray-600 text-[11px]">
+          {formatISODateToCustom(item.transactionable.created_at) || "-"}
+        </span>
+      ),
     },
     {
       label: "STATUS",
       key: "status",
       render: (item) => (
         <span
-          className={`px-2 py-0.5 rounded-md font-medium text-[9.5px] capitalize ${
-            item.status === "completed" || item.status === "approved"
-              ? "bg-green-100 text-green-700"
-              : item.status === "pending"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-red-100 text-red-700"
-          }`}
+          className={`rounded-md px-2 py-0.5 text-[9.5px] font-semibold capitalize ${item.status === "completed" || item.status === "approved" ? "bg-green-100 text-green-600" : item.status === "rejected" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700"}`}
         >
           {item.status === "completed" || item.status === "approved"
             ? "Completed"

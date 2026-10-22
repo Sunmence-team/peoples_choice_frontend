@@ -26,13 +26,8 @@ import {
   type RequestOtpPayload,
   type SubmitWithdrawalPayload,
 } from "../services/withdrawalServices";
-import { toPaged, toArray } from "../helpers/response";
-import {
-  toClientTransaction,
-  toWalletAddress,
-  type WalletAddress,
-} from "../helpers/mappers";
-import type { Transaction } from "../lib/interfaces";
+import { toArray } from "../helpers/response";
+import { toWalletAddress, type WalletAddress } from "../helpers/mappers";
 import { useUser } from "./useUser";
 
 import {
@@ -74,37 +69,12 @@ export const useTransactionLedger = (
   return useQuery({
     queryKey: ["ledger", page, perPage, type ?? "all"],
     enabled: !!token,
-    queryFn: async (): Promise<{
-      items: Transaction[];
-      total: number;
-      currentPage: number;
-      totalPages: number;
-      perPage: number;
-    }> => {
-      const serverType = type === "transfer" ? undefined : type;
-      const body = await getTransactionLedgerService({
+    queryFn: () =>
+      getTransactionLedgerService({
         page,
         per_page: perPage,
-        type: serverType,
-      });
-      const paged = toPaged<unknown>(body, perPage);
-      const serverItems = paged.items.map((item) => toClientTransaction(item));
-
-      let filtered = serverItems;
-      if (type === "transfer") {
-        filtered = serverItems.filter((i) => i.type === "transfer");
-      } else if (type === "deposit") {
-        filtered = serverItems.filter((i) => i.type === "deposit");
-      } else if (type === "withdrawal") {
-        filtered = serverItems.filter((i) => i.type === "withdrawal");
-      }
-
-      return {
-        ...paged,
-        total: paged.total || filtered.length,
-        items: filtered,
-      };
-    },
+        type: type,
+      }),
   });
 };
 
@@ -135,14 +105,7 @@ export const useMyDeposits = (page = 1, perPage = 10) => {
   return useQuery({
     queryKey: ["my-deposits", page, perPage],
     enabled: !!token,
-    queryFn: async () => {
-      const body = await getMyDepositsService({ page, per_page: perPage });
-      const paged = toPaged<unknown>(body, perPage);
-      return {
-        ...paged,
-        items: paged.items.map((item) => toClientTransaction(item, "deposit")),
-      };
-    },
+    queryFn: () => getMyDepositsService({ page, per_page: perPage }),
   });
 };
 
@@ -183,16 +146,7 @@ export const useMyWithdrawals = (page = 1, perPage = 10) => {
   return useQuery({
     queryKey: ["my-withdrawals", page, perPage],
     enabled: !!token,
-    queryFn: async () => {
-      const body = await getMyWithdrawalsService({ page, per_page: perPage });
-      const paged = toPaged<unknown>(body, perPage);
-      return {
-        ...paged,
-        items: paged.items.map((item) =>
-          toClientTransaction(item, "withdrawal"),
-        ),
-      };
-    },
+    queryFn: () => getMyWithdrawalsService({ page, per_page: perPage }),
   });
 };
 

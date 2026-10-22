@@ -5,6 +5,8 @@ import ActionCell from "../ui/ActionCell";
 import ViewTransactionModal from "../modal/ViewTransactionModal";
 import {
   formatISODateToCustom,
+  formatterUtility,
+  formatUnderScores,
 } from "../../helpers/formatterUtility";
 import { useTransactionLedger } from "../../hooks/useClientData";
 
@@ -23,7 +25,7 @@ export default function AllTransactionsTab({
     itemsPerPage,
     type,
   );
-  const items = data?.items ?? [];
+  const items: Transaction[] = data?.data?.data ?? [];
 
   const [selectedTransaction, setSelectedTransaction] =
     React.useState<Transaction | null>(null);
@@ -34,24 +36,15 @@ export default function AllTransactionsTab({
       label: "DESCRIPTION / BENEFICIARY",
       key: "transaction_id",
       render: (item) => {
-        const title =
-          item.type === "transfer"
-            ? item.recipient_name
-              ? `Transfer to ${item.recipient_name}`
-              : "Internal Transfer"
-            : item.type === "deposit"
-              ? "Direct Deposit / Inflow"
-              : item.recipient_name
-                ? `Wire to ${item.recipient_name}`
-                : `External Wire (${item.network || "Payout"})`;
-
         return (
           <div className="flex flex-col">
             <span className="font-semibold text-[#172b4d] text-[11px]">
-              {title}
+              {item.description.length > 25
+                ? `${item.description.slice(0, 25)}...`
+                : item.description}
             </span>
             <span className="text-[9px] text-gray-400 font-mono">
-              Ref: {item.transaction_id || "-"}
+              Ref: {item.reference_id || "-"}
             </span>
           </div>
         );
@@ -62,9 +55,9 @@ export default function AllTransactionsTab({
       key: "type",
       render: (item) => (
         <span
-          className={`rounded-md px-2 py-0.5 text-[9.5px] font-semibold capitalize ${item.type === "deposit" ? "bg-green-100 text-green-600" : item.type === "transfer" ? "bg-blue-100 text-blue-600" : "bg-primary/10 text-primary"}`}
+          className={`rounded-md px-2 py-0.5 text-[9.5px] font-semibold capitalize ${item.type === "deposit" ? "bg-green-100 text-green-600" : item.type.includes("transfer") ? "bg-blue-100 text-blue-600" : "bg-primary/10 text-primary"}`}
         >
-          {item.type}
+          {formatUnderScores(item.type)}
         </span>
       ),
     },
@@ -72,20 +65,17 @@ export default function AllTransactionsTab({
       label: "AMOUNT (USD)",
       key: "amount",
       render: (item) => {
-        const raw =
-          typeof item.amount === "number"
-            ? item.amount
-            : parseFloat(String(item.amount).replace(/[^0-9.-]/g, "")) || 0;
-        const formatted = raw.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        const isPositive = item.type === "deposit";
+        const isPositive =
+          item.type === "deposit" ||
+          item.type === "transfer_in" ||
+          item.type.includes("bonus");
         return (
           <span
             className={`font-semibold text-[11px] ${isPositive ? "text-green-600" : "text-[#172b4d]"}`}
           >
-            {isPositive ? `${formatted}` : `${formatted}`}
+            {isPositive
+              ? `+${formatterUtility(Number(`${item.amount}`))}`
+              : `-${formatterUtility(Number(`${item.amount}`))}`}
           </span>
         );
       },
@@ -94,16 +84,17 @@ export default function AllTransactionsTab({
       label: "CHANNEL",
       key: "network",
       render: (item) => {
-        const net = item.network || "-";
-        if (net === "Internal Transfer" || net === "internal")
-          return <span className="text-[11px]">PC Bank Instant</span>;
-        if (net === "Wire Transfer" || net === "external")
-          return <span className="text-[11px]">Federal Wire Clearing</span>;
-        if (net === "TRC20")
-          return <span className="text-[11px]">TRC-20 Clearing Rail</span>;
-        if (net === "ERC20")
-          return <span className="text-[11px]">ERC-20 Clearing Rail</span>;
-        return <span className="text-[11px]">{net}</span>;
+        const type = item.type;
+        const tType = item.transactionable?.type;
+
+        if (type.includes("bonus"))
+          return (
+            <span className="text-[11px] capitalize">Bonus</span>
+          );
+        if (type === "withdrawal" || type === "deposit")
+          return <span className="text-[11px]">USD Clearing</span>;
+
+        return <span className="text-[11px] capitalize">{tType} Transfer</span>;
       },
     },
     {
@@ -111,7 +102,7 @@ export default function AllTransactionsTab({
       key: "date",
       render: (item) => (
         <span className="text-gray-600 text-[11px]">
-          {formatISODateToCustom(item.date) || "-"}
+          {formatISODateToCustom(item.transactionable.created_at) || "-"}
         </span>
       ),
     },

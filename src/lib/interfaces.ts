@@ -31,9 +31,11 @@ export type TransactionStatus =
 export interface Transaction {
   id?: number | string;
   transaction_id: string;
-  type: "deposit" | "withdrawal" | "transfer";
+  reference_id: string;
+  type: "deposit" | "withdrawal" | "transfer_in" | "transfer_out";
   network: string;
   amount: string;
+  description: string;
   status: TransactionStatus;
   date: string;
   walletAddress?: string;
@@ -45,6 +47,30 @@ export interface Transaction {
   note?: string;
   transfer_category?: string;
   fee?: string;
+  transactionable: {
+    id: number;
+    reference_id: string;
+    user_id: number;
+    recipient_id: number;
+    type: string;
+    recipient_account_number: string;
+    recipient_name: string;
+    bank_name: string | null;
+    bank_code: string | null;
+    bank_country: string | null;
+    swift_bic: string | null;
+    routing_number: string | null;
+    amount: string;
+    fee: string;
+    currency: string;
+    status: string;
+    notes: string | null;
+    admin_remarks: string | null;
+    processed_by: string | null;
+    processed_at: string;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
 export interface Beneficiary {
@@ -183,6 +209,7 @@ export interface BankProps {
 export interface TransactionItem {
   id: number;
   transactionable_id: number;
+  description: string;
   reference_id: string;
   transaction_id: string;
   user_name: string;
@@ -199,6 +226,30 @@ export interface TransactionItem {
   recipient_name?: string;
   bank_name?: string;
   account_number?: string;
+  transactionable: {
+    id: number;
+    reference_id: string;
+    user_id: number;
+    recipient_id: number;
+    type: string;
+    recipient_account_number: string;
+    recipient_name: string;
+    bank_name: string | null;
+    bank_code: string | null;
+    bank_country: string | null;
+    swift_bic: string | null;
+    routing_number: string | null;
+    amount: string;
+    fee: string;
+    currency: string;
+    status: string;
+    notes: string | null;
+    admin_remarks: string | null;
+    processed_by: string | null;
+    processed_at: string;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
 export interface AdminUser extends Partial<UserProps> {

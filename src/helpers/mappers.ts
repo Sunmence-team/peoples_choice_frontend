@@ -1,7 +1,7 @@
 import { asDict, pickNumber, pickString, type Dict } from "./response";
 import type {
   AdminUser,
-  Transaction,
+  // Transaction,
   TransactionItem,
   TransactionStatus,
   UserProps,
@@ -112,81 +112,81 @@ const normalizeType = (
   return fallback;
 };
 
-const signedAmount = (
-  raw: Dict,
-  fallbackType: "deposit" | "withdrawal" | "transfer",
-): string => {
-  const amount = pickNumber(raw.amount, raw.credit, raw.debit);
-  const suffix = pickString(raw.currency, raw.symbol) || "USD";
-  const prefix = amount < 0 ? "" : fallbackType === "deposit" ? "+" : "-";
-  const abs = Math.abs(amount);
-  return `${prefix}$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${suffix === "USD" ? "" : suffix}`.trim();
-};
+// const signedAmount = (
+//   raw: Dict,
+//   fallbackType: "deposit" | "withdrawal" | "transfer",
+// ): string => {
+//   const amount = pickNumber(raw.amount, raw.credit, raw.debit);
+//   const suffix = pickString(raw.currency, raw.symbol) || "USD";
+//   const prefix = amount < 0 ? "" : fallbackType === "deposit" ? "+" : "-";
+//   const abs = Math.abs(amount);
+//   return `${prefix}$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${suffix === "USD" ? "" : suffix}`.trim();
+// };
 
-export const toClientTransaction = (
-  value: unknown,
-  fallbackType?: "deposit" | "withdrawal" | "transfer",
-): Transaction => {
-  const raw = asDict(value) ?? {};
-  const type = normalizeType(raw.type ?? raw.transaction_type, fallbackType);
-  const addressRel = asDict(raw.wallet_address);
-  return {
-    id: pickNumber(raw.id) || pickString(raw.id),
-    transaction_id:
-      pickString(
-        raw.transaction_id,
-        raw.reference_id,
-        raw.reference,
-        raw.ref,
-        raw.id,
-      ) || `TXN-${pickNumber(raw.id)}`,
-    type,
-    network: pickString(
-      raw.network,
-      raw.crypto_type,
-      raw.chain,
-      addressRel?.type,
-      raw.currency,
-      type === "transfer" ? "Internal Wire" : "USD Clearing",
-    ),
-    amount: signedAmount(raw, type),
-    status: normalizeStatus(
-      raw.status,
-      raw.status === null ? "pending" : undefined,
-    ),
-    date: pickString(
-      raw.date,
-      raw.created_at,
-      raw.updated_at,
-      raw.submitted_at,
-    ),
-    walletAddress:
-      pickString(
-        raw.wallet_address,
-        raw.address,
-        raw.destination_address,
-        addressRel?.address,
-      ) || undefined,
-    transactionHash:
-      pickString(
-        raw.transaction_hash,
-        raw.transactionHash,
-        raw.tx_hash,
-        raw.hash,
-      ) || undefined,
-    recipient_name:
-      pickString(raw.recipient_name, raw.beneficiary_name) || undefined,
-    recipient_account:
-      pickString(raw.recipient_account, raw.destination_account) || undefined,
-    bank_name: pickString(raw.bank_name, raw.destination_bank) || undefined,
-    sender_name: pickString(raw.sender_name, raw.user_name) || undefined,
-    note:
-      pickString(raw.note, raw.memo, raw.description, raw.remarks) || undefined,
-    transfer_category:
-      pickString(raw.transfer_category, raw.category) || undefined,
-    fee: pickString(raw.fee) || "$0.00",
-  };
-};
+// export const toClientTransaction = (
+//   value: unknown,
+//   fallbackType?: "deposit" | "withdrawal" | "transfer",
+// ): Transaction => {
+//   const raw = asDict(value) ?? {};
+//   const type = normalizeType(raw.type ?? raw.transaction_type, fallbackType);
+//   const addressRel = asDict(raw.wallet_address);
+//   return {
+//     id: pickNumber(raw.id) || pickString(raw.id),
+//     transaction_id:
+//       pickString(
+//         raw.transaction_id,
+//         raw.reference_id,
+//         raw.reference,
+//         raw.ref,
+//         raw.id,
+//       ) || `TXN-${pickNumber(raw.id)}`,
+//     type,
+//     network: pickString(
+//       raw.network,
+//       raw.crypto_type,
+//       raw.chain,
+//       addressRel?.type,
+//       raw.currency,
+//       type === "transfer" ? "Internal Wire" : "USD Clearing",
+//     ),
+//     amount: String(raw.amount),
+//     status: normalizeStatus(
+//       raw.status,
+//       raw.status === null ? "pending" : undefined,
+//     ),
+//     date: pickString(
+//       raw.date,
+//       raw.created_at,
+//       raw.updated_at,
+//       raw.submitted_at,
+//     ),
+//     walletAddress:
+//       pickString(
+//         raw.wallet_address,
+//         raw.address,
+//         raw.destination_address,
+//         addressRel?.address,
+//       ) || undefined,
+//     transactionHash:
+//       pickString(
+//         raw.transaction_hash,
+//         raw.transactionHash,
+//         raw.tx_hash,
+//         raw.hash,
+//       ) || undefined,
+//     recipient_name:
+//       pickString(raw.recipient_name, raw.beneficiary_name) || undefined,
+//     recipient_account:
+//       pickString(raw.recipient_account, raw.destination_account) || undefined,
+//     bank_name: pickString(raw.bank_name, raw.destination_bank) || undefined,
+//     sender_name: pickString(raw.sender_name, raw.user_name) || undefined,
+//     note:
+//       pickString(raw.note, raw.memo, raw.description, raw.remarks) || undefined,
+//     transfer_category:
+//       pickString(raw.transfer_category, raw.category) || undefined,
+//     fee: pickString(raw.fee) || "$0.00",
+//   };
+// };
 
 export const toAdminTransaction = (
   value: unknown,
