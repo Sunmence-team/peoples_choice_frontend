@@ -77,7 +77,7 @@ export interface RequestWithdrawalPayload {
  * Step 1: Request OTP code for withdrawal (Zero email sent; code generated in backend DB)
  */
 export const requestWithdrawalOtpService = async (
-  payload?: RequestOtpPayload
+  payload?: RequestOtpPayload,
 ): Promise<RequestOtpResponse> => {
   const res = await api.post("/withdrawals/request-otp", payload);
   return unwrap(res.data) as RequestOtpResponse;
@@ -87,7 +87,7 @@ export const requestWithdrawalOtpService = async (
  * Step 2: Verify OTP code provided by admin
  */
 export const verifyWithdrawalOtpService = async (
-  otpCode: string
+  otpCode: string,
 ): Promise<VerifyOtpResponse> => {
   const res = await api.post("/withdrawals/verify-otp", {
     otp_code: otpCode.trim(),
@@ -98,16 +98,17 @@ export const verifyWithdrawalOtpService = async (
 /**
  * Step 3: Request OTC clearance code from admin
  */
-export const requestWithdrawalOtcService = async (): Promise<RequestOtcResponse> => {
-  const res = await api.post("/withdrawals/request-otc", {});
-  return unwrap(res.data) as RequestOtcResponse;
-};
+export const requestWithdrawalOtcService =
+  async (): Promise<RequestOtcResponse> => {
+    const res = await api.post("/withdrawals/request-otc", {});
+    return unwrap(res.data) as RequestOtcResponse;
+  };
 
 /**
  * Step 4: Finalize withdrawal with OTC clearance code
  */
 export const submitWithdrawalService = async (
-  payload: SubmitWithdrawalPayload
+  payload: SubmitWithdrawalPayload,
 ): Promise<SubmitWithdrawalResponse> => {
   const otc = payload.otc_code || payload.cto_code || "";
   const cleanPayload = {
@@ -125,7 +126,7 @@ export const submitWithdrawalService = async (
 };
 
 export const requestWithdrawalService = async (
-  payload: RequestWithdrawalPayload
+  payload: RequestWithdrawalPayload,
 ): Promise<unknown> => {
   const otc = payload.otc_code || payload.cto_code || "";
   const cleanPayload = {
@@ -140,13 +141,13 @@ export const requestWithdrawalService = async (
 export const getMyWithdrawalsService = async (params?: {
   page?: number;
   per_page?: number;
-}): Promise<unknown> => {
+}) => {
   const res = await api.get("/withdrawals", { params });
-  return unwrap(res.data);
+  return res.data;
 };
 
 export const getWithdrawalService = async (
-  withdrawalId: number | string
+  withdrawalId: number | string,
 ): Promise<unknown> => {
   const res = await api.get(`/withdrawals/${withdrawalId}`);
   return unwrap(res.data);

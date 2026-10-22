@@ -213,6 +213,8 @@ export const toAdminTransaction = (
     user_name: userName,
     reference_id: String(raw.reference_id),
     transactionable_id: Number(raw.transactionable_id),
+    description: String(raw.description),
+    transactionable: null,
     type,
     network: pickString(
       raw.network,

@@ -249,7 +249,7 @@ export interface TransactionItem {
     processed_at: string;
     created_at: string;
     updated_at: string;
-  };
+  } | null;
 }
 
 export interface AdminUser extends Partial<UserProps> {

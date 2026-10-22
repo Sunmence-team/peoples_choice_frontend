@@ -1,31 +1,18 @@
-import {
-  Check,
-  CircleUserRound,
-  ShieldCheck,
-  X,
-} from "lucide-react";
+import { Check, CircleUserRound, ShieldCheck, X } from "lucide-react";
 
-type WithdrawalStatus =
-  | "submitted"
-  | "pending_review"
-  | "approved"
-  | "rejected";
+type WithdrawalStatus = "submitted" | "pending" | "approved" | "rejected";
 
 interface WithdrawalStatusFlowProps {
   status?: WithdrawalStatus;
 }
 
 export function WithdrawalStatusFlow({
-  status = "pending_review",
+  status = "pending",
 }: WithdrawalStatusFlowProps) {
   const isSubmitted =
-    status === "submitted" ||
-    status === "pending_review" ||
-    status === "approved";
+    status === "submitted" || status === "pending" || status === "approved";
 
-  const isPending =
-    status === "pending_review" ||
-    status === "approved";
+  const isPending = status === "pending" || status === "approved";
 
   const isApproved = status === "approved";
 
@@ -45,9 +32,8 @@ export function WithdrawalStatusFlow({
             </div>
 
             <p className="text-[11px] font-semibold leading-5 text-green-700">
-              Withdrawal requests are reviewed manually.
-              Approved payments will be marked Completed
-              after processing.
+              Withdrawal requests are reviewed manually. Approved payments will
+              be marked Completed after processing.
             </p>
           </div>
         </div>
@@ -64,14 +50,9 @@ export function WithdrawalStatusFlow({
           {/* Submitted */}
           <StatusStep
             label="Submitted"
-            icon={
-              <CircleUserRound className="h-4 w-4" />
-            }
+            icon={<CircleUserRound className="h-4 w-4" />}
             active={isSubmitted}
-            completed={
-              status === "pending_review" ||
-              status === "approved"
-            }
+            completed={status === "pending" || status === "approved"}
           />
 
           {/* Arrow */}
@@ -86,9 +67,7 @@ export function WithdrawalStatusFlow({
                 Review
               </>
             }
-            icon={
-              <CircleUserRound className="h-4 w-4" />
-            }
+            icon={<CircleUserRound className="h-4 w-4" />}
             active={isPending}
             completed={isApproved}
           />
@@ -118,22 +97,15 @@ export function WithdrawalStatusFlow({
           <div className="flex flex-col items-center">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                isRejected
-                  ? "bg-red-500 text-white"
-                  : "bg-red-50 text-red-500"
+                isRejected ? "bg-red-500 text-white" : "bg-red-50 text-red-500"
               }`}
             >
-              <X
-                className="h-5 w-5"
-                strokeWidth={2.5}
-              />
+              <X className="h-5 w-5" strokeWidth={2.5} />
             </div>
 
             <span
               className={`mt-2 text-[10px] font-semibold ${
-                isRejected
-                  ? "text-red-500"
-                  : "text-gray-500"
+                isRejected ? "text-red-500" : "text-gray-500"
               }`}
             >
               Rejected
@@ -156,12 +128,7 @@ interface StatusStepProps {
   completed: boolean;
 }
 
-function StatusStep({
-  label,
-  icon,
-  active,
-  completed,
-}: StatusStepProps) {
+function StatusStep({ label, icon, active, completed }: StatusStepProps) {
   return (
     <div className="flex min-w-[65px] flex-1 flex-col items-center">
       <div
@@ -178,9 +145,7 @@ function StatusStep({
 
       <span
         className={`mt-2 text-center text-[10px] font-semibold leading-4 ${
-          active
-            ? "text-primary"
-            : "text-gray-400"
+          active ? "text-primary" : "text-gray-400"
         }`}
       >
         {label}
@@ -193,26 +158,16 @@ function StatusStep({
 /* Arrow */
 /* ---------------------------------- */
 
-function StatusArrow({
-  active,
-}: {
-  active: boolean;
-}) {
+function StatusArrow({ active }: { active: boolean }) {
   return (
     <div className="flex flex-1 items-center px-1 pt-5">
       <div
-        className={`h-[2px] flex-1 ${
-          active
-            ? "bg-green-500"
-            : "bg-gray-200"
-        }`}
+        className={`h-[2px] flex-1 ${active ? "bg-green-500" : "bg-gray-200"}`}
       />
 
       <div
         className={`h-2 w-2 rotate-45 border-r-2 border-t-2 ${
-          active
-            ? "border-green-500"
-            : "border-gray-200"
+          active ? "border-green-500" : "border-gray-200"
         }`}
       />
     </div>

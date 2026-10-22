@@ -25,7 +25,7 @@ import {
 } from "../../../hooks/useClientData";
 import { getErrorMessage } from "../../../helpers/api";
 import FormattedInput from "../../../components/ui/FormattedInput";
-import {  formatterUtility } from "../../../helpers/formatterUtility";
+import { formatterUtility } from "../../../helpers/formatterUtility";
 
 interface WithdrawalFormValues {
   amount: string;
@@ -257,12 +257,12 @@ export default function Withdrawal() {
   const otpError = formik.touched.otp_code && formik.errors.otp_code;
   const otcError = formik.touched.otc_code && formik.errors.otc_code;
 
-  const latestWithdrawal = withdrawals?.items?.[0];
+  const latestWithdrawal = withdrawals?.data?.data?.[0];
   const statusMap: Record<
     string,
-    "submitted" | "pending_review" | "approved" | "rejected"
+    "submitted" | "pending" | "approved" | "rejected"
   > = {
-    pending: "pending_review",
+    pending: "pending",
     approved: "approved",
     completed: "approved",
     rejected: "rejected",
@@ -761,7 +761,7 @@ export default function Withdrawal() {
         <WithdrawalStatusFlow
           status={
             latestWithdrawal
-              ? (statusMap[latestWithdrawal.status] ?? "pending_review")
+              ? (statusMap[latestWithdrawal.status] ?? "pending")
               : "submitted"
           }
         />

@@ -37,7 +37,7 @@ export interface DepositDetail {
 }
 
 export const submitDepositService = async (
-  payload: SubmitDepositPayload
+  payload: SubmitDepositPayload,
 ): Promise<DepositDetail> => {
   const formData = new FormData();
   formData.append("wallet_address_id", String(payload.wallet_address_id));
@@ -53,13 +53,13 @@ export const submitDepositService = async (
 export const getMyDepositsService = async (params?: {
   page?: number;
   per_page?: number;
-}): Promise<unknown> => {
+}) => {
   const res = await api.get("/deposits", { params });
-  return unwrap(res.data);
+  return res.data;
 };
 
 export const getDepositService = async (
-  depositId: number | string
+  depositId: number | string,
 ): Promise<DepositDetail> => {
   const res = await api.get(`/deposits/${depositId}`);
   return unwrap(res.data) as DepositDetail;

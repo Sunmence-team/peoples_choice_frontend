@@ -38,40 +38,28 @@ const validationSchema = Yup.object({
           "image/jpg",
           "application/pdf",
         ].includes(value.type);
-      }
+      },
     )
-    .test(
-      "fileSize",
-      "File size must not exceed 5MB",
-      (value) => {
-        if (!value) return false;
+    .test("fileSize", "File size must not exceed 5MB", (value) => {
+      if (!value) return false;
 
-        return value.size <= 5 * 1024 * 1024;
-      }
-    ),
+      return value.size <= 5 * 1024 * 1024;
+    }),
 });
 
 const DepositRequest = () => {
   const [copied, setCopied] = useState(false);
-  const [activeDepositId, setActiveDepositId] = useState<number | string | null>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("active_deposit_id");
-      if (saved) return saved;
-    }
-    return null;
-  });
 
   const { data: wallets, isLoading: walletsLoading } = useWallets();
   const { data: deposits } = useMyDeposits(1, 5);
   const submitMutation = useSubmitDeposit();
 
-  const latestDeposit = deposits?.items?.[0];
+  const latestDeposit: DepositDetail = deposits?.data?.data?.[0];
   const effectiveDepositId =
-    activeDepositId ?? (latestDeposit?.status === "pending" ? latestDeposit.id : null);
+    latestDeposit?.status === "pending" ? latestDeposit.id : null;
 
-  const { data: depositDetails, isLoading: depositDetailsLoading } = useDeposit(
-    effectiveDepositId
-  );
+  const { data: depositDetails, isLoading: depositDetailsLoading } =
+    useDeposit(effectiveDepositId);
 
   const formik = useFormik({
     initialValues: {
@@ -86,19 +74,12 @@ const DepositRequest = () => {
       if (!values.proof_image) return;
 
       try {
-        const result = await submitMutation.mutateAsync({
+        await submitMutation.mutateAsync({
           wallet_address_id: values.wallet_address_id,
           amount: values.amount,
           proof_image: values.proof_image,
         });
         helpers.resetForm();
-
-        const newId =
-          (result as DepositDetail)?.id ?? (result as { data?: { id?: number | string } })?.data?.id;
-        if (newId) {
-          setActiveDepositId(newId);
-          localStorage.setItem("active_deposit_id", String(newId));
-        }
       } catch (error) {
         console.error("Deposit failed:", error);
       }
@@ -107,7 +88,7 @@ const DepositRequest = () => {
 
   const selectedWallet =
     wallets?.find(
-      (wallet) => String(wallet.id) === String(formik.values.wallet_address_id)
+      (wallet) => String(wallet.id) === String(formik.values.wallet_address_id),
     ) ?? wallets?.[0];
 
   const walletAddress = selectedWallet?.address ?? "";
@@ -127,9 +108,7 @@ const DepositRequest = () => {
     }
   };
 
-  const handleFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0] ?? null;
 
     formik.setFieldValue("proof_image", file);
@@ -137,287 +116,278 @@ const DepositRequest = () => {
 
   return (
     <div className="w-full">
+      <div className="mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg text-primary font-bold">
+          Deposit Funds & Account Inflow
+        </h2>
+        <p className="hidden md:block text-xs font-medium max-w-2xl text-gray-500 mt-0.5">
+          Fund your People's Choice Bank account balance
+        </p>
+      </div>
 
-        <div className="mb-3 sm:mb-4">
-            <h2 className='text-base sm:text-lg text-primary font-bold'>Deposit Funds & Account Inflow</h2>
-            <p className='hidden md:block text-xs font-medium max-w-2xl text-gray-500 mt-0.5'>
-                Fund your People's Choice Bank account balance
-            </p>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 mt-4 sm:mt-6">
+        <div className="rounded-xl border border-[#e5edf5] bg-white p-3.5 sm:p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]">
+          {/* Heading */}
+          <div className="mb-3 sm:mb-4">
+            <h2 className="text-xs sm:text-[14px] font-bold text-primary">
+              Step 1: Automated Settlement Coordinates
+            </h2>
+          </div>
 
+          {/* Network */}
+          <div className="mb-4 sm:mb-5">
+            <label className="mb-2 block text-[11px] font-semibold text-primary">
+              Select Clearing Rail
+            </label>
 
-        <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 mt-4 sm:mt-6">
+            {walletsLoading ? (
+              <div className="flex items-center gap-2 text-[11px] text-[#718096]">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading addresses...
+              </div>
+            ) : !wallets || wallets.length === 0 ? (
+              <p className="text-[11px] text-[#718096]">
+                No deposit addresses available yet. Please check back later.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {wallets.map((wallet) => {
+                  const isSelected =
+                    String(formik.values.wallet_address_id) ===
+                    String(wallet.id);
 
-            <div className="rounded-xl border border-[#e5edf5] bg-white p-3.5 sm:p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]">
-                {/* Heading */}
-                <div className="mb-3 sm:mb-4">
-                    <h2 className="text-xs sm:text-[14px] font-bold text-primary">
-                        Step 1: Automated Settlement Coordinates
-                    </h2>
-                </div>
+                  return (
+                    <button
+                      key={wallet.id}
+                      type="button"
+                      onClick={() =>
+                        formik.setFieldValue("wallet_address_id", wallet.id)
+                      }
+                      className={`h-9 sm:h-10 rounded-lg border text-[11px] sm:text-xs font-semibold transition cursor-pointer truncate px-2 ${
+                        isSelected
+                          ? "border-primary bg-primary text-white shadow-sm"
+                          : "border-[#e0e8f0] bg-[#f8fafc] text-[#718096] hover:border-primary hover:text-primary"
+                      }`}
+                    >
+                      {wallet.label ?? wallet.type}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-                {/* Network */}
-                <div className="mb-4 sm:mb-5">
-                    <label className="mb-2 block text-[11px] font-semibold text-primary">
-                        Select Clearing Rail
-                    </label>
+            {formik.touched.wallet_address_id &&
+              formik.errors.wallet_address_id && (
+                <p className="mt-1 text-[10px] text-red-500">
+                  {formik.errors.wallet_address_id}
+                </p>
+              )}
+          </div>
 
-                    {walletsLoading ? (
-                        <div className="flex items-center gap-2 text-[11px] text-[#718096]">
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            Loading addresses...
-                        </div>
-                    ) : !wallets || wallets.length === 0 ? (
-                        <p className="text-[11px] text-[#718096]">
-                            No deposit addresses available yet. Please check back later.
-                        </p>
-                    ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {wallets.map((wallet) => {
-                                const isSelected =
-                                    String(formik.values.wallet_address_id) ===
-                                    String(wallet.id);
+          {/* Wallet Address */}
+          <div className="mb-4 sm:mb-5">
+            <label className="mb-2 block text-[11px] font-semibold text-primary">
+              Bank Deposit Settlement Address (USD Credited)
+            </label>
 
-                                return (
-                                    <button
-                                        key={wallet.id}
-                                        type="button"
-                                        onClick={() =>
-                                            formik.setFieldValue(
-                                                "wallet_address_id",
-                                                wallet.id
-                                            )
-                                        }
-                                        className={`h-9 sm:h-10 rounded-lg border text-[11px] sm:text-xs font-semibold transition cursor-pointer truncate px-2 ${isSelected
-                                            ? "border-primary bg-primary text-white shadow-sm"
-                                            : "border-[#e0e8f0] bg-[#f8fafc] text-[#718096] hover:border-primary hover:text-primary"
-                                            }`}
-                                    >
-                                        {wallet.label ?? wallet.type}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
+            <div className="flex gap-2">
+              <div className="flex h-10 min-w-0 flex-1 items-center rounded-lg border border-[#dfe8f1] bg-[#f8fafc] px-3">
+                <span className="truncate text-[11px] text-[#64748b]">
+                  {walletAddress || "—"}
+                </span>
+              </div>
 
-                    {formik.touched.wallet_address_id &&
-                        formik.errors.wallet_address_id && (
-                            <p className="mt-1 text-[10px] text-red-500">
-                                {formik.errors.wallet_address_id}
-                            </p>
-                        )}
-                </div>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="h-10 rounded-lg bg-primary px-4 sm:px-5 text-[11px] font-semibold text-white transition hover:bg-[#09264d] cursor-pointer shrink-0"
+              >
+                {copied ? "Copied" : "Copy"}
+              </button>
+            </div>
+          </div>
 
-                {/* Wallet Address */}
-                <div className="mb-4 sm:mb-5">
-                    <label className="mb-2 block text-[11px] font-semibold text-primary">
-                        Bank Deposit Settlement Address (USD Credited)
-                    </label>
-
-                    <div className="flex gap-2">
-                        <div className="flex h-10 min-w-0 flex-1 items-center rounded-lg border border-[#dfe8f1] bg-[#f8fafc] px-3">
-                            <span className="truncate text-[11px] text-[#64748b]">
-                                {walletAddress || "—"}
-                            </span>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={handleCopy}
-                            className="h-10 rounded-lg bg-primary px-4 sm:px-5 text-[11px] font-semibold text-white transition hover:bg-[#09264d] cursor-pointer shrink-0"
-                        >
-                            {copied ? "Copied" : "Copy"}
-                        </button>
-                    </div>
-                </div>
-
-                {/* QR + Instructions */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-5 pt-2">
-                    <div className="flex h-[100px] w-[100px] sm:h-[105px] sm:w-[105px] shrink-0 items-center justify-center rounded-lg border border-[#edf2f7] bg-white p-2 shadow-xs">
-                        {walletAddress ? (
-                            <QRCodeSVG
-                                value={walletAddress}
-                                size={84}
-                                level="M"
-                                includeMargin={false}
-                            />
-                        ) : (
-                            <span className="text-[9px] text-[#a0aec0]">No QR</span>
-                        )}
-                    </div>
-
-                    <div className="min-w-0">
-                        <h3 className="mb-1 text-xs sm:text-[12px] font-bold text-primary">
-                            Scan QR to Transfer Funds
-                        </h3>
-
-                        <p className="max-w-full sm:max-w-[220px] text-[10px] sm:text-[11px] leading-relaxed text-[#718096]">
-                            Transfer to the settlement address above using your payment app. Inflows are credited 1:1 to your USD checking balance.
-                        </p>
-                    </div>
-                </div>
+          {/* QR + Instructions */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-5 pt-2">
+            <div className="flex h-[100px] w-[100px] sm:h-[105px] sm:w-[105px] shrink-0 items-center justify-center rounded-lg border border-[#edf2f7] bg-white p-2 shadow-xs">
+              {walletAddress ? (
+                <QRCodeSVG
+                  value={walletAddress}
+                  size={84}
+                  level="M"
+                  includeMargin={false}
+                />
+              ) : (
+                <span className="text-[9px] text-[#a0aec0]">No QR</span>
+              )}
             </div>
 
-            <form
-                onSubmit={formik.handleSubmit}
-                noValidate
-                className="rounded-xl border border-[#e5edf5] bg-white p-3.5 sm:p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]"
+            <div className="min-w-0">
+              <h3 className="mb-1 text-xs sm:text-[12px] font-bold text-primary">
+                Scan QR to Transfer Funds
+              </h3>
+
+              <p className="max-w-full sm:max-w-[220px] text-[10px] sm:text-[11px] leading-relaxed text-[#718096]">
+                Transfer to the settlement address above using your payment app.
+                Inflows are credited 1:1 to your USD checking balance.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <form
+          onSubmit={formik.handleSubmit}
+          noValidate
+          className="rounded-xl border border-[#e5edf5] bg-white p-3.5 sm:p-5 shadow-[0_2px_10px_rgba(15,45,75,0.04)]"
+        >
+          <div className="mb-3 sm:mb-4">
+            <h2 className="text-xs sm:text-[14px] font-bold text-primary">
+              Step 2: Confirm Inflow Request
+            </h2>
+          </div>
+
+          {/* Amount */}
+          <div className="mb-4">
+            <label
+              htmlFor="amount"
+              className="mb-2 block text-[11px] font-semibold text-primary"
             >
-                <div className="mb-3 sm:mb-4">
-                    <h2 className="text-xs sm:text-[14px] font-bold text-primary">
-                        Step 2: Confirm Inflow Request
-                    </h2>
-                </div>
+              Deposit Amount (USD / USDT Pegged)
+            </label>
 
-                {/* Amount */}
-                <div className="mb-4">
-                    <label
-                        htmlFor="amount"
-                        className="mb-2 block text-[11px] font-semibold text-primary"
-                    >
-                        Deposit Amount (USD / USDT Pegged)
-                    </label>
-
-                    <FormattedInput
-                        id="amount"
-                        name="amount"
-                        placeholder="Enter amount"
-                        value={formik.values.amount}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`h-10 w-full rounded-lg border bg-white px-3 text-xs text-primary outline-none transition placeholder:text-[#a0aec0]
-                            ${formik.touched.amount && formik.errors.amount
+            <FormattedInput
+              id="amount"
+              name="amount"
+              placeholder="Enter amount"
+              value={formik.values.amount}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className={`h-10 w-full rounded-lg border bg-white px-3 text-xs text-primary outline-none transition placeholder:text-[#a0aec0]
+                            ${
+                              formik.touched.amount && formik.errors.amount
                                 ? "border-red-400"
                                 : "border-[#dfe8f1]"
                             }`}
-                    />
+            />
 
-                    {formik.touched.amount && formik.errors.amount && (
-                        <p className="mt-1 text-[10px] text-red-500">
-                            {formik.errors.amount}
-                        </p>
-                    )}
-                </div>
+            {formik.touched.amount && formik.errors.amount && (
+              <p className="mt-1 text-[10px] text-red-500">
+                {formik.errors.amount}
+              </p>
+            )}
+          </div>
 
-                {/* Payment Proof */}
-                <div className="mb-4">
-                    <label className="mb-2 block text-[11px] font-semibold text-primary">
-                        Upload Payment Proof / Transfer Voucher
-                    </label>
+          {/* Payment Proof */}
+          <div className="mb-4">
+            <label className="mb-2 block text-[11px] font-semibold text-primary">
+              Upload Payment Proof / Transfer Voucher
+            </label>
 
-                    <label
-                        htmlFor="proof_image"
-                        className={`flex min-h-[68px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-3 text-center transition hover:bg-[#f8fafc] ${formik.touched.proof_image &&
-                            formik.errors.proof_image
-                            ? "border-red-400"
-                            : "border-[#cbd8e5]"
-                            }`}
-                    >
-                        <svg
-                            className="mb-1 h-5 w-5 text-[#94a3b8]"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.7"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 16V4m0 0L8 8m4-4 4 4"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"
-                            />
-                        </svg>
-
-                        {formik.values.proof_image ? (
-                            <span className="max-w-full truncate text-[10px] font-medium text-primary">
-                                {formik.values.proof_image.name}
-                            </span>
-                        ) : (
-                            <>
-                                <span className="text-[10px] font-semibold text-[#718096]">
-                                    Click to upload or drag & drop
-                                </span>
-
-                                <span className="mt-0.5 text-[9px] text-[#a0aec0]">
-                                    PNG, JPG or PDF (Max 5MB)
-                                </span>
-                            </>
-                        )}
-
-                        <input
-                            id="proof_image"
-                            name="proof_image"
-                            type="file"
-                            accept=".png,.jpg,.jpeg,.pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
-                    </label>
-
-                    {formik.touched.proof_image &&
-                        formik.errors.proof_image && (
-                            <p className="mt-1 text-[10px] text-red-500">
-                                {formik.errors.proof_image as string}
-                            </p>
-                        )}
-                </div>
-
-                {/* API Error */}
-                {submitMutation.isError && (
-                    <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-[10px] text-red-600">
-                        {getErrorMessage(
-                            submitMutation.error,
-                            "Failed to submit deposit request. Please try again."
-                        )}
-                    </div>
-                )}
-
-                {/* Success */}
-                {submitMutation.isSuccess && (
-                    <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-[10px] text-green-600">
-                        Deposit request submitted successfully.
-                    </div>
-                )}
-
-                {/* Submit */}
-                <button
-                    type="submit"
-                    disabled={submitMutation.isPending}
-                    className="flex h-10 w-full items-center justify-center rounded-lg bg-primary cursor-pointer text-[11px] font-bold text-white transition hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    {submitMutation.isPending ? (
-                        <>
-
-                            <Loader2
-                                className="mr-2 h-4 w-4 animate-spin"
-                            />
-
-                            Submitting...
-                        </>
-                    ) : (
-                        "Submit Inflow Request"
-                    )}
-                </button>
-            </form>
-        </div>
-
-        {effectiveDepositId && (
-            <div className="mt-5">
-                <DepositStatusTracker
-                    depositId={effectiveDepositId}
-                    deposit={depositDetails}
-                    isLoading={depositDetailsLoading}
-                    onClose={() => {
-                        setActiveDepositId(null);
-                        localStorage.removeItem("active_deposit_id");
-                    }}
+            <label
+              htmlFor="proof_image"
+              className={`flex min-h-[68px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-3 text-center transition hover:bg-[#f8fafc] ${
+                formik.touched.proof_image && formik.errors.proof_image
+                  ? "border-red-400"
+                  : "border-[#cbd8e5]"
+              }`}
+            >
+              <svg
+                className="mb-1 h-5 w-5 text-[#94a3b8]"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 16V4m0 0L8 8m4-4 4 4"
                 />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"
+                />
+              </svg>
+
+              {formik.values.proof_image ? (
+                <span className="max-w-full truncate text-[10px] font-medium text-primary">
+                  {formik.values.proof_image.name}
+                </span>
+              ) : (
+                <>
+                  <span className="text-[10px] font-semibold text-[#718096]">
+                    Click to upload or drag & drop
+                  </span>
+
+                  <span className="mt-0.5 text-[9px] text-[#a0aec0]">
+                    PNG, JPG or PDF (Max 5MB)
+                  </span>
+                </>
+              )}
+
+              <input
+                id="proof_image"
+                name="proof_image"
+                type="file"
+                accept=".png,.jpg,.jpeg,.pdf"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+
+            {formik.touched.proof_image && formik.errors.proof_image && (
+              <p className="mt-1 text-[10px] text-red-500">
+                {formik.errors.proof_image as string}
+              </p>
+            )}
+          </div>
+
+          {/* API Error */}
+          {submitMutation.isError && (
+            <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-[10px] text-red-600">
+              {getErrorMessage(
+                submitMutation.error,
+                "Failed to submit deposit request. Please try again.",
+              )}
             </div>
-        )}
+          )}
+
+          {/* Success */}
+          {submitMutation.isSuccess && (
+            <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-[10px] text-green-600">
+              Deposit request submitted successfully.
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={submitMutation.isPending}
+            className="flex h-10 w-full items-center justify-center rounded-lg bg-primary cursor-pointer text-[11px] font-bold text-white transition hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {submitMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Inflow Request"
+            )}
+          </button>
+        </form>
+      </div>
+
+      {effectiveDepositId && (
+        <div className="mt-5">
+          <DepositStatusTracker
+            depositId={effectiveDepositId}
+            deposit={depositDetails}
+            isLoading={depositDetailsLoading}
+            onClose={() => {}}
+          />
+        </div>
+      )}
     </div>
   );
 };
