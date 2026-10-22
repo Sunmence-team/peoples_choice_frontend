@@ -46,14 +46,12 @@ const Transfers: React.FC = () => {
     if (!selectedTransfer) return;
     try {
       if (actionType === "approve") {
-        await approveMutation.mutateAsync(selectedTransfer.id);
-        toast.success(
-          `Wire transfer ${selectedTransfer.transaction_id || ""} completed successfully`
-        );
+        await approveMutation.mutateAsync(selectedTransfer.transactionable_id);
+        toast.success(`Wire transfer completed successfully`);
       } else {
-        await rejectMutation.mutateAsync(selectedTransfer.id);
+        await rejectMutation.mutateAsync(selectedTransfer.transactionable_id);
         toast.success(
-          `Wire transfer rejected. Balance was atomically refunded to sender.`
+          `Wire transfer rejected. Balance was atomically refunded to sender.`,
         );
       }
       setConfirmModal(false);
@@ -69,7 +67,7 @@ const Transfers: React.FC = () => {
       key: "transaction_id",
       render: (item: TransactionItem) => (
         <span className="font-mono font-semibold text-[11px] text-[#0B2D5B]">
-          {item.transaction_id || "-"}
+          {item.reference_id || "-"}
         </span>
       ),
     },
@@ -101,7 +99,8 @@ const Transfers: React.FC = () => {
       key: "amount",
       render: (item: TransactionItem) => (
         <span className="font-semibold text-[11px] text-[#0B2D5B]">
-          ${Number(item.amount || 0).toLocaleString("en-US", {
+          $
+          {Number(item.amount || 0).toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
@@ -160,7 +159,8 @@ const Transfers: React.FC = () => {
             Wire & External Transfers Review
           </h1>
           <p className="mt-0.5 text-[15px] text-[#8190a3]">
-            Review, authorize, or reject outgoing ACH, SWIFT and international wire transfers.
+            Review, authorize, or reject outgoing ACH, SWIFT and international
+            wire transfers.
           </p>
         </div>
 

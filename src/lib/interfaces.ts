@@ -112,7 +112,7 @@ export interface ReusableTableProps<
   onToggleRowSelection?: (id: number | string) => void;
   onToggleAllRows?: (checked: boolean) => void;
   getRowId?: (item: T, index: number) => number | string | undefined;
-  showPagination?:boolean
+  showPagination?: boolean;
 }
 
 export interface PaginationControlProps {
@@ -152,7 +152,7 @@ export interface SearchableInputProps<T> {
 export interface UserProps {
   id: number;
   username: string;
-  name?:string
+  name?: string;
   first_name: string;
   last_name: string;
   full_name: string;
@@ -182,7 +182,8 @@ export interface BankProps {
 
 export interface TransactionItem {
   id: number;
-  transaction_id: string;
+  transactionable_id: number;
+  reference_id: string;
   user_name: string;
   type: "deposit" | "withdrawal" | "transfer";
   network: string;
