@@ -211,7 +211,7 @@ export default function Overview() {
                   <p className="text-[11px] sm:text-xs font-medium leading-tight text-white/90">
                     Available Account Balance
                   </p>
-                  <p className="text-[9px] sm:text-[10px] text-[#a5c0dc] truncate">
+                  <p className="text-[9px] sm:text-[12px] text-[#a5c0dc] truncate">
                     Acct: {accountNumber}
                   </p>
                 </div>

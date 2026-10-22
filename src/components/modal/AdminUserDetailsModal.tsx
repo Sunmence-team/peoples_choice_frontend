@@ -1,6 +1,10 @@
 import React from "react";
 import Modal from "./Modal";
-import { formatShortDate, getInitials } from "../../helpers/formatterUtility";
+import {
+  formatCompactAmount,
+  formatShortDate,
+  getInitials,
+} from "../../helpers/formatterUtility";
 import type { AdminUser } from "../../lib/interfaces";
 
 interface AdminUserDetailsModalProps {
@@ -23,19 +27,22 @@ export const AdminUserDetailsModal: React.FC<AdminUserDetailsModalProps> = ({
   if (!isOpen || !user) return null;
 
   const rows = [
-    { label: "USER ID", value: `#${user.id}` },
+    // { label: "USER ID", value: `#${user.id}` },
     { label: "FULL NAME", value: `${user.first_name} ${user.last_name}` },
     { label: "EMAIL", value: user.email },
     { label: "PHONE", value: user.phone || "-" },
     { label: "COUNTRY", value: user.country || "-" },
     { label: "ACCOUNT NUMBER", value: user.account_number || "-" },
     { label: "ROLE", value: user.role || "client" },
-    { label: "WALLET BALANCE", value: `$${user.balance || 0} USD` },
+    {
+      label: "WALLET BALANCE",
+      value: `${formatCompactAmount(Number(user.balance)) || 0} USD`,
+    },
     {
       label: "KYC STATUS",
       value: user.kyc_status || (user.is_verified ? "verified" : "unverified"),
     },
-    { label: "STATUS", value: user.status },
+    // { label: "STATUS", value: user.status },
     { label: "JOINED", value: formatShortDate(user.created_at) },
   ];
 

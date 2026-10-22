@@ -26,28 +26,32 @@ export const UserProvider = ({ children }: userProviderProps) => {
     setRole(null);
     setIsAuthenticated(false);
     toast.success("Logged out successfully");
-    window.location.href = "/";
+    window.location.href = "/login";
   }, []);
 
-  const refreshUser = useCallback(async (token: string) => {
-    if (!token) throw new Error("No token");
-    try {
-      const response = await api.get("/user", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = toUserProps(response.data?.data ?? response.data);
-      setUser(data);
-      const nextRole = data.role || (data.is_admin === 1 ? "admin" : "client");
-      setRole(nextRole);
-      localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("role", nextRole);
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        logout();
+  const refreshUser = useCallback(
+    async (token: string) => {
+      if (!token) throw new Error("No token");
+      try {
+        const response = await api.get("/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = toUserProps(response.data?.data ?? response.data);
+        setUser(data);
+        const nextRole =
+          data.role || (data.is_admin === 1 ? "admin" : "client");
+        setRole(nextRole);
+        localStorage.setItem("user", JSON.stringify(data));
+        localStorage.setItem("role", nextRole);
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response?.status === 401) {
+          logout();
+        }
+        throw err;
       }
-      throw err;
-    }
-  }, [logout]);
+    },
+    [logout],
+  );
 
   useEffect(() => {
     const initAuth = async () => {

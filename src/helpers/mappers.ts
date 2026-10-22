@@ -211,6 +211,8 @@ export const toAdminTransaction = (
         raw.ref,
       ) || `${type === "deposit" ? "DEP" : "WDR"}-${pickNumber(raw.id)}`,
     user_name: userName,
+    reference_id: String(raw.reference_id),
+    transactionable_id: Number(raw.transactionable_id),
     type,
     network: pickString(
       raw.network,

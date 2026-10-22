@@ -184,7 +184,7 @@ export interface TransactionItem {
   id: number;
   transactionable_id: number;
   reference_id: string;
-  transaction_id?: string;
+  transaction_id: string;
   user_name: string;
   type: "deposit" | "withdrawal" | "transfer";
   network: string;
