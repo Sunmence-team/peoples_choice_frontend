@@ -22,7 +22,7 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { formatCompactAmount } from "../../../helpers/formatterUtility";
+import { formatterUtility } from "../../../helpers/formatterUtility";
 
 type TransferTab = "internal" | "external";
 
@@ -159,7 +159,7 @@ export default function Transfer() {
             Available Account Balance:
           </span>
           <span className="font-bold text-primary">
-            {formatCompactAmount(Number(availableBalance))} USD
+            {formatterUtility(Number(availableBalance))} USD
           </span>
         </div>
 

@@ -25,7 +25,7 @@ import {
 } from "../../../hooks/useClientData";
 import { getErrorMessage } from "../../../helpers/api";
 import FormattedInput from "../../../components/ui/FormattedInput";
-import { formatCompactAmount } from "../../../helpers/formatterUtility";
+import {  formatterUtility } from "../../../helpers/formatterUtility";
 
 interface WithdrawalFormValues {
   amount: string;
@@ -306,7 +306,7 @@ export default function Withdrawal() {
                     <span className="text-base sm:text-lg font-bold text-primary">
                       {statsLoading
                         ? "..."
-                        : `${formatCompactAmount(Number(availableBalance))}`}
+                        : `${formatterUtility(Number(availableBalance))}`}
                     </span>
 
                     <span className="text-[11px] sm:text-[12px] font-bold text-primary">

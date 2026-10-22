@@ -23,6 +23,7 @@ import { Eye, EyeOff } from "lucide-react";
 import {
   formatCompactAmount,
   formatISODateToCustom,
+  formatterUtility,
 } from "../../../helpers/formatterUtility";
 import { useKYCStatus } from "../../../hooks/useClientData";
 import { MdArrowOutward } from "react-icons/md";
@@ -99,22 +100,13 @@ export default function Overview() {
       label: "AMOUNT (USD)",
       key: "amount",
       render: (item) => {
-        const raw =
-          typeof item.amount === "number"
-            ? item.amount
-            : parseFloat(String(item.amount).replace(/[^0-9.-]/g, "")) || 0;
-        const formatted = raw.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        const isPositive = item.type === "deposit";
         return (
           <span
             className={`font-semibold text-[11px] ${
-              isPositive ? "text-green-600" : "text-[#172b4d]"
+              +item.amount > 0 ? "text-green-600" : "text-[#172b4d]"
             }`}
           >
-            {isPositive ? `+$${formatted}` : `-$${formatted}`}
+            {item.amount}
           </span>
         );
       },
@@ -236,7 +228,7 @@ export default function Overview() {
                   {statsLoading
                     ? "..."
                     : showBalance
-                      ? `${formatCompactAmount(Number(balance))}`
+                      ? `${formatterUtility(Number(balance))}`
                       : "*******"}
                 </span>
 
